@@ -4,185 +4,196 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ProWash Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-/* ═══════════════════════════════════════════════════
-   PROWASH DASHBOARD — Earthy & Industrial Theme
-   ═══════════════════════════════════════════════════ */
 :root {
-  --soil:      #2C1A0E;
-  --bark:      #3D2410;
-  --moss:      #4A5E3A;
-  --sage:      #6B7F5A;
-  --meadow:    #8FAF72;
-  --fern:      #B5C99A;
-  --cream:     #F5EFE0;
-  --parchment: #EDE4CF;
-  --sand:      #D4C4A0;
-  --rust:      #A0522D;
-  --amber:     #C97D2E;
-  --water:     #4A7C8B;
-  --white:     #FDFAF4;
-  --text-main: #1E1208;
-  --text-muted:#7A6A54;
-  --border:    #C8B89A;
-  --sidebar-w: 220px;
-  --radius:    8px;
-  --shadow:    0 2px 12px rgba(44,26,14,0.10);
-  --shadow-lg: 0 8px 32px rgba(44,26,14,0.18);
+  --navy:      #0A0F1E;
+  --navy2:     #111827;
+  --navy3:     #1C2740;
+  --blue:      #2563EB;
+  --blue-lt:   #3B82F6;
+  --blue-glow: #60A5FA;
+  --cyan:      #06B6D4;
+  --white:     #FFFFFF;
+  --gray-50:   #F8FAFC;
+  --gray-100:  #F1F5F9;
+  --gray-200:  #E2E8F0;
+  --gray-400:  #94A3B8;
+  --gray-600:  #475569;
+  --gray-800:  #1E293B;
+  --text-main: #F1F5F9;
+  --text-muted:#94A3B8;
+  --border:    rgba(255,255,255,0.08);
+  --border-lt: rgba(255,255,255,0.05);
+  --sidebar-w: 230px;
+  --radius:    10px;
+  --shadow:    0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.5);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+body { font-family: 'Inter', sans-serif; background: var(--navy); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
 .hidden { display: none !important; }
 
-/* LOGIN */
-.login-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--soil); position:relative; overflow:hidden; }
-.login-bg-texture { position:absolute; inset:0; background-image: radial-gradient(ellipse at 20% 50%, rgba(74,94,58,0.3) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(169,82,45,0.2) 0%, transparent 50%); pointer-events:none; }
-.login-card { position:relative; background:var(--bark); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:3rem 2.5rem; width:100%; max-width:400px; text-align:center; box-shadow:var(--shadow-lg); }
-.login-logo { display:flex; align-items:center; justify-content:center; gap:0.6rem; margin-bottom:0.4rem; }
-.login-logo .logo-icon { font-size:2rem; color:var(--meadow); }
-.login-logo .logo-text { font-family:'Bebas Neue',sans-serif; font-size:2.8rem; color:var(--cream); letter-spacing:0.12em; }
-.login-tagline { font-size:0.8rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--sage); margin-bottom:1.5rem; }
-.login-divider { height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent); margin-bottom:1.5rem; }
-.login-desc { color:var(--sand); font-size:0.9rem; line-height:1.6; margin-bottom:2rem; }
-.google-btn { display:flex; align-items:center; justify-content:center; gap:0.75rem; width:100%; padding:0.85rem 1.5rem; background:var(--moss); color:var(--white); border:1px solid var(--sage); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:500; cursor:pointer; transition:background 0.2s,transform 0.1s; }
-.google-btn:hover { background:var(--sage); transform:translateY(-1px); }
+/* ── LOGIN ── */
+.login-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--navy); position:relative; overflow:hidden; }
+.login-screen::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at 30% 40%, rgba(37,99,235,0.15) 0%, transparent 60%), radial-gradient(ellipse at 75% 70%, rgba(6,182,212,0.08) 0%, transparent 50%); pointer-events:none; }
+.login-card { position:relative; background:var(--navy2); border:1px solid var(--border); border-radius:20px; padding:3rem 2.5rem; width:100%; max-width:420px; text-align:center; box-shadow:var(--shadow-lg); }
+.login-logo { display:flex; align-items:center; justify-content:center; gap:0.7rem; margin-bottom:0.5rem; }
+.login-logo .logo-mark { width:40px; height:40px; background:linear-gradient(135deg,var(--blue),var(--cyan)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+.login-logo .logo-text { font-family:'Space Grotesk',sans-serif; font-size:2rem; color:var(--white); letter-spacing:0.05em; font-weight:700; }
+.login-tagline { font-size:0.78rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-muted); margin-bottom:2rem; }
+.login-divider { height:1px; background:var(--border); margin-bottom:2rem; }
+.login-desc { color:var(--gray-400); font-size:0.9rem; line-height:1.6; margin-bottom:2rem; }
+.google-btn { display:flex; align-items:center; justify-content:center; gap:0.75rem; width:100%; padding:0.9rem 1.5rem; background:var(--blue); color:var(--white); border:none; border-radius:var(--radius); font-family:'Inter',sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; transition:background 0.2s, transform 0.1s, box-shadow 0.2s; box-shadow:0 0 20px rgba(37,99,235,0.3); }
+.google-btn:hover { background:var(--blue-lt); transform:translateY(-1px); box-shadow:0 0 30px rgba(37,99,235,0.5); }
 .google-btn:active { transform:translateY(0); }
-.login-note { margin-top:1rem; font-size:0.8rem; color:#e87070; min-height:1.2em; }
-.login-footer { margin-top:2rem; font-size:0.75rem; color:rgba(255,255,255,0.2); letter-spacing:0.05em; }
+.login-note { margin-top:1rem; font-size:0.8rem; color:#f87171; min-height:1.2em; }
+.login-footer { margin-top:2rem; font-size:0.72rem; color:rgba(255,255,255,0.15); letter-spacing:0.05em; }
 
-/* APP LAYOUT */
+/* ── APP ── */
 .app { display:flex; min-height:100vh; }
-.sidebar { width:var(--sidebar-w); background:var(--bark); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; border-right:1px solid rgba(255,255,255,0.06); }
-.sidebar-brand { display:flex; align-items:center; gap:0.5rem; padding:1.4rem 1.2rem 1rem; border-bottom:1px solid rgba(255,255,255,0.06); }
-.sidebar-brand .logo-icon { font-size:1.4rem; color:var(--meadow); }
-.sidebar-brand .logo-text { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color:var(--cream); letter-spacing:0.1em; }
-.sidebar-nav { flex:1; padding:1rem 0.6rem; display:flex; flex-direction:column; gap:0.2rem; overflow-y:auto; }
-.nav-item { display:flex; align-items:center; gap:0.6rem; padding:0.65rem 0.8rem; border-radius:var(--radius); color:var(--sand); font-size:0.9rem; font-weight:500; cursor:pointer; transition:background 0.15s,color 0.15s; text-decoration:none; user-select:none; }
-.nav-item:hover { background:rgba(255,255,255,0.06); color:var(--cream); }
-.nav-item.active { background:var(--moss); color:var(--white); }
-.nav-icon { font-size:1.1rem; opacity:0.8; width:1.3rem; text-align:center; }
-.sidebar-footer { padding:1rem; border-top:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:0.6rem; }
-.user-chip { display:flex; align-items:center; gap:0.6rem; color:var(--sand); font-size:0.82rem; }
-#user-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--sage); }
-.signout-btn { width:100%; padding:0.45rem; background:transparent; border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius); color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.8rem; cursor:pointer; transition:background 0.15s,color 0.15s; }
-.signout-btn:hover { background:rgba(255,255,255,0.06); color:var(--sand); }
 
-/* MAIN */
-.main-content { margin-left:var(--sidebar-w); flex:1; padding:2rem 2rem 3rem; min-height:100vh; }
-.top-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.8rem; flex-wrap:wrap; gap:1rem; }
-.page-title { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:var(--soil); letter-spacing:0.06em; }
+/* ── SIDEBAR ── */
+.sidebar { width:var(--sidebar-w); background:var(--navy2); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; border-right:1px solid var(--border-lt); }
+.sidebar-brand { display:flex; align-items:center; gap:0.6rem; padding:1.5rem 1.2rem 1.2rem; border-bottom:1px solid var(--border-lt); }
+.sidebar-brand .logo-mark { width:32px; height:32px; background:linear-gradient(135deg,var(--blue),var(--cyan)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+.sidebar-brand .logo-text { font-family:'Space Grotesk',sans-serif; font-size:1.3rem; color:var(--white); font-weight:700; letter-spacing:0.03em; }
+.sidebar-nav { flex:1; padding:1.2rem 0.75rem; display:flex; flex-direction:column; gap:0.15rem; overflow-y:auto; }
+.nav-label { font-size:0.65rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--gray-600); padding:0.6rem 0.75rem 0.3rem; }
+.nav-item { display:flex; align-items:center; gap:0.7rem; padding:0.6rem 0.75rem; border-radius:8px; color:var(--text-muted); font-size:0.875rem; font-weight:500; cursor:pointer; transition:background 0.15s, color 0.15s; text-decoration:none; user-select:none; }
+.nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text-main); }
+.nav-item.active { background:rgba(37,99,235,0.2); color:var(--blue-glow); }
+.nav-item.active .nav-icon { color:var(--blue-lt); }
+.nav-icon { font-size:1rem; width:1.1rem; text-align:center; opacity:0.7; }
+.nav-item.active .nav-icon { opacity:1; }
+.sidebar-footer { padding:1rem 0.75rem; border-top:1px solid var(--border-lt); display:flex; flex-direction:column; gap:0.6rem; }
+.user-chip { display:flex; align-items:center; gap:0.6rem; color:var(--text-muted); font-size:0.82rem; }
+#user-avatar { width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid var(--blue); }
+#user-name { font-weight:500; color:var(--text-main); }
+.signout-btn { width:100%; padding:0.5rem; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-family:'Inter',sans-serif; font-size:0.8rem; cursor:pointer; transition:all 0.15s; }
+.signout-btn:hover { background:rgba(255,255,255,0.05); color:var(--text-main); border-color:rgba(255,255,255,0.15); }
+
+/* ── MAIN ── */
+.main-content { margin-left:var(--sidebar-w); flex:1; padding:2rem 2.5rem 3rem; min-height:100vh; background:var(--navy); }
+.top-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+.page-title { font-family:'Space Grotesk',sans-serif; font-size:1.75rem; color:var(--white); font-weight:700; letter-spacing:-0.01em; }
 .top-actions { display:flex; align-items:center; gap:1rem; }
-.sync-status { font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--moss); }
-.action-btn { padding:0.55rem 1.2rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--parchment); color:var(--text-main); font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500; cursor:pointer; transition:background 0.15s,transform 0.1s; }
-.action-btn:hover { background:var(--sand); }
-.action-btn.primary { background:var(--moss); color:var(--white); border-color:var(--moss); }
-.action-btn.primary:hover { background:var(--sage); }
+.sync-status { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--cyan); background:rgba(6,182,212,0.1); padding:0.3rem 0.75rem; border-radius:99px; border:1px solid rgba(6,182,212,0.2); }
+.action-btn { padding:0.55rem 1.2rem; border-radius:8px; border:1px solid var(--border); background:var(--navy3); color:var(--text-main); font-family:'Inter',sans-serif; font-size:0.875rem; font-weight:500; cursor:pointer; transition:all 0.15s; }
+.action-btn:hover { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.15); }
+.action-btn.primary { background:var(--blue); color:var(--white); border-color:var(--blue); box-shadow:0 0 15px rgba(37,99,235,0.3); }
+.action-btn.primary:hover { background:var(--blue-lt); box-shadow:0 0 25px rgba(37,99,235,0.5); }
 .page { display:none; }
 .page.active { display:block; }
 
-/* STAT CARDS */
-.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:1.5rem; }
-.stat-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem 1.4rem; position:relative; overflow:hidden; box-shadow:var(--shadow); }
-.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--moss),var(--meadow)); }
-.stat-label { font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.5rem; }
-.stat-value { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--soil); letter-spacing:0.04em; line-height:1; }
-.stat-sub { font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem; }
+/* ── STAT CARDS ── */
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+.stat-card { background:var(--navy2); border:1px solid var(--border); border-radius:var(--radius); padding:1.4rem 1.5rem; position:relative; overflow:hidden; transition:border-color 0.2s; }
+.stat-card:hover { border-color:rgba(37,99,235,0.4); }
+.stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--blue),var(--cyan)); }
+.stat-label { font-size:0.72rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.6rem; }
+.stat-value { font-family:'Space Grotesk',sans-serif; font-size:2rem; color:var(--white); font-weight:700; line-height:1; }
+.stat-sub { font-size:0.72rem; color:var(--text-muted); margin-top:0.35rem; }
 
-/* CARDS */
-.card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
-.card-header { padding:1rem 1.2rem; font-weight:600; font-size:0.9rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-muted); border-bottom:1px solid var(--border); background:var(--parchment); }
+/* ── CARDS ── */
+.card { background:var(--navy2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.card-header { padding:1rem 1.25rem; font-weight:600; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); border-bottom:1px solid var(--border); }
 .dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 @media (max-width:900px) { .dash-grid { grid-template-columns:1fr; } }
 
-/* FILTER BAR */
+/* ── FILTER BAR ── */
 .filter-bar { display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; }
-.search-input,.filter-select { padding:0.55rem 0.9rem; border:1px solid var(--border); border-radius:var(--radius); background:var(--white); font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--text-main); outline:none; transition:border-color 0.15s; }
-.search-input:focus,.filter-select:focus { border-color:var(--moss); }
-.search-input { min-width:220px; }
+.search-input,.filter-select { padding:0.55rem 1rem; border:1px solid var(--border); border-radius:8px; background:var(--navy2); font-family:'Inter',sans-serif; font-size:0.875rem; color:var(--text-main); outline:none; transition:border-color 0.15s; }
+.search-input::placeholder { color:var(--text-muted); }
+.search-input:focus,.filter-select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+.search-input { min-width:240px; }
+.filter-select option { background:var(--navy2); }
 
-/* TABLE */
+/* ── TABLE ── */
 .table-wrap { overflow-x:auto; }
 .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
-.data-table thead { background:var(--parchment); }
-.data-table th { padding:0.75rem 1rem; text-align:left; font-size:0.75rem; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-muted); border-bottom:1px solid var(--border); white-space:nowrap; }
-.data-table td { padding:0.75rem 1rem; border-bottom:1px solid var(--border); color:var(--text-main); vertical-align:middle; }
+.data-table thead { background:rgba(255,255,255,0.03); }
+.data-table th { padding:0.75rem 1.25rem; text-align:left; font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); border-bottom:1px solid var(--border); white-space:nowrap; }
+.data-table td { padding:0.875rem 1.25rem; border-bottom:1px solid var(--border-lt); color:var(--text-main); vertical-align:middle; }
 .data-table tbody tr:last-child td { border-bottom:none; }
-.data-table tbody tr:hover { background:#faf7f0; }
-.empty-state { padding:2rem; text-align:center; color:var(--text-muted); font-size:0.9rem; font-style:italic; }
+.data-table tbody tr:hover { background:rgba(255,255,255,0.03); }
+.empty-state { padding:2.5rem; text-align:center; color:var(--text-muted); font-size:0.875rem; }
 
-/* BADGES */
-.badge { display:inline-block; padding:0.2rem 0.6rem; border-radius:99px; font-size:0.72rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; }
-.badge-scheduled  { background:#dbeafe; color:#1d4ed8; }
-.badge-inprogress { background:#fef3c7; color:#92400e; }
-.badge-completed  { background:#dcfce7; color:#166534; }
-.badge-cancelled  { background:#fee2e2; color:#991b1b; }
-.badge-paid       { background:#dcfce7; color:#166534; }
-.badge-unpaid     { background:#fef3c7; color:#92400e; }
-.badge-overdue    { background:#fee2e2; color:#991b1b; }
-.badge-sent       { background:#dbeafe; color:#1d4ed8; }
-.badge-draft      { background:#f3f4f6; color:#374151; }
-.badge-accepted   { background:#dcfce7; color:#166534; }
+/* ── BADGES ── */
+.badge { display:inline-flex; align-items:center; padding:0.2rem 0.65rem; border-radius:99px; font-size:0.7rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; }
+.badge-scheduled  { background:rgba(37,99,235,0.15);  color:#93C5FD; border:1px solid rgba(37,99,235,0.3); }
+.badge-inprogress { background:rgba(234,179,8,0.15);  color:#FDE047; border:1px solid rgba(234,179,8,0.3); }
+.badge-completed  { background:rgba(34,197,94,0.15);  color:#86EFAC; border:1px solid rgba(34,197,94,0.3); }
+.badge-cancelled  { background:rgba(239,68,68,0.15);  color:#FCA5A5; border:1px solid rgba(239,68,68,0.3); }
+.badge-paid       { background:rgba(34,197,94,0.15);  color:#86EFAC; border:1px solid rgba(34,197,94,0.3); }
+.badge-unpaid     { background:rgba(234,179,8,0.15);  color:#FDE047; border:1px solid rgba(234,179,8,0.3); }
+.badge-overdue    { background:rgba(239,68,68,0.15);  color:#FCA5A5; border:1px solid rgba(239,68,68,0.3); }
+.badge-sent       { background:rgba(6,182,212,0.15);  color:#67E8F9; border:1px solid rgba(6,182,212,0.3); }
+.badge-draft      { background:rgba(148,163,184,0.1); color:#94A3B8; border:1px solid rgba(148,163,184,0.2); }
+.badge-accepted   { background:rgba(34,197,94,0.15);  color:#86EFAC; border:1px solid rgba(34,197,94,0.3); }
 
-/* TABLE BUTTONS */
-.tbl-btn { padding:0.25rem 0.6rem; border-radius:4px; border:1px solid var(--border); background:transparent; font-size:0.75rem; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s; margin-right:4px; }
-.tbl-btn:hover { background:var(--parchment); }
-.tbl-btn.del { color:#991b1b; border-color:#fca5a5; }
-.tbl-btn.del:hover { background:#fee2e2; }
+/* ── TABLE BUTTONS ── */
+.tbl-btn { padding:0.3rem 0.7rem; border-radius:6px; border:1px solid var(--border); background:transparent; font-size:0.75rem; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; margin-right:4px; color:var(--text-muted); }
+.tbl-btn:hover { background:rgba(255,255,255,0.07); color:var(--text-main); border-color:rgba(255,255,255,0.15); }
+.tbl-btn.del { color:#f87171; border-color:rgba(239,68,68,0.3); }
+.tbl-btn.del:hover { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.5); }
 
-/* CALENDAR */
+/* ── CALENDAR ── */
 .calendar-controls { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; }
-.cal-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--white); font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
-.cal-btn:hover { background:var(--parchment); }
-.cal-month-label { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--soil); letter-spacing:0.06em; min-width:200px; text-align:center; }
-.calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); }
-.cal-day-header { background:var(--parchment); padding:0.5rem; text-align:center; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); }
-.cal-day { background:var(--white); min-height:80px; padding:0.4rem; font-size:0.8rem; }
-.cal-day.other-month { background:#faf8f4; color:var(--text-muted); }
-.cal-day.today { background:#f0f7ea; }
-.cal-day-num { font-weight:600; margin-bottom:0.2rem; }
-.cal-job-dot { background:var(--moss); color:var(--white); border-radius:3px; padding:1px 4px; font-size:0.65rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-btn { width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:var(--navy2); font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; color:var(--text-main); }
+.cal-btn:hover { background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.15); }
+.cal-month-label { font-family:'Space Grotesk',sans-serif; font-size:1.2rem; color:var(--white); font-weight:700; min-width:220px; text-align:center; }
+.calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border-lt); }
+.cal-day-header { background:rgba(255,255,255,0.03); padding:0.6rem; text-align:center; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); }
+.cal-day { background:var(--navy2); min-height:80px; padding:0.5rem; font-size:0.8rem; transition:background 0.15s; }
+.cal-day:hover { background:rgba(255,255,255,0.03); }
+.cal-day.other-month { background:rgba(255,255,255,0.01); color:var(--text-muted); opacity:0.5; }
+.cal-day.today { background:rgba(37,99,235,0.08); outline:1px solid rgba(37,99,235,0.3); outline-offset:-1px; }
+.cal-day-num { font-weight:600; margin-bottom:0.25rem; color:var(--text-main); }
+.cal-day.today .cal-day-num { color:var(--blue-glow); }
+.cal-job-dot { background:rgba(37,99,235,0.3); color:var(--blue-glow); border:1px solid rgba(37,99,235,0.4); border-radius:4px; padding:1px 5px; font-size:0.65rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-/* MODAL */
-.modal-overlay { position:fixed; inset:0; background:rgba(44,26,14,0.55); z-index:500; display:flex; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(2px); }
-.modal { background:var(--white); border-radius:12px; width:100%; max-width:520px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; max-height:90vh; overflow:hidden; }
-.modal-header { display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.5rem; border-bottom:1px solid var(--border); background:var(--parchment); }
-.modal-title { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--soil); letter-spacing:0.06em; }
-.modal-close { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-muted); transition:color 0.15s; }
-.modal-close:hover { color:var(--text-main); }
+/* ── MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; display:flex; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+.modal { background:var(--navy2); border:1px solid var(--border); border-radius:16px; width:100%; max-width:520px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; max-height:90vh; overflow:hidden; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); }
+.modal-title { font-family:'Space Grotesk',sans-serif; font-size:1.2rem; color:var(--white); font-weight:700; }
+.modal-close { background:rgba(255,255,255,0.05); border:1px solid var(--border); width:32px; height:32px; border-radius:8px; font-size:1rem; cursor:pointer; color:var(--text-muted); transition:all 0.15s; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:rgba(255,255,255,0.1); color:var(--text-main); }
 .modal-body { padding:1.5rem; overflow-y:auto; display:flex; flex-direction:column; gap:1rem; }
-.modal-footer { padding:1rem 1.5rem; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:0.75rem; background:var(--parchment); }
+.modal-footer { padding:1rem 1.5rem; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:0.75rem; }
 
-/* FORMS */
-.form-group { display:flex; flex-direction:column; gap:0.35rem; }
-.form-label { font-size:0.8rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-muted); }
-.form-input,.form-select,.form-textarea { padding:0.6rem 0.85rem; border:1px solid var(--border); border-radius:var(--radius); background:var(--white); font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--text-main); outline:none; transition:border-color 0.15s; width:100%; }
-.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--moss); }
+/* ── FORMS ── */
+.form-group { display:flex; flex-direction:column; gap:0.4rem; }
+.form-label { font-size:0.75rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); }
+.form-input,.form-select,.form-textarea { padding:0.65rem 1rem; border:1px solid var(--border); border-radius:8px; background:rgba(255,255,255,0.04); font-family:'Inter',sans-serif; font-size:0.9rem; color:var(--text-main); outline:none; transition:border-color 0.15s, box-shadow 0.15s; width:100%; }
+.form-input::placeholder { color:var(--text-muted); }
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,0.15); }
+.form-select option { background:var(--navy2); }
 .form-textarea { resize:vertical; min-height:80px; }
 .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 
-/* TOAST */
-.toast { position:fixed; bottom:2rem; right:2rem; background:var(--bark); color:var(--cream); padding:0.75rem 1.4rem; border-radius:var(--radius); font-size:0.875rem; z-index:9999; box-shadow:var(--shadow-lg); animation:slideUp 0.25s ease; }
-.toast.error { background:#7f1d1d; }
-.toast.success { background:var(--moss); }
+/* ── TOAST ── */
+.toast { position:fixed; bottom:2rem; right:2rem; background:var(--navy3); color:var(--text-main); border:1px solid var(--border); padding:0.8rem 1.5rem; border-radius:10px; font-size:0.875rem; z-index:9999; box-shadow:var(--shadow-lg); animation:slideUp 0.25s ease; }
+.toast.error { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.4); color:#fca5a5; }
+.toast.success { background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.4); color:#86efac; }
 @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════════ LOGIN SCREEN ═══════════════════════ -->
+<!-- LOGIN -->
 <div id="login-screen" class="login-screen">
-  <div class="login-bg-texture"></div>
   <div class="login-card">
     <div class="login-logo">
-      <span class="logo-icon">⬡</span>
+      <div class="logo-mark">💧</div>
       <span class="logo-text">PROWASH</span>
     </div>
     <p class="login-tagline">Business Command Center</p>
     <div class="login-divider"></div>
-    <p class="login-desc">Sign in with your authorized Google account to access the dashboard.</p>
-    <button id="google-signin-btn" class="google-btn" onclick="handleSignIn()">
-      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    <p class="login-desc">Sign in with your authorized Google account to access your dashboard.</p>
+    <button class="google-btn" onclick="handleSignIn()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continue with Google
     </button>
     <p class="login-note" id="login-error"></p>
@@ -190,21 +201,24 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   <div class="login-footer">Access restricted to authorized users only.</div>
 </div>
 
-<!-- ═══════════════════════ APP SHELL ═══════════════════════ -->
+<!-- APP -->
 <div id="app" class="app hidden">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <span class="logo-icon">⬡</span>
+      <div class="logo-mark">💧</div>
       <span class="logo-text">PROWASH</span>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">◈</span> Overview</a>
-      <a class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-icon">◉</span> Jobs</a>
-      <a class="nav-item" data-page="customers" onclick="navigate('customers')"><span class="nav-icon">◎</span> Customers</a>
-      <a class="nav-item" data-page="invoices" onclick="navigate('invoices')"><span class="nav-icon">◇</span> Invoices</a>
-      <a class="nav-item" data-page="estimates" onclick="navigate('estimates')"><span class="nav-icon">◆</span> Estimates</a>
-      <a class="nav-item" data-page="schedule" onclick="navigate('schedule')"><span class="nav-icon">◫</span> Schedule</a>
-      <a class="nav-item" data-page="expenses" onclick="navigate('expenses')"><span class="nav-icon">◬</span> Expenses</a>
+      <div class="nav-label">Main</div>
+      <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">▪</span> Overview</a>
+      <a class="nav-item" data-page="jobs" onclick="navigate('jobs')"><span class="nav-icon">▪</span> Jobs</a>
+      <a class="nav-item" data-page="customers" onclick="navigate('customers')"><span class="nav-icon">▪</span> Customers</a>
+      <div class="nav-label" style="margin-top:0.5rem">Finance</div>
+      <a class="nav-item" data-page="invoices" onclick="navigate('invoices')"><span class="nav-icon">▪</span> Invoices</a>
+      <a class="nav-item" data-page="estimates" onclick="navigate('estimates')"><span class="nav-icon">▪</span> Estimates</a>
+      <a class="nav-item" data-page="expenses" onclick="navigate('expenses')"><span class="nav-icon">▪</span> Expenses</a>
+      <div class="nav-label" style="margin-top:0.5rem">Planning</div>
+      <a class="nav-item" data-page="schedule" onclick="navigate('schedule')"><span class="nav-icon">▪</span> Schedule</a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-chip">
@@ -219,7 +233,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status">● Synced</span>
+        <span class="sync-status" id="sync-status">● Live</span>
         <button class="action-btn primary" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -227,10 +241,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <!-- DASHBOARD -->
     <section id="page-dashboard" class="page active">
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" id="stat-revenue">$0</div><div class="stat-sub">This month</div></div>
-        <div class="stat-card"><div class="stat-label">Active Jobs</div><div class="stat-value" id="stat-jobs">0</div><div class="stat-sub">In progress</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue This Month</div><div class="stat-value" id="stat-revenue">$0</div><div class="stat-sub">Paid invoices</div></div>
+        <div class="stat-card"><div class="stat-label">Active Jobs</div><div class="stat-value" id="stat-jobs">0</div><div class="stat-sub">Scheduled + In Progress</div></div>
         <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value" id="stat-outstanding">$0</div><div class="stat-sub">Unpaid invoices</div></div>
-        <div class="stat-card"><div class="stat-label">Customers</div><div class="stat-value" id="stat-customers">0</div><div class="stat-sub">Total</div></div>
+        <div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value" id="stat-customers">0</div><div class="stat-sub">All time</div></div>
       </div>
       <div class="dash-grid">
         <div class="card"><div class="card-header">Recent Jobs</div><div id="dash-recent-jobs" class="table-wrap"><p class="empty-state">No jobs yet.</p></div></div>
@@ -246,46 +260,32 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
           <option value="">All Statuses</option><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option>
         </select>
       </div>
-      <div class="card">
-        <table class="data-table"><thead><tr><th>Job #</th><th>Customer</th><th>Service</th><th>Date</th><th>Status</th><th>Amount</th><th>Actions</th></tr></thead>
-        <tbody id="jobs-body"><tr><td colspan="7" class="empty-state">No jobs yet. Click + Add New.</td></tr></tbody></table>
-      </div>
+      <div class="card"><table class="data-table"><thead><tr><th>Job #</th><th>Customer</th><th>Service</th><th>Date</th><th>Status</th><th>Amount</th><th>Actions</th></tr></thead>
+      <tbody id="jobs-body"><tr><td colspan="7" class="empty-state">No jobs yet. Click + Add New.</td></tr></tbody></table></div>
     </section>
 
     <!-- CUSTOMERS -->
     <section id="page-customers" class="page">
-      <div class="filter-bar">
-        <input type="text" class="search-input" placeholder="Search customers..." oninput="filterTable('customers', this.value)" />
-      </div>
-      <div class="card">
-        <table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Total Jobs</th><th>Actions</th></tr></thead>
-        <tbody id="customers-body"><tr><td colspan="6" class="empty-state">No customers yet. Click + Add New.</td></tr></tbody></table>
-      </div>
+      <div class="filter-bar"><input type="text" class="search-input" placeholder="Search customers..." oninput="filterTable('customers', this.value)" /></div>
+      <div class="card"><table class="data-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Total Jobs</th><th>Actions</th></tr></thead>
+      <tbody id="customers-body"><tr><td colspan="6" class="empty-state">No customers yet.</td></tr></tbody></table></div>
     </section>
 
     <!-- INVOICES -->
     <section id="page-invoices" class="page">
       <div class="filter-bar">
         <input type="text" class="search-input" placeholder="Search invoices..." oninput="filterTable('invoices', this.value)" />
-        <select class="filter-select" onchange="filterByStatus('invoices', this.value)">
-          <option value="">All</option><option>Unpaid</option><option>Paid</option><option>Overdue</option>
-        </select>
+        <select class="filter-select" onchange="filterByStatus('invoices', this.value)"><option value="">All</option><option>Unpaid</option><option>Paid</option><option>Overdue</option></select>
       </div>
-      <div class="card">
-        <table class="data-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="invoices-body"><tr><td colspan="7" class="empty-state">No invoices yet. Click + Add New.</td></tr></tbody></table>
-      </div>
+      <div class="card"><table class="data-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="invoices-body"><tr><td colspan="7" class="empty-state">No invoices yet.</td></tr></tbody></table></div>
     </section>
 
     <!-- ESTIMATES -->
     <section id="page-estimates" class="page">
-      <div class="filter-bar">
-        <input type="text" class="search-input" placeholder="Search estimates..." oninput="filterTable('estimates', this.value)" />
-      </div>
-      <div class="card">
-        <table class="data-table"><thead><tr><th>Estimate #</th><th>Customer</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="estimates-body"><tr><td colspan="7" class="empty-state">No estimates yet. Click + Add New.</td></tr></tbody></table>
-      </div>
+      <div class="filter-bar"><input type="text" class="search-input" placeholder="Search estimates..." oninput="filterTable('estimates', this.value)" /></div>
+      <div class="card"><table class="data-table"><thead><tr><th>Estimate #</th><th>Customer</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="estimates-body"><tr><td colspan="7" class="empty-state">No estimates yet.</td></tr></tbody></table></div>
     </section>
 
     <!-- SCHEDULE -->
@@ -297,7 +297,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       </div>
       <div class="card"><div class="calendar-grid" id="calendar-grid"></div></div>
       <div class="card" style="margin-top:1rem;">
-        <div class="card-header">Scheduled Jobs This Month</div>
+        <div class="card-header">Jobs This Month</div>
         <table class="data-table"><thead><tr><th>Date</th><th>Customer</th><th>Service</th><th>Status</th></tr></thead>
         <tbody id="schedule-body"><tr><td colspan="4" class="empty-state">No scheduled jobs.</td></tr></tbody></table>
       </div>
@@ -307,18 +307,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     <section id="page-expenses" class="page">
       <div class="filter-bar">
         <input type="text" class="search-input" placeholder="Search expenses..." oninput="filterTable('expenses', this.value)" />
-        <select class="filter-select" onchange="filterByStatus('expenses', this.value)">
-          <option value="">All Categories</option><option>Fuel</option><option>Equipment</option><option>Supplies</option><option>Marketing</option><option>Other</option>
-        </select>
+        <select class="filter-select" onchange="filterByStatus('expenses', this.value)"><option value="">All Categories</option><option>Fuel</option><option>Equipment</option><option>Supplies</option><option>Marketing</option><option>Other</option></select>
       </div>
       <div class="stat-grid" style="margin-bottom:1rem;">
         <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-value" id="stat-total-expenses">$0</div><div class="stat-sub">All time</div></div>
         <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value" id="stat-month-expenses">$0</div><div class="stat-sub">Current month</div></div>
       </div>
-      <div class="card">
-        <table class="data-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Actions</th></tr></thead>
-        <tbody id="expenses-body"><tr><td colspan="5" class="empty-state">No expenses yet. Click + Add New.</td></tr></tbody></table>
-      </div>
+      <div class="card"><table class="data-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Actions</th></tr></thead>
+      <tbody id="expenses-body"><tr><td colspan="5" class="empty-state">No expenses yet.</td></tr></tbody></table></div>
     </section>
   </main>
 </div>
@@ -326,43 +322,25 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <!-- MODAL -->
 <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal(event)">
   <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modal-title">Add New</h2>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
+    <div class="modal-header"><h2 class="modal-title" id="modal-title">Add New</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body" id="modal-body"></div>
-    <div class="modal-footer">
-      <button class="action-btn" onclick="closeModal()">Cancel</button>
-      <button class="action-btn primary" onclick="saveRecord()">Save</button>
-    </div>
+    <div class="modal-footer"><button class="action-btn" onclick="closeModal()">Cancel</button><button class="action-btn primary" onclick="saveRecord()">Save</button></div>
   </div>
 </div>
-
-<!-- TOAST -->
 <div id="toast" class="toast hidden"></div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-// ════════════════════════════════════════════════════════
-//  !! FILL IN YOUR CREDENTIALS BELOW BEFORE UPLOADING !!
-// ════════════════════════════════════════════════════════
 const CONFIG = {
   GOOGLE_CLIENT_ID: "488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.apps.googleusercontent.com",
   AUTHORIZED_EMAIL: "jamesfreeman8000@gmail.com",
   SPREADSHEET_ID:   "1f7zba8rYUiDLuBgcwErBYXuZ2Y2rZIG2iD-SulF3z7w",
   API_KEY:          "AIzaSyCsu0sSQL_a9Klef5iXgwA__S7H3q_VvnQ",
 };
-// ════════════════════════════════════════════════════════
 
-/* ── STATE ── */
-let accessToken = null;
-let currentPage = 'dashboard';
-let editingRow  = null;
-let calMonth    = new Date().getMonth();
-let calYear     = new Date().getFullYear();
-
+let accessToken = null, currentPage = 'dashboard', editingRow = null;
+let calMonth = new Date().getMonth(), calYear = new Date().getFullYear();
 const cache = { Jobs:[], Customers:[], Invoices:[], Estimates:[], Schedule:[], Expenses:[] };
-
 const SHEETS = {
   Jobs:      ['Job #','Customer','Service','Date','Status','Amount','Notes'],
   Customers: ['Name','Phone','Email','Address','Notes'],
@@ -372,7 +350,6 @@ const SHEETS = {
   Expenses:  ['Date','Description','Category','Amount'],
 };
 
-/* ── AUTH ── */
 function handleSignIn() {
   const client = google.accounts.oauth2.initTokenClient({
     client_id: CONFIG.GOOGLE_CLIENT_ID,
@@ -408,7 +385,6 @@ function handleSignOut() {
   document.getElementById('login-error').textContent = '';
 }
 
-/* ── SHEETS API ── */
 const BASE = () => `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}`;
 const hdrs = () => ({ 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' });
 
@@ -432,7 +408,7 @@ async function readSheet(name) {
   return rows.slice(1).map((row, i) => {
     const obj = {};
     SHEETS[name].forEach((col, ci) => { obj[col] = row[ci] || ''; });
-    obj._rowIndex = i + 2; // 1-based + skip header
+    obj._rowIndex = i + 2;
     return obj;
   });
 }
@@ -461,17 +437,16 @@ async function writeRow(name, rowNum, values) {
 function colLetter(n) { let s=''; while(n>0){s=String.fromCharCode(64+(n%26||26))+s;n=Math.floor((n-1)/26);}return s; }
 
 async function loadAllData() {
-  setSyncStatus('⟳ Loading...');
+  setSyncStatus('⟳ Syncing...');
   try {
     const [j,c,i,e,s,x] = await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Estimates'),readSheet('Schedule'),readSheet('Expenses')]);
     cache.Jobs=j; cache.Customers=c; cache.Invoices=i; cache.Estimates=e; cache.Schedule=s; cache.Expenses=x;
-    setSyncStatus('● Synced');
-  } catch(e) { setSyncStatus('✕ Sync error'); console.error(e); }
+    setSyncStatus('● Live');
+  } catch(e) { setSyncStatus('✕ Error'); console.error(e); }
 }
 
 function setSyncStatus(m) { document.getElementById('sync-status').textContent = m; }
 
-/* ── NAV ── */
 const PAGE_TITLES = { dashboard:'Overview', jobs:'Jobs', customers:'Customers', invoices:'Invoices', estimates:'Estimates', schedule:'Schedule', expenses:'Expenses' };
 
 function navigate(page) {
@@ -489,10 +464,8 @@ function renderPage(page) {
   if (map[page]) map[page]();
 }
 
-/* ── DASHBOARD ── */
 function renderDashboard() {
-  const now = new Date();
-  const mo = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const now = new Date(), mo = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const revenue = cache.Invoices.filter(i=>i['Status']==='Paid'&&(i['Date']||'').startsWith(mo)).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
   const activeJobs = cache.Jobs.filter(j=>['Scheduled','In Progress'].includes(j['Status'])).length;
   const outstanding = cache.Invoices.filter(i=>['Unpaid','Overdue'].includes(i['Status'])).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
@@ -500,17 +473,14 @@ function renderDashboard() {
   document.getElementById('stat-jobs').textContent = activeJobs;
   document.getElementById('stat-outstanding').textContent = '$'+outstanding.toFixed(2);
   document.getElementById('stat-customers').textContent = cache.Customers.length;
-
-  const rj = document.getElementById('dash-recent-jobs');
   const recentJobs = [...cache.Jobs].reverse().slice(0,5);
+  const rj = document.getElementById('dash-recent-jobs');
   rj.innerHTML = recentJobs.length ? `<table class="data-table"><thead><tr><th>Job #</th><th>Customer</th><th>Service</th><th>Status</th><th>Amount</th></tr></thead><tbody>${recentJobs.map(j=>`<tr><td>${j['Job #']}</td><td>${j['Customer']}</td><td>${j['Service']}</td><td>${badge(j['Status'])}</td><td>$${parseFloat(j['Amount']||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>` : '<p class="empty-state">No jobs yet.</p>';
-
   const upcoming = cache.Schedule.filter(s=>s['Date']>=now.toISOString().slice(0,10)&&s['Status']!=='Cancelled').sort((a,b)=>a['Date'].localeCompare(b['Date'])).slice(0,5);
   const up = document.getElementById('dash-upcoming');
   up.innerHTML = upcoming.length ? `<table class="data-table"><thead><tr><th>Date</th><th>Customer</th><th>Service</th></tr></thead><tbody>${upcoming.map(s=>`<tr><td>${s['Date']}</td><td>${s['Customer']}</td><td>${s['Service']}</td></tr>`).join('')}</tbody></table>` : '<p class="empty-state">Nothing scheduled.</p>';
 }
 
-/* ── TABLES ── */
 function renderTable(page, filterText='', filterStatus='') {
   const cfgs = {
     jobs:      { sheet:'Jobs',      body:'jobs-body',      statusCol:'Status',   render:r=>`<td>${r['Job #']}</td><td>${r['Customer']}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>${badge(r['Status'])}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td>` },
@@ -535,17 +505,13 @@ function renderTable(page, filterText='', filterStatus='') {
 function filterTable(page, val) { renderTable(page, val); }
 function filterByStatus(page, val) { renderTable(page, '', val); }
 
-/* ── SCHEDULE ── */
 function renderSchedule() { renderCalendar(); renderScheduleList(); }
-
 function renderCalendar() {
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-month-label').textContent = `${months[calMonth]} ${calYear}`;
-  const firstDay = new Date(calYear,calMonth,1).getDay();
-  const daysInMonth = new Date(calYear,calMonth+1,0).getDate();
+  const firstDay = new Date(calYear,calMonth,1).getDay(), daysInMonth = new Date(calYear,calMonth+1,0).getDate();
   const todayStr = new Date().toISOString().slice(0,10);
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  let html = days.map(d=>`<div class="cal-day-header">${d}</div>`).join('');
+  let html = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-day-header">${d}</div>`).join('');
   for (let i=0;i<firstDay;i++) html+=`<div class="cal-day other-month"></div>`;
   for (let d=1;d<=daysInMonth;d++) {
     const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -554,19 +520,15 @@ function renderCalendar() {
   }
   document.getElementById('calendar-grid').innerHTML = html;
 }
-
 function renderScheduleList() {
   const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
   const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>a['Date'].localeCompare(b['Date']));
-  document.getElementById('schedule-body').innerHTML = jobs.length ? jobs.map(s=>`<tr><td>${s['Date']}</td><td>${s['Customer']}</td><td>${s['Service']}</td><td>${badge(s['Status'])}</td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No jobs scheduled this month.</td></tr>`;
+  document.getElementById('schedule-body').innerHTML = jobs.length ? jobs.map(s=>`<tr><td>${s['Date']}</td><td>${s['Customer']}</td><td>${s['Service']}</td><td>${badge(s['Status'])}</td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No jobs this month.</td></tr>`;
 }
-
 function prevMonth() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderSchedule(); }
 function nextMonth() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderSchedule(); }
 
-/* ── MODALS ── */
 const PAGE_TO_SHEET = { jobs:'Jobs', customers:'Customers', invoices:'Invoices', estimates:'Estimates', schedule:'Schedule', expenses:'Expenses', dashboard:'Jobs' };
-
 const FORMS = {
   Jobs: ()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Customers: ()=>`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="Name" placeholder="Jane Smith" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="(555) 000-0000" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="Email" placeholder="jane@email.com" /></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" placeholder="123 Main St, City, State" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
@@ -583,7 +545,6 @@ function openAddModal() {
   document.getElementById('modal-body').innerHTML = FORMS[sheet]();
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
-
 function openEditModal(sheet, rowIndex) {
   const rec = cache[sheet].find(r=>r._rowIndex===rowIndex);
   if (!rec) return;
@@ -593,7 +554,6 @@ function openEditModal(sheet, rowIndex) {
   document.getElementById('modal-overlay').classList.remove('hidden');
   SHEETS[sheet].forEach(col => { const el=document.querySelector(`[name="${col}"]`); if(el) el.value=rec[col]||''; });
 }
-
 async function saveRecord() {
   const sheet = editingRow ? editingRow.sheet : PAGE_TO_SHEET[currentPage];
   const values = SHEETS[sheet].map(col => { const el=document.querySelector(`[name="${col}"]`); return el?el.value.trim():''; });
@@ -601,55 +561,42 @@ async function saveRecord() {
   try {
     if (editingRow) { await updateRow(sheet, editingRow.rowIndex, values); showToast('Record updated!','success'); }
     else { await appendRow(sheet, values); showToast('Record added!','success'); }
-    closeModal();
-    await loadAllData();
-    renderPage(currentPage);
+    closeModal(); await loadAllData(); renderPage(currentPage);
   } catch(e) { showToast('Save failed. Check your config.','error'); setSyncStatus('✕ Error'); console.error(e); }
 }
-
 async function confirmDelete(sheet, rowIndex) {
   if (!confirm('Delete this record? This cannot be undone.')) return;
   setSyncStatus('⟳ Deleting...');
   try { await deleteRow(sheet, rowIndex); showToast('Deleted.','success'); await loadAllData(); renderPage(currentPage); }
   catch(e) { showToast('Delete failed.','error'); console.error(e); }
 }
-
 function closeModal(e) {
   if (e && e.target !== document.getElementById('modal-overlay')) return;
   document.getElementById('modal-overlay').classList.add('hidden');
   editingRow = null;
 }
 
-/* ── HELPERS ── */
 function badge(status) {
   const map = { 'Scheduled':'scheduled','In Progress':'inprogress','Completed':'completed','Cancelled':'cancelled','Paid':'paid','Unpaid':'unpaid','Overdue':'overdue','Sent':'sent','Draft':'draft','Accepted':'accepted','Declined':'cancelled' };
   return `<span class="badge badge-${map[status]||'draft'}">${status||'—'}</span>`;
 }
-
 function tod() { return new Date().toISOString().slice(0,10); }
-
 function custSelect(name) {
   const opts = cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('');
   return `<select class="form-select" name="${name}"><option value="">— Select Customer —</option>${opts}</select><input class="form-input" name="${name}_manual" placeholder="Or type name directly" style="margin-top:0.4rem" />`;
 }
-
-function svcOpts() {
-  return ['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'].map(s=>`<option>${s}</option>`).join('');
-}
-
+function svcOpts() { return ['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'].map(s=>`<option>${s}</option>`).join(''); }
 function nextId(col, sheet, prefix) {
   const rows = cache[sheet]||[];
   if (!rows.length) return `${prefix}-001`;
   const next = Math.max(...rows.map(r=>parseInt((r[col]||'').replace(/\D/g,''))||0))+1;
   return `${prefix}-${String(next).padStart(3,'0')}`;
 }
-
 function showToast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent=msg; t.className=`toast ${type}`; t.classList.remove('hidden');
   setTimeout(()=>t.classList.add('hidden'),3000);
 }
-
 function showError(msg) { const el=document.getElementById('login-error'); if(el) el.textContent=msg; }
 </script>
 </body>
