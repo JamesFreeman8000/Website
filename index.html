@@ -418,27 +418,44 @@ const cache={Jobs:[],Customers:[],Invoices:[],Estimates:[],Schedule:[],Expenses:
 const SHEETS={Jobs:['Job #','Customer','Service','Date','Status','Amount','Notes'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Service','Date','Amount','Status','Notes'],Schedule:['Date','Customer','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
 
 // Restore session on page load
+// Wait until the Google Identity script is fully loaded before using it
+function whenGoogleReady(cb,tries=0){
+  if(window.google && google.accounts && google.accounts.oauth2){cb();return;}
+  if(tries>50){console.error('Google Identity script failed to load');return;}
+  setTimeout(()=>whenGoogleReady(cb,tries+1),100);
+}
+
 window.addEventListener('load',()=>{
-  // Init token client early so silent refresh works
-  tokenClient=google.accounts.oauth2.initTokenClient({
-    client_id:CONFIG.GOOGLE_CLIENT_ID,
-    scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-    callback:()=>{}
-  });
-  // Restore saved session
-  const saved=sessionStorage.getItem('hydro_session');
-  if(!saved) return;
-  try{
-    const s=JSON.parse(saved);
-    if(!s.token||!s.name) return;
+  whenGoogleReady(()=>{
+    // Init token client so login + silent refresh both work
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CONFIG.GOOGLE_CLIENT_ID,
+      scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+      callback:()=>{}
+    });
+    // Try to restore a saved session
+    const saved=sessionStorage.getItem('hydro_session');
+    if(!saved) return;
+    let s;
+    try{ s=JSON.parse(saved); }catch(e){ sessionStorage.removeItem('hydro_session'); return; }
+    if(!s||!s.token||!s.name){ sessionStorage.removeItem('hydro_session'); return; }
     accessToken=s.token;
     document.getElementById('user-avatar').src=s.avatar||'';
     document.getElementById('user-name').textContent=s.name;
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     startAutoRefresh();
-    ensureSheetsExist().then(()=>loadAllData().then(()=>renderPage(currentPage)));
-  }catch(e){sessionStorage.removeItem('hydro_session');}
+    // Load data — sheetsGet auto-refreshes the token if it has expired
+    ensureSheetsExist().then(()=>loadAllData()).then(()=>renderPage(currentPage)).catch(e=>{
+      console.error('Session data load failed:',e);
+      // Token likely expired & silent refresh failed — send back to login
+      sessionStorage.removeItem('hydro_session');
+      accessToken=null;
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-error').textContent='Your session expired. Please sign in again.';
+    });
+  });
 });
 
 // US Federal Holidays — floating ones calculated correctly each year
@@ -512,12 +529,15 @@ async function refreshTokenAndRetry(fn){
   return new Promise((resolve,reject)=>{
     if(!tokenClient){reject(new Error('No token client'));return;}
     const prev=tokenClient.callback;
+    let done=false;
+    // If silent refresh doesn't respond in 8s, give up and ask for fresh sign-in
+    const timer=setTimeout(()=>{ if(!done){done=true;tokenClient.callback=prev;reject(new Error('refresh timeout'));} },8000);
     tokenClient.callback=(resp)=>{
+      if(done)return; done=true; clearTimeout(timer);
       tokenClient.callback=prev;
       if(resp.error){reject(new Error(resp.error));return;}
       accessToken=resp.access_token;
-      const s=JSON.parse(sessionStorage.getItem('hydro_session')||'{}');
-      s.token=accessToken;sessionStorage.setItem('hydro_session',JSON.stringify(s));
+      try{const s=JSON.parse(sessionStorage.getItem('hydro_session')||'{}');s.token=accessToken;sessionStorage.setItem('hydro_session',JSON.stringify(s));}catch(e){}
       fn().then(resolve).catch(reject);
     };
     tokenClient.requestAccessToken({prompt:''});
@@ -529,13 +549,14 @@ const BASE=()=>`https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHE
 const hdrs=()=>({'Authorization':`Bearer ${accessToken}`,'Content-Type':'application/json'});
 
 async function ensureSheetsExist(){
-  try{const r=await fetch(`${BASE()}?key=${CONFIG.API_KEY}`,{headers:hdrs()});const d=await r.json();
+  try{
+  const d=await sheetsGet(`${BASE()}?key=${CONFIG.API_KEY}`);
   const existing=(d.sheets||[]).map(s=>s.properties.title);
   const toCreate=Object.keys(SHEETS).filter(n=>!existing.includes(n));
   if(!toCreate.length)return;
-  await fetch(`${BASE()}:batchUpdate`,{method:'POST',headers:hdrs(),body:JSON.stringify({requests:toCreate.map(t=>({addSheet:{properties:{title:t}}}))})});
+  await sheetsPost(`${BASE()}:batchUpdate`,{requests:toCreate.map(t=>({addSheet:{properties:{title:t}}}))});
   for(const n of toCreate)await writeRow(n,1,SHEETS[n]);
-  }catch(e){console.error(e);}
+  }catch(e){console.error('ensureSheetsExist:',e);}
 }
 async function sheetsGet(url){
   let r=await fetch(url,{headers:hdrs()});
