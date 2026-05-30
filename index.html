@@ -151,10 +151,71 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .top-list li{display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border-radius:6px;font-size:0.85rem;}
 .top-list li .rank{width:20px;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);}
 .top-list li .val{font-family:'Space Grotesk',sans-serif;font-size:0.9rem;color:var(--cyan);font-weight:600;}
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--navy3);color:var(--text-main);border:1px solid var(--border);padding:0.8rem 1.5rem;border-radius:10px;font-size:0.875rem;z-index:9999;box-shadow:var(--shadow-lg);animation:slideUp 0.25s ease;}
+.dash-list{list-style:none;padding:0;margin:0;}
+.dash-list li{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--border-lt);gap:0.75rem;flex-wrap:nowrap;}
+.dash-list li:last-child{border-bottom:none;}
+.dash-list li:hover{background:rgba(255,255,255,0.03);}
+.dash-list-left{display:flex;flex-direction:column;gap:0.2rem;min-width:0;flex:1;}
+.dash-list-name{font-size:0.875rem;font-weight:500;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-list-sub{font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-list-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem;flex-shrink:0;}
+.dash-list-amount{font-family:'Space Grotesk',sans-serif;font-size:0.9rem;font-weight:600;color:var(--white);}
+.dash-list-date{font-size:0.72rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+.toast{position:fixed;bottom:2rem;right:2rem;.toast{position:fixed;bottom:2rem;right:2rem;background:var(--navy3);color:var(--text-main);border:1px solid var(--border);padding:0.8rem 1.5rem;border-radius:10px;font-size:0.875rem;z-index:9999;box-shadow:var(--shadow-lg);animation:slideUp 0.25s ease;}
 .toast.error{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#fca5a5;}
 .toast.success{background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.4);color:#86efac;}
 @keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══════════════════════════════
+   RESPONSIVE / MOBILE
+══════════════════════════════ */
+.hamburger{display:none;position:fixed;top:0.85rem;left:0.85rem;z-index:300;width:38px;height:38px;background:var(--navy2);border:1px solid var(--border);border-radius:8px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;}
+.hamburger span{display:block;width:18px;height:2px;background:var(--text-main);border-radius:2px;transition:all 0.25s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99;backdrop-filter:blur(2px);}
+.sidebar-overlay.visible{display:block;}
+
+@media(max-width:768px){
+  :root{--sidebar-w:230px;}
+  .hamburger{display:flex;}
+  .sidebar{transform:translateX(-100%);transition:transform 0.25s ease;top:0;}
+  .sidebar.open{transform:translateX(0);}
+  .main-content{margin-left:0;padding:4rem 1rem 2rem;}
+  .top-bar{margin-top:0.5rem;}
+  .page-title{font-size:1.4rem;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .dash-grid{grid-template-columns:1fr;}
+  .analytics-grid{grid-template-columns:1fr!important;}
+  .analytics-grid.three{grid-template-columns:1fr!important;}
+  .analytics-grid > .chart-card[style*="grid-column:span 2"]{grid-column:span 1!important;}
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .filter-bar{flex-direction:column;}
+  .search-input{min-width:unset;width:100%;}
+  .filter-select{width:100%;}
+  .form-row{grid-template-columns:1fr;}
+  .top-actions{gap:0.5rem;}
+  .action-btn.primary{padding:0.5rem 0.85rem;font-size:0.8rem;}
+  .sync-status{display:none;}
+  .cal-day{min-height:56px;font-size:0.7rem;padding:0.3rem;}
+  .cal-holiday{display:none;}
+  .modal{max-height:95vh;}
+  .chart-wrap{height:180px;}
+  .chart-wrap.tall{height:200px;}
+}
+
+@media(max-width:480px){
+  .stat-grid{grid-template-columns:1fr;}
+  .kpi-row{grid-template-columns:1fr;}
+  .main-content{padding:4rem 0.75rem 2rem;}
+  .data-table th,.data-table td{padding:0.6rem 0.75rem;font-size:0.78rem;}
+  .top-bar{gap:0.5rem;}
+}
+
+/* Always allow tables to scroll horizontally on small screens */
+.card{overflow:hidden;}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   </style>
 </head>
 <body>
@@ -181,8 +242,12 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 </div>
 
 <!-- APP -->
+<button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div id="app" class="app hidden">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="logo-mark">💧</div>
       <div class="brand-text">
@@ -524,9 +589,9 @@ function renderDashboard(){
   document.getElementById('stat-outstanding').textContent='$'+cache.Invoices.filter(i=>['Unpaid','Overdue'].includes(i['Status'])).reduce((s,i)=>s+parseFloat(i['Amount']||0),0).toFixed(2);
   document.getElementById('stat-customers').textContent=cache.Customers.length;
   const recentJobs=[...cache.Jobs].reverse().slice(0,5);
-  document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<table class="data-table"><thead><tr><th>Job #</th><th>Customer</th><th>Service</th><th>Status</th><th>Amount</th></tr></thead><tbody>${recentJobs.map(j=>`<tr><td>${j['Job #']}</td><td>${j['Customer']}</td><td>${j['Service']}</td><td>${badge(j['Status'])}</td><td>$${parseFloat(j['Amount']||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty-state">No jobs yet.</p>';
+  document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<ul class="dash-list">${recentJobs.map(j=>`<li><div class="dash-list-left"><div class="dash-list-name">${j['Customer']}</div><div class="dash-list-sub">${j['Service']} &middot; ${j['Job #']}</div></div><div class="dash-list-right"><div class="dash-list-amount">$${parseFloat(j['Amount']||0).toFixed(2)}</div>${badge(j['Status'])}</div></li>`).join('')}</ul>`:'<p class="empty-state">No jobs yet.</p>';
   const upcoming=cache.Schedule.filter(s=>s['Date']>=now.toISOString().slice(0,10)&&s['Status']!=='Cancelled').sort((a,b)=>a['Date'].localeCompare(b['Date'])).slice(0,5);
-  document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<table class="data-table"><thead><tr><th>Date</th><th>Customer</th><th>Service</th></tr></thead><tbody>${upcoming.map(s=>`<tr><td>${s['Date']}</td><td>${s['Customer']}</td><td>${s['Service']}</td></tr>`).join('')}</tbody></table>`:'<p class="empty-state">Nothing scheduled.</p>';
+  document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<ul class="dash-list">${upcoming.map(s=>`<li><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-date">${s['Date']}</div></div></li>`).join('')}</ul>`:'<p class="empty-state">Nothing scheduled.</p>';
 }
 
 function renderTable(page,filterText='',filterStatus=''){
@@ -752,6 +817,25 @@ function svcOpts(){return['House Wash','Driveway Wash','Deck/Patio Wash','Fence 
 function nextId(col,sheet,prefix){const rows=cache[sheet]||[];if(!rows.length)return `${prefix}-001`;const next=Math.max(...rows.map(r=>parseInt((r[col]||'').replace(/\D/g,''))||0))+1;return `${prefix}-${String(next).padStart(3,'0')}`;}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3000);}
 function showError(msg){const el=document.getElementById('login-error');if(el)el.textContent=msg;}
+
+// ── MOBILE SIDEBAR ──
+function toggleSidebar(){
+  const sidebar=document.getElementById('sidebar');
+  const btn=document.getElementById('hamburger-btn');
+  const overlay=document.getElementById('sidebar-overlay');
+  const isOpen=sidebar.classList.toggle('open');
+  btn.classList.toggle('open',isOpen);
+  overlay.classList.toggle('visible',isOpen);
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('hamburger-btn').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
+// Close sidebar on nav click on mobile
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click',()=>{ if(window.innerWidth<=768) closeSidebar(); });
+});
 </script>
 </body>
 </html>
