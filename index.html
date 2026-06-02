@@ -176,21 +176,23 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 
 /* MEASURE PAGE */
 .measure-search-bar{display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;}
-.measure-layout{display:grid;grid-template-columns:1fr 320px;gap:1rem;align-items:start;}
+.measure-layout{display:grid;grid-template-columns:1fr 320px;gap:1.25rem;align-items:start;}
 @media(max-width:1000px){.measure-layout{grid-template-columns:1fr;}}
 .measure-map-col{min-width:0;}
-.measure-map{width:100%;height:460px;border-radius:var(--radius);border:1px solid var(--border);background:var(--navy2);}
-.measure-toolbar{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:0.6rem 0.8rem;}
-.measure-tool-label{font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);}
-.measure-tool-btn{padding:0.4rem 0.8rem;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.15s;}
+.measure-map{width:100%;height:460px;border-radius:var(--radius);border:1px solid var(--border);background:var(--navy2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.9rem;}
+.measure-toolbar{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:0.7rem 0.9rem;}
+.measure-tool-label{font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+.measure-tool-btn{padding:0.45rem 0.85rem;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
 .measure-tool-btn:hover{background:rgba(255,255,255,0.06);color:var(--text-main);}
 .measure-tool-btn.active{background:rgba(37,99,235,0.2);color:var(--blue-glow);border-color:rgba(37,99,235,0.4);}
 .measure-pitch{display:flex;align-items:center;gap:0.5rem;margin-left:auto;}
+@media(max-width:560px){.measure-pitch{margin-left:0;width:100%;}.measure-pitch .filter-select{flex:1;}}
 .measure-pitch .filter-select{padding:0.4rem 0.6rem;font-size:0.82rem;}
-.measure-actions{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem;}
+.measure-actions{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.7rem;}
+.measure-actions .action-btn{flex:1;min-width:130px;}
 .danger-outline{color:#f87171;border-color:rgba(239,68,68,0.3);}
 .danger-outline:hover{background:rgba(239,68,68,0.1);}
-.measure-hint{font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;line-height:1.5;}
+.measure-hint{font-size:0.78rem;color:var(--text-muted);margin-top:0.7rem;line-height:1.5;}
 .measure-result-item{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;border-bottom:1px solid var(--border-lt);gap:0.5rem;}
 .measure-result-item:last-child{border-bottom:none;}
 .measure-result-left{display:flex;flex-direction:column;gap:0.15rem;min-width:0;}
@@ -421,7 +423,7 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
       </div>
       <div class="measure-layout">
         <div class="measure-map-col">
-          <div id="map" class="measure-map"></div>
+          <div id="map" class="measure-map">Loading map…</div>
           <div class="measure-toolbar">
             <span class="measure-tool-label">Measuring:</span>
             <button class="measure-tool-btn active" data-tool="Roof" onclick="setMeasureType('Roof')">🏠 Roof</button>
@@ -979,6 +981,8 @@ function buildMap(MapClass){
   updatePitchVisibility();
   // Recalc size after layout settles
   setTimeout(()=>{ if(measureMap){ google.maps.event.trigger(measureMap,'resize'); measureMap.setCenter({lat:39.6626,lng:-75.0935}); } }, 350);
+  // If the user searched before the map was ready, run that search now
+  if(pendingSearchAddr){ const a=pendingSearchAddr; pendingSearchAddr=null; setTimeout(()=>runGeocode(a),400); }
 }
 
 function setMeasureType(type){
@@ -990,10 +994,22 @@ function updatePitchVisibility(){
   document.getElementById('measure-pitch-wrap').style.display = measureType==='Roof' ? 'flex' : 'none';
 }
 
+let pendingSearchAddr=null;
+
 function goToAddress(){
   const addr=document.getElementById('measure-address').value.trim();
   if(!addr) return;
-  if(!mapsLoaded){ showToast('Map still loading, try again in a sec...',''); return; }
+  if(!mapsLoaded){
+    // Map still loading — remember the address and run it as soon as the map is ready
+    pendingSearchAddr=addr;
+    showToast('Map is still loading — your search will run in a moment…','');
+    initMeasurePage();
+    return;
+  }
+  runGeocode(addr);
+}
+
+function runGeocode(addr){
   const geocoder=new google.maps.Geocoder();
   geocoder.geocode({address:addr},(results,status)=>{
     if(status==='OK'&&results[0]){
