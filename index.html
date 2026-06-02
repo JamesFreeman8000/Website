@@ -935,7 +935,7 @@ function initMeasurePage(){
   if(mapsLoaded){ if(measureMap) google.maps.event.trigger(measureMap,'resize'); return; }
   // Load the Maps JS script once
   const s=document.createElement('script');
-  s.src=`https://maps.googleapis.com/maps/api/js?key=${CONFIG.MAPS_API_KEY}&libraries=geometry&callback=onMapsReady`;
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${CONFIG.MAPS_API_KEY}&libraries=geometry&loading=async&callback=onMapsReady`;
   s.async=true; s.defer=true;
   s.onerror=()=>{document.getElementById('map').innerHTML='<div style="padding:2rem;color:#f87171;text-align:center;">Could not load Google Maps. Check that the Maps JavaScript API is enabled and your key allows this site.</div>';};
   document.head.appendChild(s);
@@ -951,6 +951,8 @@ window.onMapsReady=function(){
   });
   measureMap.addListener('click',(e)=>addPoint(e.latLng));
   updatePitchVisibility();
+  // Nudge the map to recalc its size in case the container was hidden when created
+  setTimeout(()=>{ if(measureMap){ google.maps.event.trigger(measureMap,'resize'); measureMap.setCenter({lat:39.6626,lng:-75.0935}); } }, 300);
 };
 
 function setMeasureType(type){
