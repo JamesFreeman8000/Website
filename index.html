@@ -204,6 +204,35 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .measure-totals{padding:0.9rem 1.25rem;border-top:1px solid var(--border);background:rgba(255,255,255,0.02);}
 .measure-total-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:0.2rem 0;}
 .measure-total-row.grand{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:700;color:var(--white);border-top:1px solid var(--border-lt);margin-top:0.4rem;padding-top:0.5rem;}
+.service-checks{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;}
+@media(max-width:560px){.service-checks{grid-template-columns:1fr;}}
+.svc-check{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.7rem;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:0.85rem;color:var(--text-main);transition:all 0.15s;background:rgba(255,255,255,0.02);}
+.svc-check:hover{border-color:rgba(37,99,235,0.4);background:rgba(37,99,235,0.06);}
+.svc-check input{accent-color:var(--blue);width:16px;height:16px;cursor:pointer;}
+.svc-check input:checked + span{color:var(--blue-glow);font-weight:500;}
+/* CUSTOMER DETAIL */
+.cd-contact{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;}
+.cd-contact-item{display:inline-flex;align-items:center;gap:0.3rem;padding:0.4rem 0.7rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;font-size:0.82rem;color:var(--text-main);text-decoration:none;}
+a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
+.cd-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:1rem;}
+@media(max-width:560px){.cd-stats{grid-template-columns:1fr 1fr;}}
+.cd-stat{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:0.7rem;text-align:center;}
+.cd-stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white);line-height:1;}
+.cd-stat-lbl{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-top:0.3rem;}
+.cd-notes{font-size:0.82rem;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:7px;padding:0.6rem 0.8rem;margin-bottom:1rem;line-height:1.5;}
+.cd-section-label{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.6rem;}
+.cd-properties{display:flex;flex-direction:column;gap:0.8rem;}
+.cd-property{border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.cd-property-head{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.6rem 0.85rem;background:rgba(37,99,235,0.1);border-bottom:1px solid var(--border);}
+.cd-property-addr{font-size:0.85rem;font-weight:600;color:var(--blue-glow);}
+.cd-property-total{font-size:0.75rem;color:var(--text-muted);white-space:nowrap;}
+.cd-job{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.55rem 0.85rem;border-bottom:1px solid var(--border-lt);}
+.cd-job:last-child{border-bottom:none;}
+.cd-job-main{display:flex;flex-direction:column;gap:0.15rem;min-width:0;}
+.cd-job-svc{font-size:0.85rem;color:var(--text-main);}
+.cd-job-date{font-size:0.72rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+.cd-job-side{display:flex;align-items:center;gap:0.6rem;flex-shrink:0;}
+.cd-job-amt{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.9rem;color:var(--cyan);}
 
 /* ══════════════════════════════
    RESPONSIVE / MOBILE
@@ -403,6 +432,14 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
           <div class="chart-title">Invoice Status</div>
           <div class="chart-wrap"><canvas id="chart-invoices"></canvas></div>
         </div>
+        <div class="chart-card">
+          <div class="chart-title">Schedule Status</div>
+          <div class="chart-wrap"><canvas id="chart-schedule"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Most Requested Services</div>
+          <div class="chart-wrap"><canvas id="chart-popular-services"></canvas></div>
+        </div>
       </div>
       <div class="analytics-grid">
         <div class="chart-card">
@@ -479,8 +516,8 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
       <div class="card"><div class="calendar-grid" id="calendar-grid"></div></div>
       <div class="card" style="margin-top:1rem;">
         <div class="card-header">Jobs This Month</div>
-        <table class="data-table"><thead><tr><th>Date</th><th>Customer</th><th>Service</th><th>Status</th></tr></thead>
-        <tbody id="schedule-body"><tr><td colspan="4" class="empty-state">No scheduled jobs.</td></tr></tbody></table>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Phone</th><th>Address</th><th>Service(s)</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="schedule-body"><tr><td colspan="8" class="empty-state">No scheduled jobs.</td></tr></tbody></table></div>
       </div>
     </section>
   </main>
@@ -504,7 +541,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Jobs:[],Customers:[],Invoices:[],Estimates:[],Schedule:[],Expenses:[]};
-const SHEETS={Jobs:['Job #','Customer','Service','Date','Status','Amount','Notes'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Service','Date','Amount','Status','Notes'],Schedule:['Date','Customer','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Service','Date','Amount','Status','Notes'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -707,7 +744,7 @@ function renderDashboard(){
 function renderTable(page,filterText='',filterStatus=''){
   const cfgs={
     jobs:{sheet:'Jobs',body:'jobs-body',statusCol:'Status',render:r=>`<td>${r['Job #']}</td><td>${r['Customer']}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>${badge(r['Status'])}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td>`},
-    customers:{sheet:'Customers',body:'customers-body',render:r=>`<td>${r['Name']}</td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Jobs.filter(j=>j['Customer']===r['Name']).length}</td>`},
+    customers:{sheet:'Customers',body:'customers-body',render:r=>`<td><a href="#" onclick="event.preventDefault();showCustomerDetail('${(r['Name']||'').replace(/'/g,"\\'")}')" style="color:var(--blue-glow);text-decoration:none;font-weight:500;">${r['Name']}</a></td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Jobs.filter(j=>j['Customer']===r['Name']).length}</td>`},
     invoices:{sheet:'Invoices',body:'invoices-body',statusCol:'Status',render:r=>`<td>${r['Invoice #']}</td><td>${r['Customer']}</td><td>${r['Date']}</td><td>${r['Due Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}</td>`},
     estimates:{sheet:'Estimates',body:'estimates-body',statusCol:'Status',render:r=>`<td>${r['Estimate #']}</td><td>${r['Customer']}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}</td>`},
     expenses:{sheet:'Expenses',body:'expenses-body',statusCol:'Category',render:r=>`<td>${r['Date']}</td><td>${r['Vendor']||'—'}</td><td>${r['Description']}</td><td>${r['Category']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${r['ReceiptURL']?`<a href="${r['ReceiptURL']}" target="_blank" style="color:var(--cyan);font-size:0.75rem;">View</a>`:'—'}</td>`},
@@ -735,6 +772,13 @@ function renderAnalytics(){
   const avgJob=cache.Jobs.filter(j=>j['Status']==='Completed').length?allRevenue/cache.Jobs.filter(j=>j['Status']==='Completed').length:0;
   const convRate=cache.Estimates.length?(cache.Estimates.filter(e=>e['Status']==='Accepted').length/cache.Estimates.length*100):0;
 
+  // Schedule stats
+  const schScheduled=cache.Schedule.filter(s=>s['Status']==='Scheduled').length;
+  const schCompleted=cache.Schedule.filter(s=>s['Status']==='Completed').length;
+  const schCancelled=cache.Schedule.filter(s=>s['Status']==='Cancelled').length;
+  const schTotal=cache.Schedule.length;
+  const cancelRate=schTotal?(schCancelled/schTotal*100):0;
+
   document.getElementById('analytics-kpis').innerHTML=`
     <div class="kpi-card green"><div class="kpi-label">Total Revenue</div><div class="kpi-value">$${allRevenue.toFixed(0)}</div><div class="kpi-sub">All time paid</div></div>
     <div class="kpi-card red"><div class="kpi-label">Total Expenses</div><div class="kpi-value">$${allExpenses.toFixed(0)}</div><div class="kpi-sub">All time</div></div>
@@ -742,6 +786,8 @@ function renderAnalytics(){
     <div class="kpi-card yellow"><div class="kpi-label">This Month</div><div class="kpi-value">$${moRev.toFixed(0)}</div><div class="kpi-sub">Revenue — $${moExp.toFixed(0)} expenses</div></div>
     <div class="kpi-card purple"><div class="kpi-label">Avg Job Value</div><div class="kpi-value">$${avgJob.toFixed(0)}</div><div class="kpi-sub">Completed jobs</div></div>
     <div class="kpi-card blue"><div class="kpi-label">Estimate Conv.</div><div class="kpi-value">${convRate.toFixed(0)}%</div><div class="kpi-sub">${cache.Estimates.filter(e=>e['Status']==='Accepted').length} of ${cache.Estimates.length} accepted</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Upcoming Jobs</div><div class="kpi-value">${schScheduled}</div><div class="kpi-sub">Currently scheduled</div></div>
+    <div class="kpi-card ${cancelRate>20?'red':'green'}"><div class="kpi-label">Cancellation Rate</div><div class="kpi-value">${cancelRate.toFixed(0)}%</div><div class="kpi-sub">${schCancelled} of ${schTotal} scheduled</div></div>
   `;
 
   // Revenue vs Expenses by month (last 6 months)
@@ -756,13 +802,23 @@ function renderAnalytics(){
 
   // Jobs by service
   const svcMap={};cache.Jobs.forEach(j=>{svcMap[j['Service']]=(svcMap[j['Service']]||0)+1;});
-  mkChart('chart-services','doughnut',{labels:Object.keys(svcMap),datasets:[{data:Object.values(svcMap),backgroundColor:['#2563EB','#06B6D4','#10B981','#F59E0B','#8B5CF6','#EF4444','#EC4899','#14B8A6','#6366F1'],borderWidth:0}]});
+  mkChart('chart-services','doughnut',{labels:Object.keys(svcMap),datasets:[{data:Object.values(svcMap),backgroundColor:['#2563EB','#06B6D4','#10B981','#F59E0B','#8B5CF6','#EF4444','#EC4899','#14B8A6','#6366F1'],borderWidth:0}]},false);
 
   // Invoice status
   const paid=cache.Invoices.filter(i=>i['Status']==='Paid').length;
   const unpaid=cache.Invoices.filter(i=>i['Status']==='Unpaid').length;
   const overdue=cache.Invoices.filter(i=>i['Status']==='Overdue').length;
-  mkChart('chart-invoices','doughnut',{labels:['Paid','Unpaid','Overdue'],datasets:[{data:[paid,unpaid,overdue],backgroundColor:['#10B981','#F59E0B','#EF4444'],borderWidth:0}]});
+  mkChart('chart-invoices','doughnut',{labels:['Paid','Unpaid','Overdue'],datasets:[{data:[paid,unpaid,overdue],backgroundColor:['#10B981','#F59E0B','#EF4444'],borderWidth:0}]},false);
+
+  // Schedule status
+  mkChart('chart-schedule','doughnut',{labels:['Scheduled','Completed','Cancelled'],datasets:[{data:[schScheduled,schCompleted,schCancelled],backgroundColor:['#3B82F6','#10B981','#EF4444'],borderWidth:0}]},false);
+
+  // Most requested services (counts each service across schedule entries, which can list multiple)
+  const popMap={};
+  cache.Schedule.forEach(s=>{(s['Service']||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(svc=>{popMap[svc]=(popMap[svc]||0)+1;});});
+  cache.Jobs.forEach(j=>{if(j['Service']){popMap[j['Service']]=(popMap[j['Service']]||0)+1;}});
+  const popLabels=Object.keys(popMap), popData=Object.values(popMap);
+  mkChart('chart-popular-services','bar',{labels:popLabels,datasets:[{label:'Times requested',data:popData,backgroundColor:'rgba(6,182,212,0.6)',borderColor:'#06B6D4',borderWidth:1}]},false);
 
   // Top customers
   const custRev={};cache.Invoices.filter(i=>i['Status']==='Paid').forEach(i=>{custRev[i['Customer']]=(custRev[i['Customer']]||0)+parseFloat(i['Amount']||0);});
@@ -774,10 +830,11 @@ function renderAnalytics(){
   document.getElementById('top-jobs').innerHTML=topJ.length?topJ.map((j,i)=>`<li><span class="rank">#${i+1}</span><span>${j['Customer']} — ${j['Service']}</span><span class="val">$${parseFloat(j['Amount']).toFixed(0)}</span></li>`).join(''):'<li style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">No data yet.</li>';
 }
 
-function mkChart(id,type,data){
+function mkChart(id,type,data,currency=true){
   if(chartInstances[id]){chartInstances[id].destroy();}
   const ctx=document.getElementById(id);if(!ctx)return;
-  chartInstances[id]=new Chart(ctx,{type,data,options:{responsive:true,maintainAspectRatio:false,resizeDelay:50,plugins:{legend:{labels:{color:'#94A3B8',font:{size:11},boxWidth:12}},tooltip:{callbacks:{label:ctx=>` $${ctx.parsed.y!==undefined?ctx.parsed.y.toFixed(2):ctx.parsed.toFixed(2)}`}}},scales:type==='bar'?{x:{ticks:{color:'#94A3B8'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#94A3B8',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}}}:{}}});
+  const fmt=v=>currency?'$'+Number(v).toFixed(2):Number(v).toFixed(0);
+  chartInstances[id]=new Chart(ctx,{type,data,options:{responsive:true,maintainAspectRatio:false,resizeDelay:50,plugins:{legend:{labels:{color:'#94A3B8',font:{size:11},boxWidth:12}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.parsed.y!==undefined?ctx.parsed.y:ctx.parsed)}}},scales:type==='bar'?{x:{ticks:{color:'#94A3B8'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#94A3B8',callback:v=>currency?'$'+v:v},grid:{color:'rgba(255,255,255,0.05)'}}}:{}}});
 }
 
 // ── SCHEDULE ──
@@ -797,18 +854,20 @@ function renderCalendar(){
   }
   document.getElementById('calendar-grid').innerHTML=html;
 }
-function renderScheduleList(){const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>a['Date'].localeCompare(b['Date']));document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td>${s['Date']}</td><td>${s['Customer']}</td><td>${s['Service']}</td><td>${badge(s['Status'])}</td></tr>`).join(''):`<tr><td colspan="4" class="empty-state">No jobs this month.</td></tr>`;}
+function renderScheduleList(){const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td>${s['Date']}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">No jobs this month.</td></tr>`;}
+function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;return `${h12}:${m} ${ap}`;}
 function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderSchedule();}
 function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderSchedule();}
 
 // ── MODALS ──
 const PAGE_TO_SHEET={jobs:'Jobs',customers:'Customers',invoices:'Invoices',estimates:'Estimates',schedule:'Schedule',expenses:'Expenses',dashboard:'Jobs',analytics:'Jobs'};
+const SHEET_SINGULAR={Jobs:'Job',Customers:'Customer',Invoices:'Invoice',Estimates:'Estimate',Schedule:'Schedule Entry',Expenses:'Expense'};
 const FORMS={
-  Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
+  Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address of this job" /></div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Customers:()=>`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="Name" placeholder="Jane Smith" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="(555) 000-0000" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="Email" /></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Invoices:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" name="Invoice #" value="${nextId('Invoice #','Invoices','INV')}" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Unpaid</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" name="Due Date" /></div></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Estimates:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Estimate #</label><input class="form-input" name="Estimate #" value="${nextId('Estimate #','Estimates','EST')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
-  Schedule:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
+  Schedule:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" name="Time" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="Auto-fills from customer" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" placeholder="Auto-fills from customer, or type it" /></div><div class="form-group"><label class="form-label">Services <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(check all that apply)</span></label><div class="service-checks" id="schedule-services">${svcChecks()}</div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Expenses:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Category</label><select class="form-select" name="Category"><option>Fuel</option><option>Equipment</option><option>Supplies</option><option>Marketing</option><option>Taxes</option><option>Other</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">Vendor</label><input class="form-input" name="Vendor" placeholder="e.g. Home Depot, Amazon" /></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div></div><div class="form-group"><label class="form-label">Description</label><input class="form-input" name="Description" placeholder="What was this expense for?" /></div><div class="form-group"><label class="form-label">Receipt (PDF or Image)</label><div class="file-upload-area" id="upload-drop-zone" onclick="document.getElementById('pdf-upload').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="handleFileDrop(event)"><input type="file" id="pdf-upload" accept=".pdf,.png,.jpg,.jpeg,.webp" onchange="handleFileSelect(this)" style="display:none"><div id="upload-prompt">📎 Click or drag & drop a PDF / image</div><div class="file-name" id="file-name-display" style="color:var(--cyan);margin-top:0.3rem;font-size:0.8rem;"></div></div><input class="form-input" name="ReceiptURL" id="receipt-url-input" placeholder="Upload above — or paste a Google Drive link" style="margin-top:0.5rem" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes" placeholder="Any extra details..."></textarea></div>`,
 };
 
@@ -891,8 +950,8 @@ async function getDriveFolder(name){
   return cd.id;
 }
 
-function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${sheet.slice(0,-1)}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');}
-function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${sheet.slice(0,-1)}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});}
+function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');}
+function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}}
 async function saveRecord(){
   const sheet=editingRow?editingRow.sheet:(forceSaveSheet||PAGE_TO_SHEET[currentPage]);
 
@@ -912,18 +971,39 @@ async function saveRecord(){
     }
   }
 
+  // For Schedule, gather the checked services into the Service field (comma-joined)
+  if(sheet === 'Schedule'){
+    const checked=Array.from(document.querySelectorAll('.schedule-svc:checked')).map(c=>c.value);
+    const svcInput=document.querySelector('[name="Service"]');
+    // create a hidden carrier if the form has no Service input (it doesn't anymore)
+    if(!svcInput){
+      const h=document.createElement('input'); h.type='hidden'; h.name='Service'; h.value=checked.join(', ');
+      document.getElementById('modal-body').appendChild(h);
+    } else { svcInput.value=checked.join(', '); }
+  }
+
   const values=SHEETS[sheet].map(col=>{const el=document.querySelector(`[name="${col}"]`);return el?el.value.trim():'';});
   setSyncStatus('⟳ Saving...');
   try{if(editingRow){await updateRow(sheet,editingRow.rowIndex,values);showToast('Record updated!','success');}else{await appendRow(sheet,values);showToast('Record added!','success');}if(forceSaveSheet){clearAllMeasurements();forceSaveSheet=null;}closeModal();await loadAllData();renderPage(currentPage);}
   catch(e){showToast('Save failed. Check config.','error');setSyncStatus('✕ Error');console.error(e);}
 }
 async function confirmDelete(sheet,rowIndex){if(!confirm('Delete this record?'))return;setSyncStatus('⟳ Deleting...');try{await deleteRow(sheet,rowIndex);showToast('Deleted.','success');await loadAllData();renderPage(currentPage);}catch(e){showToast('Delete failed.','error');console.error(e);}}
-function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.add('hidden');editingRow=null;pendingUploadFile=null;forceSaveSheet=null;}
+function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.add('hidden');editingRow=null;pendingUploadFile=null;forceSaveSheet=null;const footer=document.querySelector('.modal-footer');if(footer&&footer.dataset.prev){footer.innerHTML=footer.dataset.prev;delete footer.dataset.prev;}}
 
 function badge(status){const map={'Scheduled':'scheduled','In Progress':'inprogress','Completed':'completed','Cancelled':'cancelled','Paid':'paid','Unpaid':'unpaid','Overdue':'overdue','Sent':'sent','Draft':'draft','Accepted':'accepted','Declined':'cancelled'};return `<span class="badge badge-${map[status]||'draft'}">${status||'—'}</span>`;}
 function tod(){return new Date().toISOString().slice(0,10);}
 function custSelect(name){const opts=cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('');return `<select class="form-select" name="${name}"><option value="">— Select Customer —</option>${opts}</select><input class="form-input" name="${name}_manual" placeholder="Or type name directly" style="margin-top:0.4rem" />`;}
 function svcOpts(){return['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'].map(s=>`<option>${s}</option>`).join('');}
+const SERVICE_LIST=['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'];
+function svcChecks(){return SERVICE_LIST.map(s=>`<label class="svc-check"><input type="checkbox" class="schedule-svc" value="${s}"><span>${s}</span></label>`).join('');}
+function autofillCustomer(name){
+  const c=cache.Customers.find(x=>x['Name']===name);
+  if(!c) return;
+  const phoneEl=document.querySelector('[name="Phone"]');
+  const addrEl=document.querySelector('[name="Address"]');
+  if(phoneEl && !phoneEl.value) phoneEl.value=c['Phone']||'';
+  if(addrEl && !addrEl.value) addrEl.value=c['Address']||'';
+}
 function nextId(col,sheet,prefix){const rows=cache[sheet]||[];if(!rows.length)return `${prefix}-001`;const next=Math.max(...rows.map(r=>parseInt((r[col]||'').replace(/\D/g,''))||0))+1;return `${prefix}-${String(next).padStart(3,'0')}`;}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3000);}
 // ════════════════════════════════════════════════════════
@@ -1104,6 +1184,58 @@ async function saveMeasurementsToEstimate(){
   if(svcEl && byType['Roof']) svcEl.value='Roof Wash';
   // currentPage stays 'measure' but saveRecord uses PAGE_TO_SHEET — force Estimates
   forceSaveSheet='Estimates';
+}
+
+// ── CUSTOMER DETAIL VIEW (jobs grouped by property) ──
+function showCustomerDetail(name){
+  const cust=cache.Customers.find(c=>c['Name']===name);
+  const jobs=cache.Jobs.filter(j=>j['Customer']===name);
+  const invoices=cache.Invoices.filter(i=>i['Customer']===name);
+  const totalRevenue=invoices.filter(i=>i['Status']==='Paid').reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
+  const outstanding=invoices.filter(i=>['Unpaid','Overdue'].includes(i['Status'])).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
+
+  // Group jobs by property address (jobs with no address go under "No address recorded")
+  const groups={};
+  jobs.forEach(j=>{
+    const key=(j['Address']&&j['Address'].trim())?j['Address'].trim():'No address recorded';
+    (groups[key]=groups[key]||[]).push(j);
+  });
+  const propCount=Object.keys(groups).filter(k=>k!=='No address recorded').length;
+
+  let groupsHtml='';
+  if(jobs.length===0){
+    groupsHtml='<p class="empty-state">No jobs recorded for this customer yet.</p>';
+  } else {
+    groupsHtml=Object.entries(groups).map(([addr,js])=>{
+      const propTotal=js.reduce((s,j)=>s+parseFloat(j['Amount']||0),0);
+      const rows=js.sort((a,b)=>(b['Date']||'').localeCompare(a['Date']||'')).map(j=>`<div class="cd-job"><div class="cd-job-main"><span class="cd-job-svc">${j['Service']||'—'}</span><span class="cd-job-date">${j['Date']||''}</span></div><div class="cd-job-side">${badge(j['Status'])}<span class="cd-job-amt">$${parseFloat(j['Amount']||0).toFixed(2)}</span></div></div>`).join('');
+      return `<div class="cd-property"><div class="cd-property-head"><span class="cd-property-addr">📍 ${addr}</span><span class="cd-property-total">$${propTotal.toFixed(2)} · ${js.length} job${js.length!==1?'s':''}</span></div>${rows}</div>`;
+    }).join('');
+  }
+
+  document.getElementById('modal-title').textContent=name;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="cd-contact">
+      ${cust&&cust['Phone']?`<a href="tel:${cust['Phone']}" class="cd-contact-item">📞 ${cust['Phone']}</a>`:''}
+      ${cust&&cust['Email']?`<a href="mailto:${cust['Email']}" class="cd-contact-item">✉️ ${cust['Email']}</a>`:''}
+      ${cust&&cust['Address']?`<span class="cd-contact-item">🏠 ${cust['Address']}</span>`:''}
+    </div>
+    <div class="cd-stats">
+      <div class="cd-stat"><div class="cd-stat-val">${jobs.length}</div><div class="cd-stat-lbl">Total Jobs</div></div>
+      <div class="cd-stat"><div class="cd-stat-val">${propCount||1}</div><div class="cd-stat-lbl">${propCount>1?'Properties':'Property'}</div></div>
+      <div class="cd-stat"><div class="cd-stat-val">$${totalRevenue.toFixed(0)}</div><div class="cd-stat-lbl">Paid Revenue</div></div>
+      <div class="cd-stat"><div class="cd-stat-val" style="color:${outstanding>0?'#FDE047':'var(--white)'}">$${outstanding.toFixed(0)}</div><div class="cd-stat-lbl">Outstanding</div></div>
+    </div>
+    ${cust&&cust['Notes']?`<div class="cd-notes"><strong>Notes:</strong> ${cust['Notes']}</div>`:''}
+    <div class="cd-section-label">Job History by Property</div>
+    <div class="cd-properties">${groupsHtml}</div>
+  `;
+  // Hide the default Save/Cancel footer buttons for this read-only view; show a Close
+  const footer=document.querySelector('.modal-footer');
+  footer.dataset.prev=footer.innerHTML;
+  footer.innerHTML='<button class="action-btn primary" onclick="closeModal()">Close</button>';
+  editingRow=null;
+  document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
 function showError(msg){const el=document.getElementById('login-error');if(el)el.textContent=msg;}
