@@ -931,29 +931,48 @@ let forceSaveSheet=null;
 let currentPath=[], currentPolyline=null, currentMarkers=[];
 let measurements=[]; // {type, sqft, pitch, polygon}
 
+let mapsScriptRequested=false;
+
 function initMeasurePage(){
-  if(mapsLoaded){ if(measureMap) google.maps.event.trigger(measureMap,'resize'); return; }
-  // Load the Maps JS script once
+  // Map already running — just make sure it's sized right
+  if(mapsLoaded && measureMap){
+    google.maps.event.trigger(measureMap,'resize');
+    measureMap.setCenter(measureMap.getCenter());
+    return;
+  }
+  // If the Google library is already on the page but map not built yet, build it
+  if(window.google && window.google.maps){ buildMap(); return; }
+  // Otherwise load the script ONCE, using onload (reliable) instead of a URL callback
+  if(mapsScriptRequested) return;
+  mapsScriptRequested=true;
   const s=document.createElement('script');
-  s.src=`https://maps.googleapis.com/maps/api/js?key=${CONFIG.MAPS_API_KEY}&libraries=geometry&loading=async&callback=onMapsReady`;
-  s.async=true; s.defer=true;
-  s.onerror=()=>{document.getElementById('map').innerHTML='<div style="padding:2rem;color:#f87171;text-align:center;">Could not load Google Maps. Check that the Maps JavaScript API is enabled and your key allows this site.</div>';};
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${CONFIG.MAPS_API_KEY}&libraries=geometry&loading=async`;
+  s.async=true;
+  s.onload=()=>{ buildMap(); };
+  s.onerror=()=>{
+    mapsScriptRequested=false;
+    document.getElementById('map').innerHTML='<div style="padding:2rem;color:#f87171;text-align:center;">Could not load Google Maps.<br>Make sure billing is enabled on your Google Cloud project and the Maps JavaScript API is turned on.</div>';
+  };
   document.head.appendChild(s);
 }
 
-// Called by the Maps script when ready
-window.onMapsReady=function(){
+function buildMap(){
+  if(mapsLoaded && measureMap) return;
+  const el=document.getElementById('map');
+  if(!el || !window.google || !window.google.maps){
+    setTimeout(buildMap,150); return; // library not ready yet — retry shortly
+  }
   mapsLoaded=true;
-  measureMap=new google.maps.Map(document.getElementById('map'),{
-    center:{lat:39.6626,lng:-75.0935}, // Clayton, NJ area default
+  measureMap=new google.maps.Map(el,{
+    center:{lat:39.6626,lng:-75.0935}, // Clayton, NJ default
     zoom:19, mapTypeId:'satellite', tilt:0,
-    disableDefaultUI:false, zoomControl:true, streetViewControl:false, fullscreenControl:true,
+    zoomControl:true, streetViewControl:false, fullscreenControl:true,
   });
   measureMap.addListener('click',(e)=>addPoint(e.latLng));
   updatePitchVisibility();
-  // Nudge the map to recalc its size in case the container was hidden when created
-  setTimeout(()=>{ if(measureMap){ google.maps.event.trigger(measureMap,'resize'); measureMap.setCenter({lat:39.6626,lng:-75.0935}); } }, 300);
-};
+  // Recalc size after layout settles
+  setTimeout(()=>{ if(measureMap){ google.maps.event.trigger(measureMap,'resize'); measureMap.setCenter({lat:39.6626,lng:-75.0935}); } }, 350);
+}
 
 function setMeasureType(type){
   measureType=type;
