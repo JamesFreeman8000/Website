@@ -179,7 +179,8 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .measure-layout{display:grid;grid-template-columns:1fr 320px;gap:1.25rem;align-items:start;}
 @media(max-width:1000px){.measure-layout{grid-template-columns:1fr;}}
 .measure-map-col{min-width:0;}
-.measure-map{width:100%;height:460px;border-radius:var(--radius);border:1px solid var(--border);background:var(--navy2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.9rem;}
+.measure-map{width:100%;height:460px;min-height:460px;border-radius:var(--radius);border:1px solid var(--border);background:var(--navy2);position:relative;overflow:hidden;}
+.measure-map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.9rem;pointer-events:none;}
 .measure-toolbar{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:0.7rem 0.9rem;}
 .measure-tool-label{font-size:0.72rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
 .measure-tool-btn{padding:0.45rem 0.85rem;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
@@ -241,7 +242,7 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
   .modal{max-height:95vh;}
   .chart-wrap{height:180px;}
   .chart-wrap.tall{height:200px;}
-  .measure-map{height:320px;}
+  .measure-map{height:320px;min-height:320px;}
 }
 
 @media(max-width:480px){
@@ -423,7 +424,7 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
       </div>
       <div class="measure-layout">
         <div class="measure-map-col">
-          <div id="map" class="measure-map">Loading map…</div>
+          <div id="map" class="measure-map"><div class="measure-map-loading" id="map-loading">Loading map…</div></div>
           <div class="measure-toolbar">
             <span class="measure-tool-label">Measuring:</span>
             <button class="measure-tool-btn active" data-tool="Roof" onclick="setMeasureType('Roof')">🏠 Roof</button>
@@ -979,6 +980,7 @@ function buildMap(MapClass){
   });
   measureMap.addListener('click',(e)=>addPoint(e.latLng));
   updatePitchVisibility();
+  const ldg=document.getElementById('map-loading'); if(ldg) ldg.remove();
   // Recalc size after layout settles
   setTimeout(()=>{ if(measureMap){ google.maps.event.trigger(measureMap,'resize'); measureMap.setCenter({lat:39.6626,lng:-75.0935}); } }, 350);
   // If the user searched before the map was ready, run that search now
