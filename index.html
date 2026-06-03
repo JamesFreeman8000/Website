@@ -234,6 +234,15 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .cd-stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white);line-height:1;}
 .cd-stat-lbl{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-top:0.3rem;}
 .cd-notes{font-size:0.82rem;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:7px;padding:0.6rem 0.8rem;margin-bottom:1rem;line-height:1.5;}
+/* ESTIMATE LINE ITEMS */
+.est-line{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;}
+.est-line-svc{flex:1;min-width:0;}
+.est-line-amt{width:110px;flex-shrink:0;}
+.est-line-del{width:32px;height:38px;flex-shrink:0;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#f87171;border-radius:8px;cursor:pointer;font-size:0.85rem;}
+.est-line-del:hover{background:rgba(239,68,68,0.1);}
+.est-add-line{margin-top:0.25rem;width:auto;font-size:0.82rem;padding:0.45rem 0.9rem;}
+.est-total-row{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;margin:0.5rem 0 0.25rem;background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:8px;font-family:'Space Grotesk',sans-serif;font-weight:700;}
+.est-total-row span:last-child{color:var(--cyan);font-size:1.1rem;}
 .cd-notes-edit{margin-bottom:1.25rem;}
 .cd-notes-edit textarea{min-height:80px;margin-bottom:0.6rem;}
 .cd-notes-save{width:auto;}
@@ -905,7 +914,7 @@ const FORMS={
   Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address of this job" /></div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div><input type="hidden" name="Photos" /><p style="font-size:0.75rem;color:var(--text-muted);">📷 To add before/after photos: save this job, then open the customer from the Customers page and use "Add Photos" on the job.</p>`,
   Customers:()=>`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="Name" placeholder="Jane Smith" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="(555) 000-0000" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="Email" /></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Invoices:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" name="Invoice #" value="${nextId('Invoice #','Invoices','INV')}" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Unpaid</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" name="Due Date" /></div></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
-  Estimates:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Estimate #</label><input class="form-input" name="Estimate #" value="${nextId('Estimate #','Estimates','EST')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
+  Estimates:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Estimate #</label><input class="form-input" name="Estimate #" value="${nextId('Estimate #','Estimates','EST')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-group"><label class="form-label">Services & Pricing</label><div id="est-lines"></div><button type="button" class="action-btn est-add-line" onclick="addEstimateLine()">+ Add Service</button></div><div class="est-total-row"><span>Total Estimate</span><span id="est-total">$0.00</span></div><input type="hidden" name="Service" /><input type="hidden" name="Amount" /><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option></select></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Schedule:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" name="Time" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="Auto-fills from customer" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" placeholder="Auto-fills from customer, or type it" /></div><div class="form-group"><label class="form-label">Services <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(check all that apply)</span></label><div class="service-checks" id="schedule-services">${svcChecks()}</div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Expenses:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Category</label><select class="form-select" name="Category"><option>Fuel</option><option>Equipment</option><option>Supplies</option><option>Marketing</option><option>Taxes</option><option>Other</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">Vendor</label><input class="form-input" name="Vendor" placeholder="e.g. Home Depot, Amazon" /></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div></div><div class="form-group"><label class="form-label">Description</label><input class="form-input" name="Description" placeholder="What was this expense for?" /></div><div class="form-group"><label class="form-label">Receipt (PDF or Image)</label><div class="file-upload-area" id="upload-drop-zone" onclick="document.getElementById('pdf-upload').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="handleFileDrop(event)"><input type="file" id="pdf-upload" accept=".pdf,.png,.jpg,.jpeg,.webp" onchange="handleFileSelect(this)" style="display:none"><div id="upload-prompt">📎 Click or drag & drop a PDF / image</div><div class="file-name" id="file-name-display" style="color:var(--cyan);margin-top:0.3rem;font-size:0.8rem;"></div></div><input class="form-input" name="ReceiptURL" id="receipt-url-input" placeholder="Upload above — or paste a Google Drive link" style="margin-top:0.5rem" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes" placeholder="Any extra details..."></textarea></div>`,
 };
@@ -993,8 +1002,8 @@ async function getDriveFolder(name){
   return cd.id;
 }
 
-function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');}
-function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}}
+function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Estimates'){addEstimateLine();}}
+function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Estimates'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}}
 async function saveRecord(){
   const sheet=editingRow?editingRow.sheet:(forceSaveSheet||PAGE_TO_SHEET[currentPage]);
 
@@ -1040,6 +1049,58 @@ function custSelect(name){const opts=cache.Customers.map(c=>`<option>${c['Name']
 function svcOpts(){return['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'].map(s=>`<option>${s}</option>`).join('');}
 const SERVICE_LIST=['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'];
 function svcChecks(){return SERVICE_LIST.map(s=>`<label class="svc-check"><input type="checkbox" class="schedule-svc" value="${s}"><span>${s}</span></label>`).join('');}
+
+// ── ESTIMATE MULTI-SERVICE LINE ITEMS ──
+function estLineHtml(service='',amount=''){
+  const opts=SERVICE_LIST.map(s=>`<option ${s===service?'selected':''}>${s}</option>`).join('');
+  return `<div class="est-line"><select class="form-select est-line-svc" onchange="updateEstimateTotal()"><option value="">— Select Service —</option>${opts}</select><input class="form-input est-line-amt" type="number" step="0.01" placeholder="0.00" value="${amount}" oninput="updateEstimateTotal()"><button type="button" class="est-line-del" title="Remove" onclick="removeEstimateLine(this)">✕</button></div>`;
+}
+function addEstimateLine(service='',amount=''){
+  const wrap=document.getElementById('est-lines');
+  if(!wrap) return;
+  wrap.insertAdjacentHTML('beforeend', estLineHtml(service,amount));
+  updateEstimateTotal();
+}
+function removeEstimateLine(btn){
+  const line=btn.closest('.est-line');
+  if(line) line.remove();
+  // Always keep at least one line
+  if(!document.querySelectorAll('.est-line').length) addEstimateLine();
+  updateEstimateTotal();
+}
+function updateEstimateTotal(){
+  let total=0;
+  document.querySelectorAll('.est-line').forEach(l=>{
+    const amt=parseFloat(l.querySelector('.est-line-amt').value||0);
+    if(!isNaN(amt)) total+=amt;
+  });
+  const totalEl=document.getElementById('est-total');
+  if(totalEl) totalEl.textContent='$'+total.toFixed(2);
+  // Write combined values into the hidden carrier inputs for saving
+  const svcParts=[], amtTotal=[];
+  document.querySelectorAll('.est-line').forEach(l=>{
+    const svc=l.querySelector('.est-line-svc').value;
+    const amt=parseFloat(l.querySelector('.est-line-amt').value||0)||0;
+    if(svc) svcParts.push(`${svc}: $${amt.toFixed(2)}`);
+  });
+  const svcInput=document.querySelector('[name="Service"]');
+  const amtInput=document.querySelector('[name="Amount"]');
+  if(svcInput) svcInput.value=svcParts.join(' | ');
+  if(amtInput) amtInput.value=total.toFixed(2);
+}
+// Parse a stored Service string like "House Wash: $200.00 | Roof Wash: $400.00" back into line items
+function parseEstimateLines(serviceStr, totalAmount){
+  const parts=(serviceStr||'').split('|').map(s=>s.trim()).filter(Boolean);
+  const lines=[];
+  parts.forEach(p=>{
+    const m=p.match(/^(.*?):\s*\$?([\d.]+)$/);
+    if(m){ lines.push({service:m[1].trim(), amount:m[2]}); }
+    else { lines.push({service:p, amount:''}); } // old single-service format with no price
+  });
+  // If nothing parsed but there's a legacy single service, use it with the total
+  if(!lines.length && serviceStr){ lines.push({service:serviceStr, amount:totalAmount||''}); }
+  return lines;
+}
 function autofillCustomer(name){
   const c=cache.Customers.find(x=>x['Name']===name);
   if(!c) return;
@@ -1226,9 +1287,12 @@ async function saveMeasurementsToEstimate(){
   const summary=Object.entries(byType).map(([t,v])=>`${t}: ${v.toLocaleString()} sqft`).join(' | ');
   const notesEl=document.querySelector('[name="Notes"]');
   if(notesEl) notesEl.value=(addr?`Address: ${addr}\n`:'')+`Measured — ${summary}`;
-  // If roof was measured, default the service to Roof Wash
-  const svcEl=document.querySelector('[name="Service"]');
-  if(svcEl && byType['Roof']) svcEl.value='Roof Wash';
+  // Seed an estimate line for each measured area type (roof->Roof Wash, driveway->Driveway Wash, etc.)
+  const typeToSvc={Roof:'Roof Wash',Driveway:'Driveway Wash',Walkway:'Deck/Patio Wash'};
+  const types=Object.keys(byType);
+  if(types.length){ types.forEach(t=>addEstimateLine(typeToSvc[t]||'Other','')); }
+  else { addEstimateLine(); }
+  updateEstimateTotal();
   // currentPage stays 'measure' but saveRecord uses PAGE_TO_SHEET — force Estimates
   forceSaveSheet='Estimates';
 }
