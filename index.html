@@ -234,6 +234,9 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .cd-stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white);line-height:1;}
 .cd-stat-lbl{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-top:0.3rem;}
 .cd-notes{font-size:0.82rem;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:7px;padding:0.6rem 0.8rem;margin-bottom:1rem;line-height:1.5;}
+.cd-notes-edit{margin-bottom:1.25rem;}
+.cd-notes-edit textarea{min-height:80px;margin-bottom:0.6rem;}
+.cd-notes-save{width:auto;}
 .cd-section-label{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.6rem;}
 .cd-properties{display:flex;flex-direction:column;gap:0.8rem;}
 .cd-property{border:1px solid var(--border);border-radius:9px;overflow:hidden;}
@@ -475,7 +478,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       </div>
       <div class="measure-layout">
         <div class="measure-map-col">
-          <div id="map" class="measure-map"><div class="measure-map-loading" id="map-loading">Loading map…</div></div>
+          <div id="map" class="measure-map" style="height:460px;min-height:460px;"><div class="measure-map-loading" id="map-loading">Loading map…</div></div>
           <div class="measure-toolbar">
             <span class="measure-tool-label">Measuring:</span>
             <button class="measure-tool-btn active" data-tool="Roof" onclick="setMeasureType('Roof')">🏠 Roof</button>
@@ -1093,6 +1096,8 @@ function buildMap(MapClass){
   if(mapsLoaded && measureMap) return;
   const el=document.getElementById('map');
   if(!el) return;
+  // Guard: make absolutely sure the container has height before the map renders into it
+  if(el.getBoundingClientRect().height < 50){ el.style.height='460px'; el.style.minHeight='460px'; }
   mapsLoaded=true;
   measureMap=new MapClass(el,{
     center:{lat:39.6626,lng:-75.0935}, // Clayton, NJ default
@@ -1102,8 +1107,9 @@ function buildMap(MapClass){
   measureMap.addListener('click',(e)=>addPoint(e.latLng));
   updatePitchVisibility();
   const ldg=document.getElementById('map-loading'); if(ldg) ldg.remove();
-  // Recalc size after layout settles
+  // Recalc size after layout settles (run twice to be safe)
   setTimeout(()=>{ if(measureMap){ google.maps.event.trigger(measureMap,'resize'); measureMap.setCenter({lat:39.6626,lng:-75.0935}); } }, 350);
+  setTimeout(()=>{ if(measureMap){ google.maps.event.trigger(measureMap,'resize'); } }, 1000);
   // If the user searched before the map was ready, run that search now
   if(pendingSearchAddr){ const a=pendingSearchAddr; pendingSearchAddr=null; setTimeout(()=>runGeocode(a),400); }
 }
@@ -1284,7 +1290,11 @@ function showCustomerDetail(name){
       <div class="cd-stat"><div class="cd-stat-val">$${totalRevenue.toFixed(0)}</div><div class="cd-stat-lbl">Paid Revenue</div></div>
       <div class="cd-stat"><div class="cd-stat-val" style="color:${outstanding>0?'#FDE047':'var(--white)'}">$${outstanding.toFixed(0)}</div><div class="cd-stat-lbl">Outstanding</div></div>
     </div>
-    ${cust&&cust['Notes']?`<div class="cd-notes"><strong>Notes:</strong> ${cust['Notes']}</div>`:''}
+    <div class="cd-section-label">Customer Notes</div>
+    <div class="cd-notes-edit">
+      <textarea class="form-textarea" id="cd-notes-box" placeholder="Add notes about this customer — gate codes, preferences, reminders...">${cust&&cust['Notes']?cust['Notes'].replace(/</g,'&lt;'):''}</textarea>
+      <button class="action-btn primary cd-notes-save" onclick="saveCustomerNotes()">Save Notes</button>
+    </div>
     <div class="cd-section-label">Job History by Property</div>
     <div class="cd-properties">${groupsHtml}</div>
   `;
@@ -1294,6 +1304,27 @@ function showCustomerDetail(name){
   editingRow=null;
   document.getElementById('modal').classList.add('modal-xl');
   document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function saveCustomerNotes(){
+  const name=detailCustomerName;
+  const box=document.getElementById('cd-notes-box');
+  if(!name||!box) return;
+  const cust=cache.Customers.find(c=>c['Name']===name);
+  if(!cust){ showToast('Customer not found.','error'); return; }
+  const newNotes=box.value.trim();
+  cust['Notes']=newNotes; // update local cache
+  setSyncStatus('⟳ Saving notes...');
+  try{
+    const values=SHEETS.Customers.map(col=>cust[col]||'');
+    await updateRow('Customers', cust._rowIndex, values);
+    setSyncStatus('● Live');
+    showToast('Notes saved!','success');
+  }catch(e){
+    showToast('Could not save notes.','error');
+    setSyncStatus('✕ Error');
+    console.error('saveCustomerNotes:',e);
+  }
 }
 
 async function uploadJobPhotos(rowIndex, files){
