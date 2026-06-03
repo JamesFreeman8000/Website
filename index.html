@@ -96,6 +96,8 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .est-link-btn{color:var(--cyan)!important;border-color:rgba(6,182,212,0.3)!important;}
 .est-sched-btn{color:#86efac!important;border-color:rgba(34,197,94,0.3)!important;}
 .est-hint{font-size:0.68rem;color:var(--text-muted);font-style:italic;align-self:center;}
+.est-reply{margin-top:5px;font-size:0.72rem;color:#fde047;cursor:pointer;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.25);border-radius:6px;padding:3px 7px;display:inline-block;}
+.est-reply:hover{background:rgba(234,179,8,0.18);}
 .tbl-btn{padding:0.28rem 0.65rem;border-radius:6px;border:1px solid var(--border);background:transparent;font-size:0.75rem;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;margin-right:4px;color:var(--text-muted);}
 .tbl-btn:hover{background:rgba(255,255,255,0.07);color:var(--text-main);}
 .tbl-btn.del{color:#f87171;border-color:rgba(239,68,68,0.3);}
@@ -572,7 +574,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Jobs:[],Customers:[],Invoices:[],Estimates:[],Schedule:[],Expenses:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Service','Date','Amount','Status','Notes','Token'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Service','Date','Amount','Status','Notes','Token','Customer Reply'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -1153,7 +1155,17 @@ function estimateActionBtns(r){
     html+=`<span class="est-hint">Edit &amp; resend to counter</span>`;
   }
   html+='</div>';
+  // If the customer left a comment, show a clickable indicator
+  if(r['Customer Reply']){
+    html+=`<div class="est-reply" onclick="showEstimateReply(${r._rowIndex})">💬 Customer left a message — click to read</div>`;
+  }
   return html;
+}
+
+function showEstimateReply(rowIndex){
+  const est=cache.Estimates.find(e=>e._rowIndex===rowIndex);
+  if(!est||!est['Customer Reply']) return;
+  alert('Message from '+(est['Customer']||'customer')+' regarding '+(est['Estimate #']||'estimate')+':\n\n'+est['Customer Reply']);
 }
 
 function copyEstimateLink(token, estNum){
