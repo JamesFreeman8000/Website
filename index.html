@@ -214,8 +214,22 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .cd-contact{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;}
 .cd-contact-item{display:inline-flex;align-items:center;gap:0.3rem;padding:0.4rem 0.7rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;font-size:0.82rem;color:var(--text-main);text-decoration:none;}
 a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
-.cd-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:1rem;}
-@media(max-width:560px){.cd-stats{grid-template-columns:1fr 1fr;}}
+.cd-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.25rem;}
+@media(max-width:680px){.cd-stats{grid-template-columns:1fr 1fr;}}
+/* Large modal for customer detail */
+.modal.modal-xl{max-width:1100px;width:95vw;max-height:92vh;}
+.cd-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.6rem;margin:0.6rem 0;}
+.cd-photo{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3;background:var(--navy3);}
+.cd-photo img{width:100%;height:100%;object-fit:cover;cursor:pointer;display:block;transition:transform 0.2s;}
+.cd-photo img:hover{transform:scale(1.04);}
+.cd-photo-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,0.6);color:#fff;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s;}
+.cd-photo:hover .cd-photo-del{opacity:1;}
+.cd-photo-del:hover{background:#dc2626;}
+.cd-no-photos{font-size:0.78rem;color:var(--text-muted);font-style:italic;padding:0.4rem 0;}
+.cd-photo-actions{display:flex;align-items:center;gap:0.75rem;margin-top:0.4rem;}
+.cd-upload-btn{font-size:0.8rem;padding:0.4rem 0.9rem;}
+.cd-photo-status{font-size:0.78rem;color:var(--cyan);}
+.cd-job-row{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;}
 .cd-stat{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:0.7rem;text-align:center;}
 .cd-stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white);line-height:1;}
 .cd-stat-lbl{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-top:0.3rem;}
@@ -226,7 +240,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .cd-property-head{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.6rem 0.85rem;background:rgba(37,99,235,0.1);border-bottom:1px solid var(--border);}
 .cd-property-addr{font-size:0.85rem;font-weight:600;color:var(--blue-glow);}
 .cd-property-total{font-size:0.75rem;color:var(--text-muted);white-space:nowrap;}
-.cd-job{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.55rem 0.85rem;border-bottom:1px solid var(--border-lt);}
+.cd-job{display:flex;flex-direction:column;gap:0.4rem;padding:0.75rem 0.85rem;border-bottom:1px solid var(--border-lt);}
 .cd-job:last-child{border-bottom:none;}
 .cd-job-main{display:flex;flex-direction:column;gap:0.15rem;min-width:0;}
 .cd-job-svc{font-size:0.85rem;color:var(--text-main);}
@@ -525,7 +539,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 
 <!-- MODAL -->
 <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal(event)">
-  <div class="modal">
+  <div class="modal" id="modal">
     <div class="modal-header"><h2 class="modal-title" id="modal-title">Add New</h2><button class="modal-close" onclick="closeModal()">&#x2715;</button></div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer"><button class="action-btn" onclick="closeModal()">Cancel</button><button class="action-btn primary" onclick="saveRecord()">Save</button></div>
@@ -541,7 +555,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Jobs:[],Customers:[],Invoices:[],Estimates:[],Schedule:[],Expenses:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Service','Date','Amount','Status','Notes'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Service','Date','Amount','Status','Notes'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -709,8 +723,30 @@ function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s
 async function loadAllData(){
   setSyncStatus('⟳ Syncing...');
   try{const[j,c,i,e,s,x]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Estimates'),readSheet('Schedule'),readSheet('Expenses')]);
-  cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Estimates=e;cache.Schedule=s;cache.Expenses=x;setSyncStatus('● Live');}
+  cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Estimates=e;cache.Schedule=s;cache.Expenses=x;setSyncStatus('● Live');
+  await markOverdueInvoices();}
   catch(e){setSyncStatus('✕ Error');console.error(e);}
+}
+
+// Auto-flip Unpaid invoices to Overdue once their due date has passed.
+// Rule: Status==='Unpaid' AND Due Date < today  ->  set 'Overdue'. Paid invoices are never touched.
+async function markOverdueInvoices(){
+  const today=new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  const toFlip=cache.Invoices.filter(inv=>{
+    const due=(inv['Due Date']||'').trim();
+    return inv['Status']==='Unpaid' && due && due < today;
+  });
+  if(!toFlip.length) return;
+  setSyncStatus('⟳ Updating overdue...');
+  try{
+    for(const inv of toFlip){
+      inv['Status']='Overdue'; // update local cache immediately
+      const values=SHEETS.Invoices.map(col=>inv[col]||'');
+      await updateRow('Invoices', inv._rowIndex, values);
+    }
+    setSyncStatus('● Live');
+    showToast(`${toFlip.length} invoice${toFlip.length>1?'s':''} marked overdue`, '');
+  }catch(e){ console.error('Overdue update failed:',e); setSyncStatus('● Live'); }
 }
 function setSyncStatus(m){document.getElementById('sync-status').textContent=m;}
 
@@ -863,7 +899,7 @@ function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderSche
 const PAGE_TO_SHEET={jobs:'Jobs',customers:'Customers',invoices:'Invoices',estimates:'Estimates',schedule:'Schedule',expenses:'Expenses',dashboard:'Jobs',analytics:'Jobs'};
 const SHEET_SINGULAR={Jobs:'Job',Customers:'Customer',Invoices:'Invoice',Estimates:'Estimate',Schedule:'Schedule Entry',Expenses:'Expense'};
 const FORMS={
-  Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address of this job" /></div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
+  Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address of this job" /></div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div><input type="hidden" name="Photos" /><p style="font-size:0.75rem;color:var(--text-muted);">📷 To add before/after photos: save this job, then open the customer from the Customers page and use "Add Photos" on the job.</p>`,
   Customers:()=>`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="Name" placeholder="Jane Smith" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="(555) 000-0000" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="Email" /></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Invoices:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" name="Invoice #" value="${nextId('Invoice #','Invoices','INV')}" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Unpaid</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" name="Due Date" /></div></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Estimates:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Estimate #</label><input class="form-input" name="Estimate #" value="${nextId('Estimate #','Estimates','EST')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
@@ -894,11 +930,10 @@ function setPendingFile(file){
   document.getElementById('receipt-url-input').placeholder = 'Auto-filled after upload...';
 }
 
-async function uploadFileToDrive(file){
-  // Upload to Google Drive in the "Hydro Receipts" folder (created if needed)
-  const folderName = 'Hydro Pressure Washing Receipts';
+async function uploadFileToDrive(file, folderName){
+  folderName = folderName || 'Hydro Pressure Washing Receipts';
 
-  // Find or create the receipts folder
+  // Find or create the folder
   let folderId = await getDriveFolder(folderName);
 
   // Upload the file
@@ -915,7 +950,7 @@ async function uploadFileToDrive(file){
 
   if(uploadResp.status === 401){
     await refreshTokenAndRetry(() => Promise.resolve());
-    return uploadFileToDrive(file); // retry
+    return uploadFileToDrive(file, folderName); // retry
   }
 
   const uploaded = await uploadResp.json();
@@ -928,8 +963,13 @@ async function uploadFileToDrive(file){
     body: JSON.stringify({ role: 'reader', type: 'anyone' })
   });
 
-  return uploaded.webViewLink || `https://drive.google.com/file/d/${uploaded.id}/view`;
+  // Return the file ID — we build whatever URL we need from it
+  return uploaded.id;
 }
+
+// Build a thumbnail/displayable image URL from a Drive file ID
+function driveImgUrl(id){ return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`; }
+function driveViewUrl(id){ return `https://drive.google.com/file/d/${id}/view`; }
 
 async function getDriveFolder(name){
   // Search for existing folder
@@ -960,7 +1000,8 @@ async function saveRecord(){
     setSyncStatus('⟳ Uploading receipt...');
     showToast('Uploading receipt to Google Drive...', '');
     try{
-      const driveUrl = await uploadFileToDrive(pendingUploadFile);
+      const driveId = await uploadFileToDrive(pendingUploadFile, 'Hydro Pressure Washing Receipts');
+      const driveUrl = driveViewUrl(driveId);
       const urlInput = document.querySelector('[name="ReceiptURL"]');
       if(urlInput) urlInput.value = driveUrl;
       pendingUploadFile = null;
@@ -988,7 +1029,7 @@ async function saveRecord(){
   catch(e){showToast('Save failed. Check config.','error');setSyncStatus('✕ Error');console.error(e);}
 }
 async function confirmDelete(sheet,rowIndex){if(!confirm('Delete this record?'))return;setSyncStatus('⟳ Deleting...');try{await deleteRow(sheet,rowIndex);showToast('Deleted.','success');await loadAllData();renderPage(currentPage);}catch(e){showToast('Delete failed.','error');console.error(e);}}
-function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.add('hidden');editingRow=null;pendingUploadFile=null;forceSaveSheet=null;const footer=document.querySelector('.modal-footer');if(footer&&footer.dataset.prev){footer.innerHTML=footer.dataset.prev;delete footer.dataset.prev;}}
+function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.add('hidden');const mdl=document.getElementById('modal');if(mdl)mdl.classList.remove('modal-xl');editingRow=null;pendingUploadFile=null;forceSaveSheet=null;detailCustomerName=null;const footer=document.querySelector('.modal-footer');if(footer&&footer.dataset.prev){footer.innerHTML=footer.dataset.prev;delete footer.dataset.prev;}}
 
 function badge(status){const map={'Scheduled':'scheduled','In Progress':'inprogress','Completed':'completed','Cancelled':'cancelled','Paid':'paid','Unpaid':'unpaid','Overdue':'overdue','Sent':'sent','Draft':'draft','Accepted':'accepted','Declined':'cancelled'};return `<span class="badge badge-${map[status]||'draft'}">${status||'—'}</span>`;}
 function tod(){return new Date().toISOString().slice(0,10);}
@@ -1186,15 +1227,17 @@ async function saveMeasurementsToEstimate(){
   forceSaveSheet='Estimates';
 }
 
-// ── CUSTOMER DETAIL VIEW (jobs grouped by property) ──
+// ── CUSTOMER DETAIL VIEW (jobs grouped by property, with photos) ──
+let detailCustomerName=null;
+
 function showCustomerDetail(name){
+  detailCustomerName=name;
   const cust=cache.Customers.find(c=>c['Name']===name);
   const jobs=cache.Jobs.filter(j=>j['Customer']===name);
   const invoices=cache.Invoices.filter(i=>i['Customer']===name);
   const totalRevenue=invoices.filter(i=>i['Status']==='Paid').reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
   const outstanding=invoices.filter(i=>['Unpaid','Overdue'].includes(i['Status'])).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
 
-  // Group jobs by property address (jobs with no address go under "No address recorded")
   const groups={};
   jobs.forEach(j=>{
     const key=(j['Address']&&j['Address'].trim())?j['Address'].trim():'No address recorded';
@@ -1208,7 +1251,22 @@ function showCustomerDetail(name){
   } else {
     groupsHtml=Object.entries(groups).map(([addr,js])=>{
       const propTotal=js.reduce((s,j)=>s+parseFloat(j['Amount']||0),0);
-      const rows=js.sort((a,b)=>(b['Date']||'').localeCompare(a['Date']||'')).map(j=>`<div class="cd-job"><div class="cd-job-main"><span class="cd-job-svc">${j['Service']||'—'}</span><span class="cd-job-date">${j['Date']||''}</span></div><div class="cd-job-side">${badge(j['Status'])}<span class="cd-job-amt">$${parseFloat(j['Amount']||0).toFixed(2)}</span></div></div>`).join('');
+      const rows=js.sort((a,b)=>(b['Date']||'').localeCompare(a['Date']||'')).map(j=>{
+        const ids=(j['Photos']||'').split(',').map(x=>x.trim()).filter(Boolean);
+        const gallery=ids.length?`<div class="cd-gallery">${ids.map(id=>`<div class="cd-photo"><img src="${driveImgUrl(id)}" loading="lazy" onclick="window.open('${driveViewUrl(id)}','_blank')" alt="job photo"><button class="cd-photo-del" title="Remove photo" onclick="removeJobPhoto(${j._rowIndex},'${id}')">✕</button></div>`).join('')}</div>`:'<div class="cd-no-photos">No photos yet</div>';
+        return `<div class="cd-job">
+          <div class="cd-job-row">
+            <div class="cd-job-main"><span class="cd-job-svc">${j['Service']||'—'}</span><span class="cd-job-date">${j['Date']||''}</span></div>
+            <div class="cd-job-side">${badge(j['Status'])}<span class="cd-job-amt">$${parseFloat(j['Amount']||0).toFixed(2)}</span></div>
+          </div>
+          ${gallery}
+          <div class="cd-photo-actions">
+            <button class="action-btn cd-upload-btn" onclick="document.getElementById('photo-input-${j._rowIndex}').click()">📷 Add Photos</button>
+            <input type="file" id="photo-input-${j._rowIndex}" accept="image/*" multiple style="display:none" onchange="uploadJobPhotos(${j._rowIndex}, this.files)">
+            <span class="cd-photo-status" id="photo-status-${j._rowIndex}"></span>
+          </div>
+        </div>`;
+      }).join('');
       return `<div class="cd-property"><div class="cd-property-head"><span class="cd-property-addr">📍 ${addr}</span><span class="cd-property-total">$${propTotal.toFixed(2)} · ${js.length} job${js.length!==1?'s':''}</span></div>${rows}</div>`;
     }).join('');
   }
@@ -1230,12 +1288,54 @@ function showCustomerDetail(name){
     <div class="cd-section-label">Job History by Property</div>
     <div class="cd-properties">${groupsHtml}</div>
   `;
-  // Hide the default Save/Cancel footer buttons for this read-only view; show a Close
   const footer=document.querySelector('.modal-footer');
   footer.dataset.prev=footer.innerHTML;
   footer.innerHTML='<button class="action-btn primary" onclick="closeModal()">Close</button>';
   editingRow=null;
+  document.getElementById('modal').classList.add('modal-xl');
   document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function uploadJobPhotos(rowIndex, files){
+  if(!files||!files.length) return;
+  const statusEl=document.getElementById('photo-status-'+rowIndex);
+  const job=cache.Jobs.find(j=>j._rowIndex===rowIndex);
+  if(!job) return;
+  const existing=(job['Photos']||'').split(',').map(x=>x.trim()).filter(Boolean);
+  try{
+    let done=0;
+    for(const file of files){
+      if(statusEl) statusEl.textContent=`Uploading ${done+1} of ${files.length}…`;
+      const id=await uploadFileToDrive(file, 'Hydro Pressure Washing Photos');
+      existing.push(id);
+      done++;
+    }
+    job['Photos']=existing.join(', ');
+    // Write the Jobs row back to the sheet
+    const values=SHEETS.Jobs.map(col=>job[col]||'');
+    await updateRow('Jobs', rowIndex, values);
+    if(statusEl) statusEl.textContent='';
+    showToast(`${done} photo${done>1?'s':''} uploaded`,'success');
+    showCustomerDetail(detailCustomerName); // refresh the view
+  }catch(e){
+    console.error('Photo upload failed:',e);
+    if(statusEl) statusEl.textContent='Upload failed.';
+    showToast('Photo upload failed.','error');
+  }
+}
+
+async function removeJobPhoto(rowIndex, photoId){
+  if(!confirm('Remove this photo from the job? (It stays in your Google Drive.)')) return;
+  const job=cache.Jobs.find(j=>j._rowIndex===rowIndex);
+  if(!job) return;
+  const remaining=(job['Photos']||'').split(',').map(x=>x.trim()).filter(Boolean).filter(id=>id!==photoId);
+  job['Photos']=remaining.join(', ');
+  try{
+    const values=SHEETS.Jobs.map(col=>job[col]||'');
+    await updateRow('Jobs', rowIndex, values);
+    showToast('Photo removed.','success');
+    showCustomerDetail(detailCustomerName);
+  }catch(e){ console.error(e); showToast('Could not remove photo.','error'); }
 }
 
 function showError(msg){const el=document.getElementById('login-error');if(el)el.textContent=msg;}
