@@ -92,8 +92,10 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .badge-draft{background:rgba(148,163,184,0.1);color:#94A3B8;border:1px solid rgba(148,163,184,0.2);}
 .badge-accepted{background:rgba(34,197,94,0.15);color:#86EFAC;border:1px solid rgba(34,197,94,0.3);}
 .badge-countered{background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3);}
-.est-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.est-under-status{margin-top:6px;}
+.est-actions{display:flex;flex-wrap:wrap;gap:5px;max-width:280px;}
 .est-link-btn{color:var(--cyan)!important;border-color:rgba(6,182,212,0.3)!important;}
+.est-email-btn{color:#93c5fd!important;border-color:rgba(59,130,246,0.35)!important;}
 .est-sched-btn{color:#86efac!important;border-color:rgba(34,197,94,0.3)!important;}
 .est-hint{font-size:0.68rem;color:var(--text-muted);font-style:italic;align-self:center;}
 .est-reply{margin-top:5px;font-size:0.72rem;color:#fde047;cursor:pointer;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.25);border-radius:6px;padding:3px 7px;display:inline-block;}
@@ -819,7 +821,7 @@ function renderTable(page,filterText='',filterStatus=''){
     jobs:{sheet:'Jobs',body:'jobs-body',statusCol:'Status',render:r=>`<td>${r['Job #']}</td><td>${r['Customer']}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>${badge(r['Status'])}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td>`},
     customers:{sheet:'Customers',body:'customers-body',render:r=>`<td><a href="#" onclick="event.preventDefault();showCustomerDetail('${(r['Name']||'').replace(/'/g,"\\'")}')" style="color:var(--blue-glow);text-decoration:none;font-weight:500;">${r['Name']}</a></td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Jobs.filter(j=>j['Customer']===r['Name']).length}</td>`},
     invoices:{sheet:'Invoices',body:'invoices-body',statusCol:'Status',render:r=>`<td>${r['Invoice #']}</td><td>${r['Customer']}</td><td>${r['Date']}</td><td>${r['Due Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}</td>`},
-    quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${estimateActionBtns(r)}</td>`},
+    quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${estimateStatusExtras(r)}</td><td>${estimateActionBtns(r)}</td>`},
     expenses:{sheet:'Expenses',body:'expenses-body',statusCol:'Category',render:r=>`<td>${r['Date']}</td><td>${r['Vendor']||'—'}</td><td>${r['Description']}</td><td>${r['Category']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${r['ReceiptURL']?`<a href="${r['ReceiptURL']}" target="_blank" style="color:var(--cyan);font-size:0.75rem;">View</a>`:'—'}</td>`},
   };
   const cfg=cfgs[page];if(!cfg)return;
@@ -827,7 +829,7 @@ function renderTable(page,filterText='',filterStatus=''){
   if(filterText){const q=filterText.toLowerCase();rows=rows.filter(r=>Object.values(r).join(' ').toLowerCase().includes(q));}
   if(filterStatus&&cfg.statusCol)rows=rows.filter(r=>r[cfg.statusCol]===filterStatus);
   const tbody=document.getElementById(cfg.body);
-  tbody.innerHTML=rows.length?rows.map(r=>`<tr>${cfg.render(r)}<td><button class="tbl-btn" onclick="openEditModal('${cfg.sheet}',${r._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('${cfg.sheet}',${r._rowIndex})">Delete</button></td></tr>`).join(''):`<tr><td colspan="10" class="empty-state">No records found.</td></tr>`;
+  tbody.innerHTML=rows.length?rows.map(r=>cfg.customActions?`<tr>${cfg.render(r)}</tr>`:`<tr>${cfg.render(r)}<td><button class="tbl-btn" onclick="openEditModal('${cfg.sheet}',${r._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('${cfg.sheet}',${r._rowIndex})">Delete</button></td></tr>`).join(''):`<tr><td colspan="10" class="empty-state">No records found.</td></tr>`;
   if(page==='expenses'){const now=new Date(),mo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;document.getElementById('stat-total-expenses').textContent='$'+cache.Expenses.reduce((s,e)=>s+parseFloat(e['Amount']||0),0).toFixed(2);document.getElementById('stat-month-expenses').textContent='$'+cache.Expenses.filter(e=>(e['Date']||'').startsWith(mo)).reduce((s,e)=>s+parseFloat(e['Amount']||0),0).toFixed(2);}
 }
 function filterTable(page,val){renderTable(page,val);}
@@ -1181,17 +1183,29 @@ function autofillCustomer(name){
 function nextId(col,sheet,prefix){const rows=cache[sheet]||[];if(!rows.length)return `${prefix}-001`;const next=Math.max(...rows.map(r=>parseInt((r[col]||'').replace(/\D/g,''))||0))+1;return `${prefix}-${String(next).padStart(3,'0')}`;}
 function genToken(){return 'tok-'+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,6);}
 
-// Buttons shown below the status badge in the Quotes table
+// Content shown in the STATUS column (under the badge): View button + deposit/reply lines
+function estimateStatusExtras(r){
+  const status=r['Status']||'';
+  let html=`<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="viewEstimate(${r._rowIndex})">👁 View</button></div>`;
+  if(status==='Accepted' && (r['DepositStatus']==='Requested' || r['DepositStatus']==='Paid')){
+    const amt=(parseFloat(r['Amount']||0)*0.35);
+    const lbl=r['DepositStatus']==='Paid'?`✓ Deposit paid ($${amt.toFixed(2)})`:`⏳ Deposit requested ($${amt.toFixed(2)}) — mark paid once received`;
+    html+=`<div class="est-dep-status ${r['DepositStatus']==='Paid'?'paid':''}" onclick="toggleDepositPaid(${r._rowIndex})">${lbl}</div>`;
+  }
+  if(r['Customer Reply']){
+    html+=`<div class="est-reply" onclick="showEstimateReply(${r._rowIndex})">💬 Customer left a message — click to read</div>`;
+  }
+  return html;
+}
+
+// Content shown in the ACTIONS column: the action buttons (Copy Link, Schedule, Deposit) + Edit/Delete
 function estimateActionBtns(r){
   const status=r['Status']||'';
   let html='<div class="est-actions">';
-  // View button — always available, opens a read-only summary
-  html+=`<button class="tbl-btn est-view-btn" onclick="viewEstimate(${r._rowIndex})">👁 View</button>`;
-  // Copy customer link — available once it's been Sent or Countered (or even Draft, to preview)
   if(r['Token']){
     html+=`<button class="tbl-btn est-link-btn" onclick="copyEstimateLink('${r['Token']}','${(r['Quote #']||'').replace(/'/g,"")}')">🔗 Copy Link</button>`;
+    html+=`<button class="tbl-btn est-email-btn" onclick="emailQuote(${r._rowIndex})">📧 Email Quote</button>`;
   }
-  // Once accepted, allow scheduling and deposit collection
   if(status==='Accepted'){
     const dep=r['DepositStatus']||'';
     html+=`<button class="tbl-btn est-sched-btn" onclick="scheduleFromEstimate(${r._rowIndex})">📅 Add to Schedule</button>`;
@@ -1201,21 +1215,12 @@ function estimateActionBtns(r){
       html+=`<button class="tbl-btn est-dep-btn" onclick="copyDepositLink(${r._rowIndex})">💵 Collect Deposit</button>`;
     }
   }
-  // If declined, a quick reminder that editing + saving will mark it Countered
   if(status==='Declined'){
     html+=`<span class="est-hint">Edit &amp; resend to counter</span>`;
   }
+  html+=`<button class="tbl-btn" onclick="openEditModal('Quotes',${r._rowIndex})">Edit</button>`;
+  html+=`<button class="tbl-btn del" onclick="confirmDelete('Quotes',${r._rowIndex})">Delete</button>`;
   html+='</div>';
-  // Deposit status line
-  if(status==='Accepted' && (r['DepositStatus']==='Requested' || r['DepositStatus']==='Paid')){
-    const amt=(parseFloat(r['Amount']||0)*0.35);
-    const lbl=r['DepositStatus']==='Paid'?`✓ Deposit paid ($${amt.toFixed(2)})`:`⏳ Deposit requested ($${amt.toFixed(2)}) — mark paid once received`;
-    html+=`<div class="est-dep-status ${r['DepositStatus']==='Paid'?'paid':''}" onclick="toggleDepositPaid(${r._rowIndex})">${lbl}</div>`;
-  }
-  // If the customer left a comment, show a clickable indicator
-  if(r['Customer Reply']){
-    html+=`<div class="est-reply" onclick="showEstimateReply(${r._rowIndex})">💬 Customer left a message — click to read</div>`;
-  }
   return html;
 }
 
@@ -1305,6 +1310,37 @@ async function toggleDepositPaid(rowIndex){
     showToast(q['DepositStatus']==='Paid'?'Deposit marked as paid ✓':'Deposit set back to requested','success');
   }catch(e){ showToast('Could not update deposit status.','error'); console.error(e); }
   renderTable('quotes');
+}
+
+// Email the quote link to the customer (via the Apps Script backend)
+async function emailQuote(rowIndex){
+  const q=cache.Quotes.find(e=>e._rowIndex===rowIndex);
+  if(!q) return;
+  if(!q['Token']){ showToast('This quote has no link yet — open & save it first.','error'); return; }
+  // Check we have an email on file for this customer
+  const cust=cache.Customers.find(c=>c['Name']===q['Customer']);
+  if(!cust || !cust['Email']){
+    showToast(`No email on file for ${q['Customer']||'this customer'}. Add it on their customer profile first.`,'error');
+    return;
+  }
+  if(!confirm(`Email this quote to ${q['Customer']} at ${cust['Email']}?`)) return;
+  const base=CONFIG.ESTIMATE_PORTAL_URL;
+  const url=base+'?action=sendemail&kind=quote&token='+encodeURIComponent(q['Token']);
+  showToast('Sending email...','');
+  try{
+    // no-cors: triggers the send but we can't read the response, so we update optimistically
+    await fetch(url,{method:'GET',mode:'no-cors'});
+    // Mark as Sent locally + in the sheet
+    if(q['Status']==='Draft'||!q['Status']){
+      q['Status']='Sent';
+      try{ await updateRow('Quotes', q._rowIndex, SHEETS.Quotes.map(col=>q[col]||'')); }catch(e){}
+    }
+    renderTable('quotes');
+    showToast(`Quote emailed to ${cust['Email']} (check it arrived).`,'success');
+  }catch(e){
+    showToast('Could not send — check your connection.','error');
+    console.error('emailQuote:',e);
+  }
 }
 
 // When a quote is accepted, prefill a Schedule entry from it
