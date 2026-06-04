@@ -99,6 +99,11 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .est-reply{margin-top:5px;font-size:0.72rem;color:#fde047;cursor:pointer;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.25);border-radius:6px;padding:3px 7px;display:inline-block;}
 .est-reply:hover{background:rgba(234,179,8,0.18);}
 .est-view-btn{color:#c4b5fd!important;border-color:rgba(139,92,246,0.3)!important;}
+.est-dep-btn{color:#fbbf24!important;border-color:rgba(251,191,36,0.35)!important;}
+.est-dep-paid{color:#86efac!important;border-color:rgba(34,197,94,0.35)!important;}
+.est-dep-status{margin-top:5px;font-size:0.72rem;color:#fbbf24;cursor:pointer;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);border-radius:6px;padding:3px 7px;display:inline-block;}
+.est-dep-status.paid{color:#86efac;background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.25);}
+.est-dep-status:hover{filter:brightness(1.2);}
 .ev-head{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem;}
 .ev-head>div{flex:1;min-width:90px;}
 .ev-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);font-weight:700;}
@@ -587,7 +592,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Quotes:['Quote #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Quotes:['Quote #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -1186,15 +1191,27 @@ function estimateActionBtns(r){
   if(r['Token']){
     html+=`<button class="tbl-btn est-link-btn" onclick="copyEstimateLink('${r['Token']}','${(r['Quote #']||'').replace(/'/g,"")}')">🔗 Copy Link</button>`;
   }
-  // Once accepted, allow scheduling
+  // Once accepted, allow scheduling and deposit collection
   if(status==='Accepted'){
+    const dep=r['DepositStatus']||'';
     html+=`<button class="tbl-btn est-sched-btn" onclick="scheduleFromEstimate(${r._rowIndex})">📅 Add to Schedule</button>`;
+    if(dep==='Paid'){
+      html+=`<button class="tbl-btn est-dep-paid" onclick="copyDepositLink(${r._rowIndex})">💵 Deposit Paid ✓</button>`;
+    } else {
+      html+=`<button class="tbl-btn est-dep-btn" onclick="copyDepositLink(${r._rowIndex})">💵 Collect Deposit</button>`;
+    }
   }
   // If declined, a quick reminder that editing + saving will mark it Countered
   if(status==='Declined'){
     html+=`<span class="est-hint">Edit &amp; resend to counter</span>`;
   }
   html+='</div>';
+  // Deposit status line
+  if(status==='Accepted' && (r['DepositStatus']==='Requested' || r['DepositStatus']==='Paid')){
+    const amt=(parseFloat(r['Amount']||0)*0.35);
+    const lbl=r['DepositStatus']==='Paid'?`✓ Deposit paid ($${amt.toFixed(2)})`:`⏳ Deposit requested ($${amt.toFixed(2)}) — mark paid once received`;
+    html+=`<div class="est-dep-status ${r['DepositStatus']==='Paid'?'paid':''}" onclick="toggleDepositPaid(${r._rowIndex})">${lbl}</div>`;
+  }
   // If the customer left a comment, show a clickable indicator
   if(r['Customer Reply']){
     html+=`<div class="est-reply" onclick="showEstimateReply(${r._rowIndex})">💬 Customer left a message — click to read</div>`;
@@ -1256,7 +1273,41 @@ function copyEstimateLink(token, estNum){
   });
 }
 
-// When an estimate is accepted, prefill a Schedule entry from it
+// Generate a deposit-payment link (35% of the quote) and mark the quote as deposit-Requested
+async function copyDepositLink(rowIndex){
+  const q=cache.Quotes.find(e=>e._rowIndex===rowIndex);
+  if(!q) return;
+  const base=CONFIG.CLEAN_ESTIMATE_URL || CONFIG.ESTIMATE_PORTAL_URL;
+  if(!base || base.indexOf('PASTE_YOUR')===0){ showToast('Set up the quote portal first.','error'); return; }
+  if(!q['Token']){ showToast('This quote has no link token yet — open & save it first.','error'); return; }
+  const deposit=(parseFloat(q['Amount']||0)*0.35).toFixed(2);
+  const link=base+'?token='+encodeURIComponent(q['Token'])+'&type=deposit';
+  // Mark as Requested (only if not already paid)
+  if(q['DepositStatus']!=='Paid'){
+    q['DepositStatus']='Requested';
+    try{ await updateRow('Quotes', q._rowIndex, SHEETS.Quotes.map(col=>q[col]||'')); }catch(e){ console.error(e); }
+    renderTable('quotes');
+  }
+  navigator.clipboard.writeText(link).then(()=>{
+    showToast(`Deposit link copied — 35% = $${deposit}. Send it to your customer.`,'success');
+  }).catch(()=>{
+    window.prompt(`Deposit link (35% = $${deposit}):`, link);
+  });
+}
+
+// Toggle a quote's deposit between Requested and Paid (you click it once the money lands)
+async function toggleDepositPaid(rowIndex){
+  const q=cache.Quotes.find(e=>e._rowIndex===rowIndex);
+  if(!q) return;
+  q['DepositStatus']=(q['DepositStatus']==='Paid')?'Requested':'Paid';
+  try{
+    await updateRow('Quotes', q._rowIndex, SHEETS.Quotes.map(col=>q[col]||''));
+    showToast(q['DepositStatus']==='Paid'?'Deposit marked as paid ✓':'Deposit set back to requested','success');
+  }catch(e){ showToast('Could not update deposit status.','error'); console.error(e); }
+  renderTable('quotes');
+}
+
+// When a quote is accepted, prefill a Schedule entry from it
 function scheduleFromEstimate(rowIndex){
   const est=cache.Quotes.find(e=>e._rowIndex===rowIndex);
   if(!est) return;
