@@ -581,13 +581,13 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.apps.googleusercontent.com",AUTHORIZED_EMAIL:"jamesfreeman8000@gmail.com",SPREADSHEET_ID:"1f7zba8rYUiDLuBgcwErBYXuZ2Y2rZIG2iD-SulF3z7w",API_KEY:"AIzaSyCsu0sSQL_a9Klef5iXgwA__S7H3q_VvnQ",MAPS_API_KEY:"AIzaSyDWbQuwnTEBJ5cnWxVgkQoBaNj8Ce91A3w",ESTIMATE_PORTAL_URL:"https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec",CLEAN_ESTIMATE_URL:"https://hydropressurewashing.co/estimate"};
+const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.apps.googleusercontent.com",AUTHORIZED_EMAIL:"jamesfreeman8000@gmail.com",SPREADSHEET_ID:"1f7zba8rYUiDLuBgcwErBYXuZ2Y2rZIG2iD-SulF3z7w",API_KEY:"AIzaSyCsu0sSQL_a9Klef5iXgwA__S7H3q_VvnQ",MAPS_API_KEY:"AIzaSyDWbQuwnTEBJ5cnWxVgkQoBaNj8Ce91A3w",ESTIMATE_PORTAL_URL:"https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec",CLEAN_ESTIMATE_URL:"https://hydropressurewashing.co/estimate",WAIVER_URL:"https://hydropressurewashing.co/estimate"};
 
 let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Jobs:[],Customers:[],Invoices:[],Estimates:[],Schedule:[],Expenses:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -922,8 +922,33 @@ function renderCalendar(){
   }
   document.getElementById('calendar-grid').innerHTML=html;
 }
-function renderScheduleList(){const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td>${s['Date']}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">No jobs this month.</td></tr>`;}
+function renderScheduleList(){const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td>${s['Date']}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><div class="est-actions"><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">No jobs this month.</td></tr>`;}
 function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;return `${h12}:${m} ${ap}`;}
+
+function waiverBtn(s){
+  if(s['WaiverStatus']==='Signed'){
+    return `<span class="est-hint" style="color:#86efac;font-style:normal;">✓ Waiver Signed</span>`;
+  }
+  return `<button class="tbl-btn est-link-btn" onclick="copyWaiverLink(${s._rowIndex})">📄 Send Waiver</button>`;
+}
+async function copyWaiverLink(rowIndex){
+  const s=cache.Schedule.find(r=>r._rowIndex===rowIndex);
+  if(!s) return;
+  if(!s['WaiverToken']){
+    s['WaiverToken']=genToken();
+    setSyncStatus('⟳ Preparing waiver...');
+    try{
+      const values=SHEETS.Schedule.map(col=>s[col]||'');
+      await updateRow('Schedule', s._rowIndex, values);
+      setSyncStatus('● Live');
+    }catch(e){ showToast('Could not prepare waiver link.','error'); setSyncStatus('✕ Error'); return; }
+  }
+  const base=CONFIG.WAIVER_URL || CONFIG.ESTIMATE_PORTAL_URL;
+  const link=base+'?type=waiver&token='+encodeURIComponent(s['WaiverToken']);
+  navigator.clipboard.writeText(link).then(()=>{
+    showToast('Waiver link copied! Send it to '+(s['Customer']||'your customer')+'.','success');
+  }).catch(()=>{ window.prompt('Copy this waiver link for your customer:', link); });
+}
 function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderSchedule();}
 function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderSchedule();}
 
