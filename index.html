@@ -254,7 +254,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .cd-stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white);line-height:1;}
 .cd-stat-lbl{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-top:0.3rem;}
 .cd-notes{font-size:0.82rem;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:7px;padding:0.6rem 0.8rem;margin-bottom:1rem;line-height:1.5;}
-/* ESTIMATE LINE ITEMS */
+/* QUOTE LINE ITEMS */
 .est-line{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;}
 .est-line-svc{flex:1;min-width:0;}
 .est-line-amt{width:110px;flex-shrink:0;}
@@ -377,7 +377,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <a class="nav-item" data-page="customers" onclick="navigate('customers')">▪ Customers</a>
       <div class="nav-label" style="margin-top:0.5rem">Finance</div>
       <a class="nav-item" data-page="invoices" onclick="navigate('invoices')">▪ Invoices</a>
-      <a class="nav-item" data-page="estimates" onclick="navigate('estimates')">▪ Estimates</a>
+      <a class="nav-item" data-page="quotes" onclick="navigate('quotes')">▪ Quotes</a>
       <a class="nav-item" data-page="expenses" onclick="navigate('expenses')">▪ Expenses</a>
       <div class="nav-label" style="margin-top:0.5rem">Insights</div>
       <a class="nav-item" data-page="analytics" onclick="navigate('analytics')">▪ Analytics</a>
@@ -437,10 +437,10 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="card"><table class="data-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="invoices-body"><tr><td colspan="7" class="empty-state">No invoices yet.</td></tr></tbody></table></div>
     </section>
 
-    <!-- ESTIMATES -->
-    <section id="page-estimates" class="page">
-      <div class="filter-bar"><input type="text" class="search-input" placeholder="Search estimates..." oninput="filterTable('estimates',this.value)" /></div>
-      <div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Estimate #</th><th>Customer</th><th>Address</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="estimates-body"><tr><td colspan="8" class="empty-state">No estimates yet.</td></tr></tbody></table></div></div>
+    <!-- QUOTES -->
+    <section id="page-quotes" class="page">
+      <div class="filter-bar"><input type="text" class="search-input" placeholder="Search quotes..." oninput="filterTable('quotes',this.value)" /></div>
+      <div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Quote #</th><th>Customer</th><th>Address</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="quotes-body"><tr><td colspan="8" class="empty-state">No quotes yet.</td></tr></tbody></table></div></div>
     </section>
 
     <!-- EXPENSES -->
@@ -542,7 +542,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
             <div id="measure-results" style="padding:0.5rem;"></div>
             <div class="measure-totals" id="measure-totals"></div>
           </div>
-          <button class="action-btn primary" style="width:100%;margin-top:1rem;" onclick="saveMeasurementsToEstimate()">Save to Estimate</button>
+          <button class="action-btn primary" style="width:100%;margin-top:1rem;" onclick="saveMeasurementsToEstimate()">Save to Quote</button>
         </div>
       </div>
     </section>
@@ -586,8 +586,8 @@ const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.ap
 let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
-const cache={Jobs:[],Customers:[],Invoices:[],Estimates:[],Schedule:[],Expenses:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Estimates:['Estimate #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
+const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[]};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Quotes:['Quote #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -754,8 +754,8 @@ function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s
 
 async function loadAllData(){
   setSyncStatus('⟳ Syncing...');
-  try{const[j,c,i,e,s,x]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Estimates'),readSheet('Schedule'),readSheet('Expenses')]);
-  cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Estimates=e;cache.Schedule=s;cache.Expenses=x;setSyncStatus('● Live');
+  try{const[j,c,i,e,s,x]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Quotes'),readSheet('Schedule'),readSheet('Expenses')]);
+  cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;setSyncStatus('● Live');
   await markOverdueInvoices();}
   catch(e){setSyncStatus('✕ Error');console.error(e);}
 }
@@ -782,7 +782,7 @@ async function markOverdueInvoices(){
 }
 function setSyncStatus(m){document.getElementById('sync-status').textContent=m;}
 
-const PAGE_TITLES={dashboard:'Overview',jobs:'Jobs',customers:'Customers',invoices:'Invoices',estimates:'Estimates',schedule:'Schedule',expenses:'Expenses',analytics:'Analytics',measure:'Measure Property'};
+const PAGE_TITLES={dashboard:'Overview',jobs:'Jobs',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',analytics:'Analytics',measure:'Measure Property'};
 function navigate(page){
   currentPage=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -794,7 +794,7 @@ function navigate(page){
   addBtn.style.display=(page==='analytics'||page==='measure')?'none':'';
   renderPage(page);
 }
-function renderPage(page){({dashboard:renderDashboard,jobs:()=>renderTable('jobs'),customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),estimates:()=>renderTable('estimates'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
+function renderPage(page){({dashboard:renderDashboard,jobs:()=>renderTable('jobs'),customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
 
 function renderDashboard(){
   const now=new Date(),mo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -814,7 +814,7 @@ function renderTable(page,filterText='',filterStatus=''){
     jobs:{sheet:'Jobs',body:'jobs-body',statusCol:'Status',render:r=>`<td>${r['Job #']}</td><td>${r['Customer']}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>${badge(r['Status'])}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td>`},
     customers:{sheet:'Customers',body:'customers-body',render:r=>`<td><a href="#" onclick="event.preventDefault();showCustomerDetail('${(r['Name']||'').replace(/'/g,"\\'")}')" style="color:var(--blue-glow);text-decoration:none;font-weight:500;">${r['Name']}</a></td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Jobs.filter(j=>j['Customer']===r['Name']).length}</td>`},
     invoices:{sheet:'Invoices',body:'invoices-body',statusCol:'Status',render:r=>`<td>${r['Invoice #']}</td><td>${r['Customer']}</td><td>${r['Date']}</td><td>${r['Due Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}</td>`},
-    estimates:{sheet:'Estimates',body:'estimates-body',statusCol:'Status',render:r=>`<td>${r['Estimate #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${estimateActionBtns(r)}</td>`},
+    quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${estimateActionBtns(r)}</td>`},
     expenses:{sheet:'Expenses',body:'expenses-body',statusCol:'Category',render:r=>`<td>${r['Date']}</td><td>${r['Vendor']||'—'}</td><td>${r['Description']}</td><td>${r['Category']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${r['ReceiptURL']?`<a href="${r['ReceiptURL']}" target="_blank" style="color:var(--cyan);font-size:0.75rem;">View</a>`:'—'}</td>`},
   };
   const cfg=cfgs[page];if(!cfg)return;
@@ -838,7 +838,7 @@ function renderAnalytics(){
   const moRev=cache.Invoices.filter(i=>i['Status']==='Paid'&&(i['Date']||'').startsWith(mo)).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
   const moExp=cache.Expenses.filter(e=>(e['Date']||'').startsWith(mo)).reduce((s,e)=>s+parseFloat(e['Amount']||0),0);
   const avgJob=cache.Jobs.filter(j=>j['Status']==='Completed').length?allRevenue/cache.Jobs.filter(j=>j['Status']==='Completed').length:0;
-  const convRate=cache.Estimates.length?(cache.Estimates.filter(e=>e['Status']==='Accepted').length/cache.Estimates.length*100):0;
+  const convRate=cache.Quotes.length?(cache.Quotes.filter(e=>e['Status']==='Accepted').length/cache.Quotes.length*100):0;
 
   // Schedule stats
   const schScheduled=cache.Schedule.filter(s=>s['Status']==='Scheduled').length;
@@ -853,7 +853,7 @@ function renderAnalytics(){
     <div class="kpi-card ${profit>=0?'blue':'red'}"><div class="kpi-label">Net Profit</div><div class="kpi-value">$${profit.toFixed(0)}</div><div class="kpi-sub">${profit>=0?'In the black':'In the red'}</div></div>
     <div class="kpi-card yellow"><div class="kpi-label">This Month</div><div class="kpi-value">$${moRev.toFixed(0)}</div><div class="kpi-sub">Revenue — $${moExp.toFixed(0)} expenses</div></div>
     <div class="kpi-card purple"><div class="kpi-label">Avg Job Value</div><div class="kpi-value">$${avgJob.toFixed(0)}</div><div class="kpi-sub">Completed jobs</div></div>
-    <div class="kpi-card blue"><div class="kpi-label">Estimate Conv.</div><div class="kpi-value">${convRate.toFixed(0)}%</div><div class="kpi-sub">${cache.Estimates.filter(e=>e['Status']==='Accepted').length} of ${cache.Estimates.length} accepted</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Quote Conv.</div><div class="kpi-value">${convRate.toFixed(0)}%</div><div class="kpi-sub">${cache.Quotes.filter(e=>e['Status']==='Accepted').length} of ${cache.Quotes.length} accepted</div></div>
     <div class="kpi-card blue"><div class="kpi-label">Upcoming Jobs</div><div class="kpi-value">${schScheduled}</div><div class="kpi-sub">Currently scheduled</div></div>
     <div class="kpi-card ${cancelRate>20?'red':'green'}"><div class="kpi-label">Cancellation Rate</div><div class="kpi-value">${cancelRate.toFixed(0)}%</div><div class="kpi-sub">${schCancelled} of ${schTotal} scheduled</div></div>
   `;
@@ -953,13 +953,13 @@ function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderSche
 function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderSchedule();}
 
 // ── MODALS ──
-const PAGE_TO_SHEET={jobs:'Jobs',customers:'Customers',invoices:'Invoices',estimates:'Estimates',schedule:'Schedule',expenses:'Expenses',dashboard:'Jobs',analytics:'Jobs'};
-const SHEET_SINGULAR={Jobs:'Job',Customers:'Customer',Invoices:'Invoice',Estimates:'Estimate',Schedule:'Schedule Entry',Expenses:'Expense'};
+const PAGE_TO_SHEET={jobs:'Jobs',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',dashboard:'Jobs',analytics:'Jobs'};
+const SHEET_SINGULAR={Jobs:'Job',Customers:'Customer',Invoices:'Invoice',Quotes:'Quote',Schedule:'Schedule Entry',Expenses:'Expense'};
 const FORMS={
   Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address of this job" /></div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div><input type="hidden" name="Photos" /><p style="font-size:0.75rem;color:var(--text-muted);">📷 To add before/after photos: save this job, then open the customer from the Customers page and use "Add Photos" on the job.</p>`,
   Customers:()=>`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="Name" placeholder="Jane Smith" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="(555) 000-0000" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="Email" /></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Invoices:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" name="Invoice #" value="${nextId('Invoice #','Invoices','INV')}" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Unpaid</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-group"><label class="form-label">Customer</label>${custSelect('Customer')}</div><div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" name="Due Date" /></div></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
-  Estimates:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Estimate #</label><input class="form-input" name="Estimate #" value="${nextId('Estimate #','Estimates','EST')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address this estimate is for" /></div><div class="form-group"><label class="form-label">Services & Pricing</label><div id="est-lines"></div><button type="button" class="action-btn est-add-line" onclick="addEstimateLine()">+ Add Service</button></div><div class="est-total-row"><span>Total Estimate</span><span id="est-total">$0.00</span></div><input type="hidden" name="Service" /><input type="hidden" name="Amount" /><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option><option>Countered</option></select></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
+  Quotes:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Quote #</label><input class="form-input" name="Quote #" value="${nextId('Quote #','Quotes','QTE')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address this quote is for" /></div><div class="form-group"><label class="form-label">Services & Pricing</label><div id="est-lines"></div><button type="button" class="action-btn est-add-line" onclick="addEstimateLine()">+ Add Service</button></div><div class="est-total-row"><span>Total Quote</span><span id="est-total">$0.00</span></div><input type="hidden" name="Service" /><input type="hidden" name="Amount" /><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option><option>Countered</option></select></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Schedule:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" name="Time" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="Auto-fills from customer" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" placeholder="Auto-fills from customer, or type it" /></div><div class="form-group"><label class="form-label">Services <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(check all that apply)</span></label><div class="service-checks" id="schedule-services">${svcChecks()}</div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Expenses:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Category</label><select class="form-select" name="Category"><option>Fuel</option><option>Equipment</option><option>Supplies</option><option>Marketing</option><option>Taxes</option><option>Other</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">Vendor</label><input class="form-input" name="Vendor" placeholder="e.g. Home Depot, Amazon" /></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div></div><div class="form-group"><label class="form-label">Description</label><input class="form-input" name="Description" placeholder="What was this expense for?" /></div><div class="form-group"><label class="form-label">Receipt (PDF or Image)</label><div class="file-upload-area" id="upload-drop-zone" onclick="document.getElementById('pdf-upload').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="handleFileDrop(event)"><input type="file" id="pdf-upload" accept=".pdf,.png,.jpg,.jpeg,.webp" onchange="handleFileSelect(this)" style="display:none"><div id="upload-prompt">📎 Click or drag & drop a PDF / image</div><div class="file-name" id="file-name-display" style="color:var(--cyan);margin-top:0.3rem;font-size:0.8rem;"></div></div><input class="form-input" name="ReceiptURL" id="receipt-url-input" placeholder="Upload above — or paste a Google Drive link" style="margin-top:0.5rem" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes" placeholder="Any extra details..."></textarea></div>`,
 };
@@ -1047,8 +1047,8 @@ async function getDriveFolder(name){
   return cd.id;
 }
 
-function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Estimates'){addEstimateLine();}}
-function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Estimates'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}}
+function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Quotes'){addEstimateLine();}}
+function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Quotes'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}}
 async function saveRecord(){
   const sheet=editingRow?editingRow.sheet:(forceSaveSheet||PAGE_TO_SHEET[currentPage]);
 
@@ -1080,8 +1080,8 @@ async function saveRecord(){
     } else { svcInput.value=checked.join(', '); }
   }
 
-  // For Estimates, ensure there's a unique Token (for the customer accept/decline link)
-  if(sheet === 'Estimates'){
+  // For Quotes, ensure there's a unique Token (for the customer accept/decline link)
+  if(sheet === 'Quotes'){
     let tokenEl=document.querySelector('[name="Token"]');
     if(!tokenEl){
       tokenEl=document.createElement('input'); tokenEl.type='hidden'; tokenEl.name='Token';
@@ -1090,7 +1090,7 @@ async function saveRecord(){
     if(!tokenEl.value){ tokenEl.value=genToken(); }
     // If editing an estimate that was Declined, resending it counts as a counter-offer
     if(editingRow){
-      const prev=cache.Estimates.find(e=>e._rowIndex===editingRow.rowIndex);
+      const prev=cache.Quotes.find(e=>e._rowIndex===editingRow.rowIndex);
       const statusEl=document.querySelector('[name="Status"]');
       if(prev && prev['Status']==='Declined' && statusEl && statusEl.value==='Declined'){
         statusEl.value='Countered';
@@ -1176,7 +1176,7 @@ function autofillCustomer(name){
 function nextId(col,sheet,prefix){const rows=cache[sheet]||[];if(!rows.length)return `${prefix}-001`;const next=Math.max(...rows.map(r=>parseInt((r[col]||'').replace(/\D/g,''))||0))+1;return `${prefix}-${String(next).padStart(3,'0')}`;}
 function genToken(){return 'tok-'+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,6);}
 
-// Buttons shown below the status badge in the Estimates table
+// Buttons shown below the status badge in the Quotes table
 function estimateActionBtns(r){
   const status=r['Status']||'';
   let html='<div class="est-actions">';
@@ -1184,7 +1184,7 @@ function estimateActionBtns(r){
   html+=`<button class="tbl-btn est-view-btn" onclick="viewEstimate(${r._rowIndex})">👁 View</button>`;
   // Copy customer link — available once it's been Sent or Countered (or even Draft, to preview)
   if(r['Token']){
-    html+=`<button class="tbl-btn est-link-btn" onclick="copyEstimateLink('${r['Token']}','${(r['Estimate #']||'').replace(/'/g,"")}')">🔗 Copy Link</button>`;
+    html+=`<button class="tbl-btn est-link-btn" onclick="copyEstimateLink('${r['Token']}','${(r['Quote #']||'').replace(/'/g,"")}')">🔗 Copy Link</button>`;
   }
   // Once accepted, allow scheduling
   if(status==='Accepted'){
@@ -1204,7 +1204,7 @@ function estimateActionBtns(r){
 
 // Read-only view of an estimate (works even after it's accepted/declined)
 function viewEstimate(rowIndex){
-  const est=cache.Estimates.find(e=>e._rowIndex===rowIndex);
+  const est=cache.Quotes.find(e=>e._rowIndex===rowIndex);
   if(!est) return;
   const lines=parseEstimateLines(est['Service'], est['Amount']);
   let itemsHtml;
@@ -1213,7 +1213,7 @@ function viewEstimate(rowIndex){
   } else {
     itemsHtml=`<div class="ev-line"><span>${est['Service']||'Service'}</span><span class="ev-amt">$${parseFloat(est['Amount']||0).toFixed(2)}</span></div>`;
   }
-  document.getElementById('modal-title').textContent=`Estimate ${est['Estimate #']||''}`;
+  document.getElementById('modal-title').textContent=`Quote ${est['Quote #']||''}`;
   document.getElementById('modal-body').innerHTML=`
     <div class="ev-head">
       <div><span class="ev-label">Customer</span><div class="ev-val">${est['Customer']||'—'}</div></div>
@@ -1235,16 +1235,16 @@ function viewEstimate(rowIndex){
 }
 
 function showEstimateReply(rowIndex){
-  const est=cache.Estimates.find(e=>e._rowIndex===rowIndex);
+  const est=cache.Quotes.find(e=>e._rowIndex===rowIndex);
   if(!est||!est['Customer Reply']) return;
-  alert('Message from '+(est['Customer']||'customer')+' regarding '+(est['Estimate #']||'estimate')+':\n\n'+est['Customer Reply']);
+  alert('Message from '+(est['Customer']||'customer')+' regarding '+(est['Quote #']||'quote')+':\n\n'+est['Customer Reply']);
 }
 
 function copyEstimateLink(token, estNum){
   // Prefer the clean branded URL; fall back to the raw script URL if not set
   const base=CONFIG.CLEAN_ESTIMATE_URL || CONFIG.ESTIMATE_PORTAL_URL;
   if(!base || base.indexOf('PASTE_YOUR')===0){
-    showToast('Set up the estimate portal first.','error');
+    showToast('Set up the quote portal first.','error');
     return;
   }
   const link=base+'?token='+encodeURIComponent(token);
@@ -1252,13 +1252,13 @@ function copyEstimateLink(token, estNum){
     showToast(`Link for ${estNum} copied! Paste it to your customer.`,'success');
   }).catch(()=>{
     // Fallback: show the link in a prompt so they can copy manually
-    window.prompt('Copy this estimate link for your customer:', link);
+    window.prompt('Copy this quote link for your customer:', link);
   });
 }
 
 // When an estimate is accepted, prefill a Schedule entry from it
 function scheduleFromEstimate(rowIndex){
-  const est=cache.Estimates.find(e=>e._rowIndex===rowIndex);
+  const est=cache.Quotes.find(e=>e._rowIndex===rowIndex);
   if(!est) return;
   editingRow=null;
   forceSaveSheet='Schedule';
@@ -1276,7 +1276,7 @@ function scheduleFromEstimate(rowIndex){
   document.querySelectorAll('.schedule-svc').forEach(cb=>{ cb.checked=estServices.includes(cb.value); });
   // Note which estimate this came from
   const notesEl=document.querySelector('[name="Notes"]');
-  if(notesEl) notesEl.value=`From accepted estimate ${est['Estimate #']||''} — $${parseFloat(est['Amount']||0).toFixed(2)}`;
+  if(notesEl) notesEl.value=`From accepted quote ${est['Quote #']||''} — $${parseFloat(est['Amount']||0).toFixed(2)}`;
 }
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3000);}
 // ════════════════════════════════════════════════════════
@@ -1448,7 +1448,7 @@ async function saveMeasurementsToEstimate(){
   // Build the modal pre-filled with measurement summary in Notes + Service
   editingRow=null;
   document.getElementById('modal-title').textContent='Save Measurements to Estimate';
-  document.getElementById('modal-body').innerHTML=FORMS.Estimates();
+  document.getElementById('modal-body').innerHTML=FORMS.Quotes();
   document.getElementById('modal-overlay').classList.remove('hidden');
   // Pre-fill notes with the measurement breakdown
   const byType={};measurements.forEach(m=>{byType[m.type]=(byType[m.type]||0)+m.sqft;});
@@ -1463,8 +1463,8 @@ async function saveMeasurementsToEstimate(){
   if(types.length){ types.forEach(t=>addEstimateLine(typeToSvc[t]||'Other','')); }
   else { addEstimateLine(); }
   updateEstimateTotal();
-  // currentPage stays 'measure' but saveRecord uses PAGE_TO_SHEET — force Estimates
-  forceSaveSheet='Estimates';
+  // currentPage stays 'measure' but saveRecord uses PAGE_TO_SHEET — force Quotes
+  forceSaveSheet='Quotes';
 }
 
 // ── CUSTOMER DETAIL VIEW (jobs grouped by property, with photos) ──
