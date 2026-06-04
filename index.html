@@ -93,7 +93,8 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .badge-accepted{background:rgba(34,197,94,0.15);color:#86EFAC;border:1px solid rgba(34,197,94,0.3);}
 .badge-countered{background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3);}
 .est-under-status{margin-top:6px;}
-.est-actions{display:flex;flex-wrap:wrap;gap:5px;max-width:280px;}
+.est-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:230px;}
+.est-actions .tbl-btn{width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 4px;font-size:0.72rem;}
 .est-link-btn{color:var(--cyan)!important;border-color:rgba(6,182,212,0.3)!important;}
 .est-email-btn{color:#93c5fd!important;border-color:rgba(59,130,246,0.35)!important;}
 .est-sched-btn{color:#86efac!important;border-color:rgba(34,197,94,0.3)!important;}
@@ -1186,7 +1187,7 @@ function genToken(){return 'tok-'+Math.random().toString(36).slice(2,10)+Math.ra
 // Content shown in the STATUS column (under the badge): View button + deposit/reply lines
 function estimateStatusExtras(r){
   const status=r['Status']||'';
-  let html=`<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="viewEstimate(${r._rowIndex})">👁 View</button></div>`;
+  let html=`<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="openQuotePage(${r._rowIndex})">👁 View</button></div>`;
   if(status==='Accepted' && (r['DepositStatus']==='Requested' || r['DepositStatus']==='Paid')){
     const amt=(parseFloat(r['Amount']||0)*0.35);
     const lbl=r['DepositStatus']==='Paid'?`✓ Deposit paid ($${amt.toFixed(2)})`:`⏳ Deposit requested ($${amt.toFixed(2)}) — mark paid once received`;
@@ -1196,6 +1197,19 @@ function estimateStatusExtras(r){
     html+=`<div class="est-reply" onclick="showEstimateReply(${r._rowIndex})">💬 Customer left a message — click to read</div>`;
   }
   return html;
+}
+
+// Open the live customer-facing quote page (the real link with the token) in a new tab
+function openQuotePage(rowIndex){
+  const q=cache.Quotes.find(e=>e._rowIndex===rowIndex);
+  if(!q) return;
+  if(!q['Token']){
+    showToast('This quote has no link yet — open it, save it, then View.','error');
+    return;
+  }
+  const base=CONFIG.CLEAN_ESTIMATE_URL || CONFIG.ESTIMATE_PORTAL_URL;
+  const link=base+'?token='+encodeURIComponent(q['Token']);
+  window.open(link,'_blank');
 }
 
 // Content shown in the ACTIONS column: the action buttons (Copy Link, Schedule, Deposit) + Edit/Delete
