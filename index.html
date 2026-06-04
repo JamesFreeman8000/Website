@@ -568,7 +568,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.apps.googleusercontent.com",AUTHORIZED_EMAIL:"jamesfreeman8000@gmail.com",SPREADSHEET_ID:"1f7zba8rYUiDLuBgcwErBYXuZ2Y2rZIG2iD-SulF3z7w",API_KEY:"AIzaSyCsu0sSQL_a9Klef5iXgwA__S7H3q_VvnQ",MAPS_API_KEY:"AIzaSyDWbQuwnTEBJ5cnWxVgkQoBaNj8Ce91A3w",ESTIMATE_PORTAL_URL:"https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec"};
+const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.apps.googleusercontent.com",AUTHORIZED_EMAIL:"jamesfreeman8000@gmail.com",SPREADSHEET_ID:"1f7zba8rYUiDLuBgcwErBYXuZ2Y2rZIG2iD-SulF3z7w",API_KEY:"AIzaSyCsu0sSQL_a9Klef5iXgwA__S7H3q_VvnQ",MAPS_API_KEY:"AIzaSyDWbQuwnTEBJ5cnWxVgkQoBaNj8Ce91A3w",ESTIMATE_PORTAL_URL:"https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec",CLEAN_ESTIMATE_URL:"https://hydropressurewashing.co/estimate"};
 
 let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
@@ -1169,9 +1169,10 @@ function showEstimateReply(rowIndex){
 }
 
 function copyEstimateLink(token, estNum){
-  const base=CONFIG.ESTIMATE_PORTAL_URL;
+  // Prefer the clean branded URL; fall back to the raw script URL if not set
+  const base=CONFIG.CLEAN_ESTIMATE_URL || CONFIG.ESTIMATE_PORTAL_URL;
   if(!base || base.indexOf('PASTE_YOUR')===0){
-    showToast('Set up the estimate portal first (paste your Apps Script URL).','error');
+    showToast('Set up the estimate portal first.','error');
     return;
   }
   const link=base+'?token='+encodeURIComponent(token);
