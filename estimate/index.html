@@ -1,1 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hydro Pressure Washing — Your Estimate</title>
+  <style>
+    html,body{margin:0;padding:0;height:100%;background:#0A0F1E;font-family:-apple-system,Segoe UI,Roboto,sans-serif;}
+    #loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94A3B8;gap:1rem;}
+    #loading .logo{font-size:1.3rem;font-weight:700;color:#fff;}
+    #loading .spin{width:34px;height:34px;border:3px solid rgba(255,255,255,0.15);border-top-color:#3B82F6;border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    iframe{border:0;width:100%;height:100%;display:block;}
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="logo">Hydro Pressure Washing</div>
+    <div class="spin"></div>
+    <div>Loading your estimate…</div>
+  </div>
+  <iframe id="frame" style="display:none;" title="Your Estimate"></iframe>
 
+  <script>
+    // Your Apps Script web app URL
+    var PORTAL = "https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec";
+
+    // Carry the ?token=... (and any &action=...) from this page's URL onto the portal URL
+    var qs = window.location.search || "";
+    var target = PORTAL + qs;
+
+    var frame = document.getElementById("frame");
+    var loading = document.getElementById("loading");
+    var loaded = false;
+
+    // When the iframe loads successfully, show it and hide the spinner
+    frame.addEventListener("load", function(){
+      loaded = true;
+      loading.style.display = "none";
+      frame.style.display = "block";
+    });
+
+    // Safety net: if the iframe hasn't loaded within 6 seconds (browser blocked it,
+    // common with strict privacy settings), fall back to a direct redirect so the
+    // customer always reaches a working estimate page.
+    setTimeout(function(){
+      if(!loaded){ window.location.href = target; }
+    }, 6000);
+
+    // Start loading the estimate inside the frame
+    frame.src = target;
+  </script>
+</body>
+</html>
