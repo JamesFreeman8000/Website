@@ -191,6 +191,19 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .dash-list li{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--border-lt);gap:0.75rem;flex-wrap:nowrap;}
 .dash-list li:last-child{border-bottom:none;}
 .dash-list li:hover{background:rgba(255,255,255,0.03);}
+.dash-clickable{cursor:pointer;}
+.jd-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.75rem;}
+.jd-name{font-size:1.15rem;font-weight:700;color:var(--white);}
+.jd-when{font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;font-family:'JetBrains Mono',monospace;}
+.jd-contact{display:flex;flex-direction:column;gap:0.45rem;margin-bottom:1.25rem;}
+.jd-contact-item{display:inline-flex;align-items:center;gap:0.4rem;padding:0.6rem 0.85rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;font-size:0.9rem;color:var(--text-main);text-decoration:none;}
+a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
+.jd-section{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.4rem;}
+.jd-services{font-size:0.95rem;color:var(--text-main);margin-bottom:1rem;line-height:1.5;}
+.jd-notes{font-size:0.9rem;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:0.7rem 0.9rem;margin-bottom:1rem;line-height:1.5;}
+.jd-row{display:flex;justify-content:space-between;padding:0.5rem 0;border-top:1px solid var(--border-lt);}
+.jd-label{font-size:0.8rem;color:var(--text-muted);}
+.jd-val{font-size:0.85rem;color:var(--text-main);}
 .dash-list-left{display:flex;flex-direction:column;gap:0.2rem;min-width:0;flex:1;}
 .dash-list-name{font-size:0.875rem;font-weight:500;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dash-list-sub{font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -417,7 +430,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       </div>
       <div class="dash-grid">
         <div class="card"><div class="card-header">Recent Jobs</div><div id="dash-recent-jobs" class="table-wrap"><p class="empty-state">No jobs yet.</p></div></div>
-        <div class="card"><div class="card-header">Upcoming Schedule</div><div id="dash-upcoming" class="table-wrap"><p class="empty-state">Nothing scheduled.</p></div></div>
+        <div class="card"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">Upcoming Schedule<button id="upcoming-sort-btn" class="tbl-btn" onclick="toggleUpcomingSort()" style="font-weight:400;">↑ Soonest first</button></div><div id="dash-upcoming" class="table-wrap"><p class="empty-state">Nothing scheduled.</p></div></div>
       </div>
     </section>
 
@@ -804,6 +817,13 @@ function navigate(page){
 }
 function renderPage(page){({dashboard:renderDashboard,jobs:()=>renderTable('jobs'),customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
 
+let upcomingSortAsc=true;
+function toggleUpcomingSort(){
+  upcomingSortAsc=!upcomingSortAsc;
+  const btn=document.getElementById('upcoming-sort-btn');
+  if(btn) btn.textContent=upcomingSortAsc?'↑ Soonest first':'↓ Furthest out';
+  renderDashboard();
+}
 function renderDashboard(){
   const now=new Date(),mo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const revenue=cache.Invoices.filter(i=>i['Status']==='Paid'&&(i['Date']||'').startsWith(mo)).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
@@ -812,9 +832,72 @@ function renderDashboard(){
   document.getElementById('stat-outstanding').textContent='$'+cache.Invoices.filter(i=>['Unpaid','Overdue'].includes(i['Status'])).reduce((s,i)=>s+parseFloat(i['Amount']||0),0).toFixed(2);
   document.getElementById('stat-customers').textContent=cache.Customers.length;
   const recentJobs=[...cache.Jobs].reverse().slice(0,5);
-  document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<ul class="dash-list">${recentJobs.map(j=>`<li><div class="dash-list-left"><div class="dash-list-name">${j['Customer']}</div><div class="dash-list-sub">${j['Service']} &middot; ${j['Job #']}</div></div><div class="dash-list-right"><div class="dash-list-amount">$${parseFloat(j['Amount']||0).toFixed(2)}</div>${badge(j['Status'])}</div></li>`).join('')}</ul>`:'<p class="empty-state">No jobs yet.</p>';
-  const upcoming=cache.Schedule.filter(s=>s['Date']>=now.toISOString().slice(0,10)&&s['Status']!=='Cancelled').sort((a,b)=>a['Date'].localeCompare(b['Date'])).slice(0,5);
-  document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<ul class="dash-list">${upcoming.map(s=>`<li><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-date">${s['Date']}</div></div></li>`).join('')}</ul>`:'<p class="empty-state">Nothing scheduled.</p>';
+  document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<ul class="dash-list">${recentJobs.map(j=>`<li class="dash-clickable" onclick="showJobDetail(${j._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${j['Customer']}</div><div class="dash-list-sub">${j['Service']} &middot; ${j['Job #']}</div></div><div class="dash-list-right"><div class="dash-list-amount">$${parseFloat(j['Amount']||0).toFixed(2)}</div>${badge(j['Status'])}</div></li>`).join('')}</ul>`:'<p class="empty-state">No jobs yet.</p>';
+  const upcoming=cache.Schedule.filter(s=>s['Date']>=now.toISOString().slice(0,10)&&s['Status']!=='Cancelled').sort((a,b)=>upcomingSortAsc?a['Date'].localeCompare(b['Date']):b['Date'].localeCompare(a['Date'])).slice(0,5);
+  document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<ul class="dash-list">${upcoming.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-date">${s['Date']}${s['Time']?' '+fmtTime(s['Time']):''}</div></div></li>`).join('')}</ul>`:'<p class="empty-state">Nothing scheduled.</p>';
+}
+
+// Look up a customer's phone/email/address from the Customers list (fallback when the record itself lacks it)
+function customerContact(name){
+  return cache.Customers.find(c=>c['Name']===name) || {};
+}
+
+// Detail popup for a SCHEDULED job (from the Upcoming list)
+function showScheduleDetail(rowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===rowIndex);
+  if(!s) return;
+  const c=customerContact(s['Customer']);
+  const phone=s['Phone']||c['Phone']||'';
+  const addr=s['Address']||c['Address']||'';
+  const email=c['Email']||'';
+  const waiver=s['WaiverStatus']==='Signed'?`<div class="jd-row"><span class="jd-label">Waiver</span><span class="jd-val" style="color:#86efac;">✓ Signed${s['WaiverSignedBy']?' by '+s['WaiverSignedBy']:''}</span></div>`:'';
+  document.getElementById('modal-title').textContent='Scheduled Job';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="jd-head"><div class="jd-name">${s['Customer']||'—'}</div>${badge(s['Status'])}</div>
+    <div class="jd-when">📅 ${s['Date']||'—'}${s['Time']?' at '+fmtTime(s['Time']):''}</div>
+    <div class="jd-contact">
+      ${addr?`<a class="jd-contact-item" href="https://maps.google.com/?q=${encodeURIComponent(addr)}" target="_blank">📍 ${addr}</a>`:'<span class="jd-contact-item">📍 No address on file</span>'}
+      ${phone?`<a class="jd-contact-item" href="tel:${phone}">📞 ${phone}</a>`:''}
+      ${email?`<a class="jd-contact-item" href="mailto:${email}">✉️ ${email}</a>`:''}
+    </div>
+    <div class="jd-section">Service(s)</div>
+    <div class="jd-services">${(s['Service']||'—')}</div>
+    ${s['Notes']?`<div class="jd-section">Notes</div><div class="jd-notes">${s['Notes']}</div>`:''}
+    ${waiver}
+  `;
+  const footer=document.querySelector('.modal-footer');
+  footer.dataset.prev=footer.innerHTML;
+  footer.innerHTML=`<button class="action-btn" onclick="closeModal();navigate('schedule')">Go to Schedule</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
+  editingRow=null;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+// Detail popup for a completed/recorded JOB (from the Recent Jobs list)
+function showJobDetail(rowIndex){
+  const j=cache.Jobs.find(x=>x._rowIndex===rowIndex);
+  if(!j) return;
+  const c=customerContact(j['Customer']);
+  const addr=j['Address']||c['Address']||'';
+  const phone=c['Phone']||'';
+  const email=c['Email']||'';
+  document.getElementById('modal-title').textContent=`Job ${j['Job #']||''}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="jd-head"><div class="jd-name">${j['Customer']||'—'}</div>${badge(j['Status'])}</div>
+    <div class="jd-when">📅 ${j['Date']||'—'} &middot; $${parseFloat(j['Amount']||0).toFixed(2)}</div>
+    <div class="jd-contact">
+      ${addr?`<a class="jd-contact-item" href="https://maps.google.com/?q=${encodeURIComponent(addr)}" target="_blank">📍 ${addr}</a>`:'<span class="jd-contact-item">📍 No address on file</span>'}
+      ${phone?`<a class="jd-contact-item" href="tel:${phone}">📞 ${phone}</a>`:''}
+      ${email?`<a class="jd-contact-item" href="mailto:${email}">✉️ ${email}</a>`:''}
+    </div>
+    <div class="jd-section">Service</div>
+    <div class="jd-services">${(j['Service']||'—')}</div>
+    ${j['Notes']?`<div class="jd-section">Notes</div><div class="jd-notes">${j['Notes']}</div>`:''}
+  `;
+  const footer=document.querySelector('.modal-footer');
+  footer.dataset.prev=footer.innerHTML;
+  footer.innerHTML=`<button class="action-btn" onclick="closeModal();openEditModal('Jobs',${rowIndex})">Edit Job</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
+  editingRow=null;
+  document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
 function renderTable(page,filterText='',filterStatus=''){
@@ -1222,7 +1305,7 @@ function estimateActionBtns(r){
   }
   if(status==='Accepted'){
     const dep=r['DepositStatus']||'';
-    html+=`<button class="tbl-btn est-sched-btn" onclick="scheduleFromEstimate(${r._rowIndex})">📅 Add to Schedule</button>`;
+    html+=`<button class="tbl-btn est-sched-btn" onclick="scheduleFromEstimate(${r._rowIndex})">📅 Schedule</button>`;
     if(dep==='Paid'){
       html+=`<button class="tbl-btn est-dep-paid" onclick="copyDepositLink(${r._rowIndex})">💵 Deposit Paid ✓</button>`;
     } else {
