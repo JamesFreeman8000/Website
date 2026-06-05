@@ -36,6 +36,10 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .sidebar-brand .brand-sub{font-size:0.6rem;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;}
 .sidebar-nav{flex:1;padding:1rem 0.75rem;display:flex;flex-direction:column;gap:0.15rem;overflow-y:auto;}
 .nav-label{font-size:0.62rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#475569;padding:0.6rem 0.75rem 0.3rem;}
+.nav-edit-row{display:flex;justify-content:flex-end;padding:0 0.75rem 0.25rem;}
+.nav-edit-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:0.68rem;padding:3px 10px;border-radius:6px;cursor:pointer;}
+.nav-edit-btn:hover{border-color:var(--blue);color:var(--blue-glow);}
+.nav-label-editing{outline:1px dashed var(--blue);outline-offset:2px;color:var(--text-main)!important;border-radius:4px;cursor:text;}
 .nav-item{display:flex;align-items:center;gap:0.7rem;padding:0.6rem 0.75rem;border-radius:8px;color:var(--text-muted);font-size:0.875rem;font-weight:500;cursor:pointer;transition:background 0.15s,color 0.15s;text-decoration:none;user-select:none;}
 .nav-item:hover{background:rgba(255,255,255,0.05);color:var(--text-main);}
 .nav-item.active{background:rgba(37,99,235,0.2);color:var(--blue-glow);}
@@ -392,15 +396,16 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       </div>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-label">Main</div>
+      <div class="nav-edit-row"><button id="nav-edit-btn" class="nav-edit-btn" onclick="toggleNavEdit()">✎ Edit</button></div>
+      <div class="nav-label" id="nav-cat-main" data-cat="main">Main</div>
       <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">▪ Overview</a>
       <a class="nav-item" data-page="jobs" onclick="navigate('jobs')">▪ Jobs</a>
       <a class="nav-item" data-page="customers" onclick="navigate('customers')">▪ Customers</a>
-      <div class="nav-label" style="margin-top:0.5rem">Finance</div>
+      <div class="nav-label" id="nav-cat-finance" data-cat="finance" style="margin-top:0.5rem">Finance</div>
       <a class="nav-item" data-page="invoices" onclick="navigate('invoices')">▪ Invoices</a>
       <a class="nav-item" data-page="quotes" onclick="navigate('quotes')">▪ Quotes</a>
       <a class="nav-item" data-page="expenses" onclick="navigate('expenses')">▪ Expenses</a>
-      <div class="nav-label" style="margin-top:0.5rem">Insights</div>
+      <div class="nav-label" id="nav-cat-tools" data-cat="tools" style="margin-top:0.5rem">Tools</div>
       <a class="nav-item" data-page="analytics" onclick="navigate('analytics')">▪ Analytics</a>
       <a class="nav-item" data-page="measure" onclick="navigate('measure')">▪ Measure</a>
       <a class="nav-item" data-page="schedule" onclick="navigate('schedule')">▪ Schedule</a>
@@ -607,8 +612,8 @@ const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.ap
 let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
-const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Quotes:['Quote #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes']};
+const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Settings:[]};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Date','Due Date','Amount','Status','Notes'],Quotes:['Quote #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Settings:['Key','Value']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -777,8 +782,76 @@ async function loadAllData(){
   setSyncStatus('⟳ Syncing...');
   try{const[j,c,i,e,s,x]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Quotes'),readSheet('Schedule'),readSheet('Expenses')]);
   cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;setSyncStatus('● Live');
-  await markOverdueInvoices();}
+  await markOverdueInvoices();
+  loadNavLabels();}
   catch(e){setSyncStatus('✕ Error');console.error(e);}
+}
+
+// Load saved category names from the Settings sheet and apply them
+async function loadNavLabels(){
+  try{
+    const rows=await readSheet('Settings');
+    cache.Settings=rows;
+    const rec=rows.find(r=>r['Key']==='navLabels');
+    if(rec && rec['Value']){
+      const names=JSON.parse(rec['Value']);
+      if(names.main) setCatLabel('main',names.main);
+      if(names.finance) setCatLabel('finance',names.finance);
+      if(names.tools) setCatLabel('tools',names.tools);
+    }
+  }catch(e){ /* Settings sheet may not exist yet — that's fine, defaults stay */ }
+}
+function setCatLabel(cat,text){
+  const el=document.getElementById('nav-cat-'+cat);
+  if(el) el.textContent=text;
+}
+
+let navEditMode=false;
+function toggleNavEdit(){
+  const btn=document.getElementById('nav-edit-btn');
+  const cats=['main','finance','tools'].map(c=>document.getElementById('nav-cat-'+c));
+  if(!navEditMode){
+    // Enter edit mode: make labels editable
+    navEditMode=true;
+    btn.textContent='✓ Save';
+    cats.forEach(el=>{ if(el){ el.contentEditable='true'; el.classList.add('nav-label-editing'); } });
+    cats[0] && cats[0].focus();
+  } else {
+    // Save mode: read the values, persist, exit
+    saveNavLabels(cats);
+  }
+}
+async function saveNavLabels(cats){
+  const btn=document.getElementById('nav-edit-btn');
+  const names={
+    main:(document.getElementById('nav-cat-main').textContent||'Main').trim(),
+    finance:(document.getElementById('nav-cat-finance').textContent||'Finance').trim(),
+    tools:(document.getElementById('nav-cat-tools').textContent||'Tools').trim(),
+  };
+  // Exit edit mode visually
+  navEditMode=false;
+  btn.textContent='✎ Edit';
+  cats.forEach(el=>{ if(el){ el.contentEditable='false'; el.classList.remove('nav-label-editing'); } });
+  // Persist to the Settings sheet
+  setSyncStatus('⟳ Saving...');
+  try{
+    const val=JSON.stringify(names);
+    const existing=(cache.Settings||[]).find(r=>r['Key']==='navLabels');
+    if(existing){
+      await updateRow('Settings', existing._rowIndex, ['navLabels', val]);
+      existing['Value']=val;
+    } else {
+      await appendRow('Settings', ['navLabels', val]);
+      // refresh cache so a later save updates instead of appends again
+      cache.Settings=await readSheet('Settings');
+    }
+    setSyncStatus('● Live');
+    showToast('Category names saved!','success');
+  }catch(e){
+    setSyncStatus('✕ Error');
+    showToast('Could not save — make sure a "Settings" tab exists, or it will be created on first save.','error');
+    console.error('saveNavLabels:',e);
+  }
 }
 
 // Auto-flip Unpaid invoices to Overdue once their due date has passed.
