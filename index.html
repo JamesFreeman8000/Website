@@ -432,7 +432,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.1</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.2</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -708,6 +708,7 @@ function handleSignIn(){
     callback:async(resp)=>{
       if(resp.error){showError('Sign-in failed: '+resp.error);return;}
       accessToken=resp.access_token;
+      window._hydroLastRefresh=Date.now();
       try{
         const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:`Bearer ${accessToken}`}});
         const user=await r.json();
@@ -732,6 +733,24 @@ function startAutoRefresh(){
     if(!tokenClient||!accessToken) return;
     tokenClient.requestAccessToken({prompt:''});// silent — no popup
   }, 50*60*1000);
+  // Browsers pause background-tab timers, so ALSO refresh when the tab becomes visible again.
+  // This is the real fix for "left it inactive and it stopped syncing."
+  if(!window._hydroVisHooked){
+    window._hydroVisHooked=true;
+    document.addEventListener('visibilitychange',()=>{
+      if(document.visibilityState!=='visible') return;
+      if(!tokenClient||!accessToken) return;
+      // If it's been more than ~45 min since the last refresh, token is likely stale — refresh + reload data
+      const last=window._hydroLastRefresh||0;
+      const mins=(Date.now()-last)/60000;
+      if(mins>=45){
+        setSyncStatus('⟳ Reconnecting...');
+        refreshTokenAndRetry(()=>Promise.resolve())
+          .then(()=>loadAllData())
+          .catch(()=>setSyncStatus('✕ Tap to refresh'));
+      }
+    });
+  }
 }
 
 // Called when a Sheets API call gets a 401 — refreshes token then retries
@@ -747,6 +766,7 @@ async function refreshTokenAndRetry(fn){
       tokenClient.callback=prev;
       if(resp.error){reject(new Error(resp.error));return;}
       accessToken=resp.access_token;
+      window._hydroLastRefresh=Date.now();
       try{const s=JSON.parse(sessionStorage.getItem('hydro_session')||'{}');s.token=accessToken;sessionStorage.setItem('hydro_session',JSON.stringify(s));}catch(e){}
       fn().then(resolve).catch(reject);
     };
@@ -971,6 +991,19 @@ async function markOverdueInvoices(){
   }catch(e){ console.error('Overdue update failed:',e); setSyncStatus('● Live'); }
 }
 function setSyncStatus(m){document.getElementById('sync-status').textContent=m;}
+// Manual re-sync — click the status indicator to force a token refresh + data reload
+async function manualResync(){
+  if(!tokenClient||!accessToken){ return; }
+  setSyncStatus('⟳ Reconnecting...');
+  try{
+    await refreshTokenAndRetry(()=>Promise.resolve());
+    await loadAllData();
+    renderPage(currentPage);
+  }catch(e){
+    setSyncStatus('✕ Tap to refresh');
+    console.error('manualResync:',e);
+  }
+}
 
 const PAGE_TITLES={dashboard:'Overview',jobs:'Jobs',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',analytics:'Analytics',measure:'Measure Property'};
 function navigate(page){
