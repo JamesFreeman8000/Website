@@ -41,6 +41,18 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .nav-edit-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:0.68rem;padding:3px 10px;border-radius:6px;cursor:pointer;}
 .nav-edit-btn:hover{border-color:var(--blue);color:var(--blue-glow);}
 .nav-label-editing{outline:1px dashed var(--blue);outline-offset:2px;color:var(--text-main)!important;border-radius:4px;cursor:text;}
+.nav-badge{display:inline-block;background:#dc2626;color:#fff;font-size:0.6rem;font-weight:700;border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;}
+.nav-badge.hidden{display:none;}
+.sound-toggle{display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--text-main);cursor:pointer;}
+.activity-item{display:flex;align-items:center;gap:0.85rem;padding:0.85rem 1rem;border:1px solid var(--border-lt);border-radius:10px;margin-bottom:0.5rem;cursor:pointer;transition:border-color .15s;}
+.activity-item:hover{border-color:var(--blue);}
+.activity-item.new{background:rgba(37,99,235,0.06);border-color:rgba(37,99,235,0.25);}
+.activity-icon{font-size:1.3rem;flex-shrink:0;}
+.activity-main{flex:1;min-width:0;}
+.activity-text{font-size:0.92rem;color:var(--white);font-weight:500;display:flex;align-items:center;gap:0.4rem;}
+.activity-sub{font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.activity-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3B82F6;flex-shrink:0;}
+.activity-go{font-size:0.78rem;color:var(--blue-glow);flex-shrink:0;}
 .nav-group{display:flex;flex-direction:column;}
 .sidebar-nav.nav-editing .nav-group{min-height:18px;border:1px dashed transparent;border-radius:6px;padding:2px;}
 .sidebar-nav.nav-editing .nav-item{cursor:grab;border:1px solid var(--border-lt);border-radius:6px;margin:2px 0;background:rgba(255,255,255,0.02);}
@@ -413,6 +425,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="nav-label" id="nav-cat-main" data-cat="main">Main</div>
       <div class="nav-group" data-cat="main" id="navgroup-main">
         <a class="nav-item active" data-page="dashboard" onclick="navItemClick(event,'dashboard')">▪ Overview</a>
+        <a class="nav-item" data-page="activity" onclick="navItemClick(event,'activity')">▪ Activity <span id="nav-activity-badge" class="nav-badge hidden">0</span></a>
         <a class="nav-item" data-page="jobs" onclick="navItemClick(event,'jobs')">▪ Jobs</a>
         <a class="nav-item" data-page="customers" onclick="navItemClick(event,'customers')">▪ Customers</a>
       </div>
@@ -439,7 +452,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.5</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.7</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -486,6 +499,15 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <section id="page-quotes" class="page">
       <div class="filter-bar"><input type="text" class="search-input" placeholder="Search quotes..." oninput="filterTable('quotes',this.value)" /></div>
       <div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Quote #</th><th>Customer</th><th>Address</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="quotes-body"><tr><td colspan="8" class="empty-state">No quotes yet.</td></tr></tbody></table></div></div>
+    </section>
+
+    <!-- ACTIVITY / INBOX -->
+    <section id="page-activity" class="page">
+      <div class="filter-bar" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <label class="sound-toggle"><input type="checkbox" id="notif-sound-toggle" onchange="toggleNotifSound(this.checked)"> 🔔 Sound on new activity</label>
+        <button class="action-btn" onclick="markAllActivitySeen()">Mark all as seen</button>
+      </div>
+      <div class="card"><div id="activity-list" style="padding:0.5rem;"><p class="empty-state">No customer activity yet. When someone accepts, declines, replies, or pays a deposit, it'll show here.</p></div></div>
     </section>
 
     <!-- EXPENSES -->
@@ -838,9 +860,117 @@ async function loadAllData(){
   try{const[j,c,i,e,s,x]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Quotes'),readSheet('Schedule'),readSheet('Expenses')]);
   cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;setSyncStatus('● Live');
   await markOverdueInvoices();
-  loadNavLabels();}
+  await loadNavLabels();
+  detectActivity();}
   catch(e){setSyncStatus('✕ Error');console.error(e);}
 }
+
+// ── ACTIVITY / NOTIFICATIONS ──
+// Build the list of customer-driven activity items from the current quotes.
+// Only customer actions are flagged (Accepted/Declined status, a Customer Reply, or deposit Paid) —
+// never your own edits, so you don't get notified about yourself.
+function buildActivityItems(){
+  const items=[];
+  (cache.Quotes||[]).forEach(q=>{
+    const id=q['Quote #']||('row'+q._rowIndex);
+    const status=(q['Status']||'').trim();
+    if(status==='Accepted') items.push({key:id+'|accepted',row:q._rowIndex,type:'accepted',icon:'✅',text:`${q['Customer']||'Customer'} accepted ${id}`,sub:`$${parseFloat(q['Amount']||0).toFixed(2)}`});
+    if(status==='Declined') items.push({key:id+'|declined',row:q._rowIndex,type:'declined',icon:'❌',text:`${q['Customer']||'Customer'} declined ${id}`,sub:`$${parseFloat(q['Amount']||0).toFixed(2)}`});
+    if((q['Customer Reply']||'').trim()) items.push({key:id+'|reply:'+(q['Customer Reply']||'').trim().slice(0,40),row:q._rowIndex,type:'reply',icon:'💬',text:`${q['Customer']||'Customer'} left a note on ${id}`,sub:(q['Customer Reply']||'').trim()});
+    if((q['DepositStatus']||'').trim()==='Paid') items.push({key:id+'|deposit',row:q._rowIndex,type:'deposit',icon:'💵',text:`Deposit marked paid for ${id}`,sub:`${q['Customer']||''}`});
+  });
+  return items;
+}
+// Compare against the "seen" set stored in Settings; flag new ones, update badge, maybe play sound.
+function detectActivity(){
+  const items=buildActivityItems();
+  // FIRST-RUN / MISSING-SNAPSHOT SAFEGUARD:
+  // If no "seen" snapshot exists yet (first time, or Settings was rebuilt/cleared),
+  // silently mark everything currently here as already-seen so we DON'T dump a pile of old notifications.
+  const hasSnapshot=(cache.Settings||[]).some(r=>r['Key']==='activitySeen');
+  if(!hasSnapshot){
+    const seedSeen={};
+    items.forEach(it=>{ seedSeen[it.key]=Date.now(); });
+    saveSetting('activitySeen', JSON.stringify(seedSeen)).catch(e=>console.error('seed activitySeen:',e));
+    window._hydroPrevUnseen=0;
+    const badge0=document.getElementById('nav-activity-badge');
+    if(badge0) badge0.classList.add('hidden');
+    if(currentPage==='activity') renderActivity();
+    return; // start clean — only future activity will notify
+  }
+  const seen=getSeenActivity();
+  const unseen=items.filter(it=>!seen[it.key]);
+  // badge
+  const badge=document.getElementById('nav-activity-badge');
+  if(badge){
+    if(unseen.length){ badge.textContent=unseen.length; badge.classList.remove('hidden'); }
+    else { badge.classList.add('hidden'); }
+  }
+  // sound — only if there are NEW items beyond what we'd already counted this session, and sound is on
+  if(unseen.length>(window._hydroPrevUnseen||0) && notifSoundOn && window._hydroSoundReady){
+    playNotifSound();
+  }
+  window._hydroPrevUnseen=unseen.length;
+  // if currently viewing the activity page, refresh it
+  if(currentPage==='activity') renderActivity();
+}
+function getSeenActivity(){
+  try{
+    const rec=(cache.Settings||[]).find(r=>r['Key']==='activitySeen');
+    return rec&&rec['Value']?JSON.parse(rec['Value']):{};
+  }catch(e){ return {}; }
+}
+async function markAllActivitySeen(){
+  const items=buildActivityItems();
+  const seen={};
+  items.forEach(it=>{ seen[it.key]=Date.now(); });
+  try{ await saveSetting('activitySeen', JSON.stringify(seen)); }catch(e){ console.error(e); }
+  window._hydroPrevUnseen=0;
+  detectActivity();
+  renderActivity();
+  showToast('All caught up!','success');
+}
+function renderActivity(){
+  const wrap=document.getElementById('activity-list');
+  if(!wrap) return;
+  const items=buildActivityItems().reverse(); // newest-ish first
+  const seen=getSeenActivity();
+  if(!items.length){ wrap.innerHTML='<p class="empty-state">No customer activity yet. When someone accepts, declines, replies, or pays a deposit, it\'ll show here.</p>'; return; }
+  wrap.innerHTML=items.map(it=>{
+    const isNew=!seen[it.key];
+    return `<div class="activity-item ${isNew?'new':''}" onclick="goToActivity(${it.row})"><div class="activity-icon">${it.icon}</div><div class="activity-main"><div class="activity-text">${isNew?'<span class="activity-dot"></span>':''}${it.text}</div><div class="activity-sub">${it.sub||''}</div></div><div class="activity-go">View →</div></div>`;
+  }).join('');
+}
+function goToActivity(rowIndex){
+  navigate('quotes');
+  setTimeout(()=>{
+    const q=cache.Quotes.find(e=>e._rowIndex===rowIndex);
+    if(q && q['Token']){ /* could scroll/highlight; for now just land on quotes */ }
+  },100);
+}
+
+// ── SOUND ──
+let notifSoundOn=false;
+function toggleNotifSound(on){
+  notifSoundOn=on;
+  saveSetting('notifSound', on?'on':'off').catch(()=>{});
+  if(on){ window._hydroSoundReady=true; showToast('Notification sound on.','success'); }
+  else { showToast('Notification sound off.',''); }
+}
+function playNotifSound(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sine'; o.frequency.value=880;
+    g.gain.setValueAtTime(0.0001,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.25,ctx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.4);
+    o.start(); o.stop(ctx.currentTime+0.4);
+  }catch(e){ /* browsers may block audio until interaction; ignore */ }
+}
+// Any click in the app marks audio as allowed to play (browser requirement)
+document.addEventListener('click',()=>{ window._hydroSoundReady=true; }, {once:true});
 
 // Load saved category names from the Settings sheet and apply them
 async function loadNavLabels(){
@@ -860,6 +990,9 @@ async function loadNavLabels(){
       const layout=JSON.parse(arr['Value']); // { main:[pages], finance:[pages], tools:[pages] }
       applyTabLayout(layout);
     }
+    // Restore notification sound preference
+    const snd=rows.find(r=>r['Key']==='notifSound');
+    if(snd && snd['Value']==='on'){ notifSoundOn=true; const t=document.getElementById('notif-sound-toggle'); if(t) t.checked=true; }
   }catch(e){ /* Settings sheet may not exist yet — that's fine, defaults stay */ }
 }
 // Move each tab into its saved category group, in saved order
@@ -1028,7 +1161,7 @@ async function manualResync(){
   }
 }
 
-const PAGE_TITLES={dashboard:'Overview',jobs:'Jobs',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',analytics:'Analytics',measure:'Measure Property'};
+const PAGE_TITLES={dashboard:'Overview',activity:'Activity',jobs:'Jobs',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',analytics:'Analytics',measure:'Measure Property'};
 function navigate(page){
   currentPage=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1040,7 +1173,7 @@ function navigate(page){
   addBtn.style.display=(page==='analytics'||page==='measure')?'none':'';
   renderPage(page);
 }
-function renderPage(page){({dashboard:renderDashboard,jobs:()=>renderTable('jobs'),customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
+function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,jobs:()=>renderTable('jobs'),customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
 
 let upcomingSortAsc=true;
 function toggleUpcomingSort(){
