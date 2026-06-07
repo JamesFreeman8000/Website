@@ -53,6 +53,12 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .activity-sub{font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .activity-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3B82F6;flex-shrink:0;}
 .activity-go{font-size:0.78rem;color:var(--blue-glow);flex-shrink:0;}
+.pay-modal-summary{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:0.7rem 0.9rem;font-size:0.85rem;color:var(--text-main);margin-bottom:1rem;}
+.pay-hist-item{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:0.7rem 0;border-bottom:1px solid var(--border-lt);}
+.pay-hist-amt{font-size:1rem;font-weight:700;color:#86efac;}
+.pay-hist-type{font-size:0.7rem;font-weight:600;color:var(--text-muted);background:rgba(255,255,255,0.06);padding:1px 7px;border-radius:10px;margin-left:0.3rem;}
+.pay-hist-sub{font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem;}
+.pay-hist-actions{display:flex;gap:0.4rem;flex-shrink:0;}
 .nav-group{display:flex;flex-direction:column;}
 .sidebar-nav.nav-editing .nav-group{min-height:18px;border:1px dashed transparent;border-radius:6px;padding:2px;}
 .sidebar-nav.nav-editing .nav-item{cursor:grab;border:1px solid var(--border-lt);border-radius:6px;margin:2px 0;background:rgba(255,255,255,0.02);}
@@ -452,7 +458,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.7</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.8</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -661,8 +667,8 @@ const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.ap
 let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
-const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Settings:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Settings:['Key','Value']};
+const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Payments:[],Settings:[]};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes'],Settings:['Key','Value']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -857,8 +863,8 @@ function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s
 
 async function loadAllData(){
   setSyncStatus('⟳ Syncing...');
-  try{const[j,c,i,e,s,x]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Quotes'),readSheet('Schedule'),readSheet('Expenses')]);
-  cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;setSyncStatus('● Live');
+  try{const[j,c,i,e,s,x,p]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Quotes'),readSheet('Schedule'),readSheet('Expenses'),readSheet('Payments')]);
+  cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;cache.Payments=p;setSyncStatus('● Live');
   await markOverdueInvoices();
   await loadNavLabels();
   detectActivity();}
@@ -1645,7 +1651,7 @@ function genToken(){return 'tok-'+Math.random().toString(36).slice(2,10)+Math.ra
 
 // ── INVOICE table content (mirrors quotes) ──
 function invoiceStatusExtras(r){
-  return `<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="openInvoicePage(${r._rowIndex})">👁 View</button></div>`;
+  return `<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="openInvoicePage(${r._rowIndex})">👁 View</button></div>`+invoicePaymentSummary(r);
 }
 function invoiceActionBtns(r){
   let html='<div class="est-actions">';
@@ -1653,10 +1659,22 @@ function invoiceActionBtns(r){
     html+=`<button class="tbl-btn est-link-btn" onclick="copyInvoiceLink('${r['Token']}','${(r['Invoice #']||'').replace(/'/g,"")}')">🔗 Copy Link</button>`;
     html+=`<button class="tbl-btn est-email-btn" onclick="emailInvoice(${r._rowIndex})">📧 Email Invoice</button>`;
   }
+  html+=`<button class="tbl-btn est-dep-btn" onclick="openPaymentModal(${r._rowIndex})">💵 Log Payment</button>`;
   html+=`<button class="tbl-btn" onclick="openEditModal('Invoices',${r._rowIndex})">Edit</button>`;
   html+=`<button class="tbl-btn del" onclick="confirmDelete('Invoices',${r._rowIndex})">Delete</button>`;
   html+='</div>';
   return html;
+}
+// Status extras already shows View; add a payment summary line under invoices
+function invoicePaymentSummary(r){
+  const pays=(cache.Payments||[]).filter(p=>p['Invoice #']===r['Invoice #']);
+  if(!pays.length) return '';
+  const total=parseFloat(r['Amount']||0);
+  const paid=pays.reduce((s,p)=>s+parseFloat(p['Amount']||0),0);
+  const bal=total-paid;
+  const cls=bal<=0.001?'paid':'';
+  const lbl=bal<=0.001?`✓ Paid in full ($${paid.toFixed(2)})`:`Paid $${paid.toFixed(2)} of $${total.toFixed(2)} — $${bal.toFixed(2)} left`;
+  return `<div class="est-dep-status ${cls}" onclick="showPaymentHistory(${r._rowIndex})">${lbl} · ${pays.length} payment${pays.length>1?'s':''}</div>`;
 }
 function openInvoicePage(rowIndex){
   const inv=cache.Invoices.find(e=>e._rowIndex===rowIndex);
@@ -1687,6 +1705,100 @@ async function emailInvoice(rowIndex){
     await fetch(url,{method:'GET',mode:'no-cors'});
     showToast(`Invoice emailed to ${cust['Email']} (check it arrived).`,'success');
   }catch(e){ showToast('Could not send — check your connection.','error'); console.error('emailInvoice:',e); }
+}
+
+// ── PAYMENTS / RECEIPTS ──
+let payingInvoiceRow=null;
+function openPaymentModal(invRowIndex){
+  const inv=cache.Invoices.find(e=>e._rowIndex===invRowIndex);
+  if(!inv) return;
+  payingInvoiceRow=invRowIndex;
+  const total=parseFloat(inv['Amount']||0);
+  const pays=(cache.Payments||[]).filter(p=>p['Invoice #']===inv['Invoice #']);
+  const paid=pays.reduce((s,p)=>s+parseFloat(p['Amount']||0),0);
+  const bal=(total-paid);
+  const methods=['Cash','Check','Cash App','Venmo','Zelle','Wire Transfer','Debit/Credit Card','Other'];
+  document.getElementById('modal-title').textContent=`Log Payment — ${inv['Invoice #']||''}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="pay-modal-summary">Invoice total: <strong>$${total.toFixed(2)}</strong> · Paid so far: <strong>$${paid.toFixed(2)}</strong> · Balance: <strong style="color:${bal<=0.001?'#86efac':'#fbbf24'}">$${bal.toFixed(2)}</strong></div>
+    <div class="form-group"><label class="form-label">Payment Amount ($)</label><input class="form-input" type="number" step="0.01" id="pay-amount" value="${bal>0?bal.toFixed(2):''}" placeholder="0.00" /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Method</label><select class="form-select" id="pay-method">${methods.map(m=>`<option>${m}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="pay-type"><option>Deposit</option><option>Partial</option><option>Final</option><option>Full</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="pay-date" value="${tod()}" /></div>
+    <div class="form-group"><label class="form-label">Notes (optional)</label><input class="form-input" id="pay-notes" placeholder="e.g. paid on-site" /></div>
+  `;
+  const footer=document.querySelector('.modal-footer');
+  footer.dataset.prev=footer.innerHTML;
+  footer.innerHTML=`<button class="action-btn" onclick="closeModal()">Cancel</button><button class="action-btn primary" onclick="savePayment()">Record Payment</button>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+async function savePayment(){
+  const inv=cache.Invoices.find(e=>e._rowIndex===payingInvoiceRow);
+  if(!inv){ closeModal(); return; }
+  const amount=parseFloat(document.getElementById('pay-amount').value||0);
+  if(!amount||amount<=0){ showToast('Enter a payment amount.','error'); return; }
+  const method=document.getElementById('pay-method').value;
+  const type=document.getElementById('pay-type').value;
+  const date=document.getElementById('pay-date').value||tod();
+  const notes=document.getElementById('pay-notes').value||'';
+  const payNum=nextId('Payment #','Payments','PMT');
+  const token=genToken();
+  // Payments columns: Payment #, Invoice #, Customer, Amount, Method, Type, Date, Token, Notes
+  const values=[payNum, inv['Invoice #']||'', inv['Customer']||'', amount.toFixed(2), method, type, date, token, notes];
+  setSyncStatus('⟳ Saving payment...');
+  try{
+    await appendRow('Payments', values);
+    // Recompute paid total and update the invoice status if covered
+    const prevPaid=(cache.Payments||[]).filter(p=>p['Invoice #']===inv['Invoice #']).reduce((s,p)=>s+parseFloat(p['Amount']||0),0);
+    const newPaid=prevPaid+amount;
+    const total=parseFloat(inv['Amount']||0);
+    if(newPaid>=total-0.001 && inv['Status']!=='Paid'){
+      inv['Status']='Paid';
+      await updateRow('Invoices', inv._rowIndex, SHEETS.Invoices.map(col=>inv[col]||''));
+    }
+    await loadAllData();
+    closeModal();
+    renderPage(currentPage);
+    showToast('Payment recorded. Receipt link ready — open payment history to send it.','success');
+  }catch(e){ showToast('Could not save payment.','error'); setSyncStatus('✕ Error'); console.error('savePayment:',e); }
+}
+function showPaymentHistory(invRowIndex){
+  const inv=cache.Invoices.find(e=>e._rowIndex===invRowIndex);
+  if(!inv) return;
+  const pays=(cache.Payments||[]).filter(p=>p['Invoice #']===inv['Invoice #']);
+  const total=parseFloat(inv['Amount']||0);
+  const paid=pays.reduce((s,p)=>s+parseFloat(p['Amount']||0),0);
+  const bal=total-paid;
+  document.getElementById('modal-title').textContent=`Payments — ${inv['Invoice #']||''}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="pay-modal-summary">Total: <strong>$${total.toFixed(2)}</strong> · Paid: <strong>$${paid.toFixed(2)}</strong> · Balance: <strong style="color:${bal<=0.001?'#86efac':'#fbbf24'}">$${bal.toFixed(2)}</strong></div>
+    ${pays.length?pays.map(p=>`<div class="pay-hist-item"><div><div class="pay-hist-amt">$${parseFloat(p['Amount']||0).toFixed(2)} <span class="pay-hist-type">${p['Type']||''}</span></div><div class="pay-hist-sub">${p['Date']||''} · ${p['Method']||''}${p['Notes']?' · '+p['Notes']:''}</div></div><div class="pay-hist-actions"><button class="tbl-btn est-link-btn" onclick="copyReceiptLink('${p['Token']}','${p['Payment #']}')">🔗 Receipt</button><button class="tbl-btn est-email-btn" onclick="emailReceipt('${p['Token']}','${(inv['Customer']||'').replace(/'/g,"")}')">📧 Email</button></div></div>`).join(''):'<p class="empty-state">No payments logged yet.</p>'}
+  `;
+  const footer=document.querySelector('.modal-footer');
+  footer.dataset.prev=footer.innerHTML;
+  footer.innerHTML=`<button class="action-btn" onclick="closeModal()">Close</button><button class="action-btn primary" onclick="openPaymentModal(${invRowIndex})">+ Log Another Payment</button>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function copyReceiptLink(token, payNum){
+  const base=CONFIG.CLEAN_INVOICE_URL || CONFIG.ESTIMATE_PORTAL_URL;
+  const link=base+'?token='+encodeURIComponent(token)+'&type=receipt';
+  navigator.clipboard.writeText(link).then(()=>{
+    showToast(`Receipt link for ${payNum} copied!`,'success');
+  }).catch(()=>{ window.prompt('Copy this receipt link:', link); });
+}
+async function emailReceipt(token, customerName){
+  const cust=cache.Customers.find(c=>c['Name']===customerName);
+  if(!cust || !cust['Email']){ showToast(`No email on file for ${customerName||'this customer'}.`,'error'); return; }
+  if(!confirm(`Email this receipt to ${customerName} at ${cust['Email']}?`)) return;
+  const base=CONFIG.ESTIMATE_PORTAL_URL;
+  const url=base+'?action=sendemail&kind=receipt&token='+encodeURIComponent(token);
+  showToast('Sending receipt...','');
+  try{
+    await fetch(url,{method:'GET',mode:'no-cors'});
+    showToast(`Receipt emailed to ${cust['Email']} (check it arrived).`,'success');
+  }catch(e){ showToast('Could not send.','error'); console.error('emailReceipt:',e); }
 }
 
 // Content shown in the STATUS column (under the badge): View button + deposit/reply lines
