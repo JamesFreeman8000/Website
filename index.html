@@ -251,6 +251,12 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .measure-result-type{font-size:0.85rem;font-weight:500;color:var(--text-main);}
 .measure-result-sub{font-size:0.72rem;color:var(--text-muted);}
 .measure-result-sqft{font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:600;color:var(--cyan);white-space:nowrap;}
+.measure-result-price{font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:700;color:#86efac;white-space:nowrap;}
+.price-rates{padding:0.5rem 0.8rem 0.8rem;}
+.rate-row{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;}
+.rate-label{font-size:0.82rem;font-weight:600;width:75px;flex-shrink:0;}
+.rate-row input[type=range]{flex:1;accent-color:var(--blue);min-width:0;}
+.rate-box{width:64px;flex-shrink:0;padding:0.35rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,0.04);color:var(--text-main);font-size:0.82rem;text-align:right;}
 .measure-result-del{background:none;border:none;color:#f87171;cursor:pointer;font-size:0.9rem;padding:0 0.3rem;}
 .measure-totals{padding:0.9rem 1.25rem;border-top:1px solid var(--border);background:rgba(255,255,255,0.02);}
 .measure-total-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:0.2rem 0;}
@@ -575,6 +581,14 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
           <p class="measure-hint">Click points around an area on the map to trace it. Click "Finish This Area" when the shape is closed, then start the next one.</p>
         </div>
         <div class="measure-results-col">
+          <div class="card">
+            <div class="card-header">Pricing — $ per sq ft</div>
+            <div class="price-rates" id="price-rates">
+              <div class="rate-row"><span class="rate-label" style="color:#3B82F6;">Roof</span><input type="range" min="0" max="2" step="0.05" value="0.30" id="rate-Roof" oninput="updateRate('Roof',this.value)"><input type="number" min="0" step="0.01" value="0.30" id="ratebox-Roof" onchange="updateRate('Roof',this.value)" class="rate-box"></div>
+              <div class="rate-row"><span class="rate-label" style="color:#06B6D4;">Driveway</span><input type="range" min="0" max="2" step="0.05" value="0.25" id="rate-Driveway" oninput="updateRate('Driveway',this.value)"><input type="number" min="0" step="0.01" value="0.25" id="ratebox-Driveway" onchange="updateRate('Driveway',this.value)" class="rate-box"></div>
+              <div class="rate-row"><span class="rate-label" style="color:#10B981;">Walkway</span><input type="range" min="0" max="2" step="0.05" value="0.25" id="rate-Walkway" oninput="updateRate('Walkway',this.value)"><input type="number" min="0" step="0.01" value="0.25" id="ratebox-Walkway" onchange="updateRate('Walkway',this.value)" class="rate-box"></div>
+            </div>
+          </div>
           <div class="card">
             <div class="card-header">Measurements</div>
             <div id="measure-results" style="padding:0.5rem;"></div>
@@ -1728,6 +1742,16 @@ let measureMap=null, mapsLoaded=false, measureType='Roof';
 let forceSaveSheet=null;
 let currentPath=[], currentPolyline=null, currentMarkers=[];
 let measurements=[]; // {type, sqft, pitch, polygon}
+let priceRates={Roof:0.30,Driveway:0.25,Walkway:0.25}; // $ per sq ft, editable on the Measure page
+function updateRate(type,val){
+  const v=parseFloat(val)||0;
+  priceRates[type]=v;
+  const slider=document.getElementById('rate-'+type);
+  const box=document.getElementById('ratebox-'+type);
+  if(slider) slider.value=v;
+  if(box) box.value=v.toFixed(2);
+  renderMeasurements();
+}
 
 let mapsBootstrapped=false;
 let geometryLib=null;
@@ -1860,14 +1884,19 @@ function finishCurrentShape(){
 function renderMeasurements(){
   const wrap=document.getElementById('measure-results');
   if(!measurements.length){ wrap.innerHTML='<p class="empty-state" style="padding:1.5rem;">No areas measured yet. Trace one on the map.</p>'; document.getElementById('measure-totals').innerHTML=''; return; }
-  wrap.innerHTML=measurements.map((m,i)=>`<div class="measure-result-item"><div class="measure-result-left"><span class="measure-result-type">${m.type}</span>${m.type==='Roof'?`<span class="measure-result-sub">pitch ×${m.pitch}</span>`:''}</div><div style="display:flex;align-items:center;gap:0.5rem;"><span class="measure-result-sqft">${m.sqft.toLocaleString()} ft²</span><button class="measure-result-del" onclick="deleteMeasurement(${i})">✕</button></div></div>`).join('');
-  // totals by type
+  wrap.innerHTML=measurements.map((m,i)=>{
+    const rate=priceRates[m.type]||0;
+    const price=m.sqft*rate;
+    return `<div class="measure-result-item"><div class="measure-result-left"><span class="measure-result-type">${m.type}</span><span class="measure-result-sub">${m.sqft.toLocaleString()} ft² × $${rate.toFixed(2)}${m.type==='Roof'?` · pitch ×${m.pitch}`:''}</span></div><div style="display:flex;align-items:center;gap:0.5rem;"><span class="measure-result-price">$${price.toFixed(2)}</span><button class="measure-result-del" onclick="deleteMeasurement(${i})">✕</button></div></div>`;
+  }).join('');
+  // totals by type (sqft + price)
   const byType={};
   measurements.forEach(m=>{byType[m.type]=(byType[m.type]||0)+m.sqft;});
-  const grand=measurements.reduce((s,m)=>s+m.sqft,0);
+  const grandSqft=measurements.reduce((s,m)=>s+m.sqft,0);
+  const grandPrice=measurements.reduce((s,m)=>s+m.sqft*(priceRates[m.type]||0),0);
   document.getElementById('measure-totals').innerHTML=
-    Object.entries(byType).map(([t,v])=>`<div class="measure-total-row"><span style="color:var(--text-muted)">${t}</span><span>${v.toLocaleString()} ft²</span></div>`).join('')+
-    `<div class="measure-total-row grand"><span>Total</span><span>${grand.toLocaleString()} ft²</span></div>`;
+    Object.entries(byType).map(([t,v])=>`<div class="measure-total-row"><span style="color:var(--text-muted)">${t}</span><span>${v.toLocaleString()} ft² · $${(v*(priceRates[t]||0)).toFixed(2)}</span></div>`).join('')+
+    `<div class="measure-total-row grand"><span>Total</span><span>${grandSqft.toLocaleString()} ft² · $${grandPrice.toFixed(2)}</span></div>`;
 }
 
 function deleteMeasurement(i){
@@ -1899,11 +1928,15 @@ async function saveMeasurementsToEstimate(){
   if(notesEl) notesEl.value=`Measured — ${summary}`;
   const addrEl2=document.querySelector('[name="Address"]');
   if(addrEl2 && addr) addrEl2.value=addr;
-  // Seed an estimate line for each measured area type (roof->Roof Wash, driveway->Driveway Wash, etc.)
+  // Seed an estimate line for each measured area type, with the calculated price (sqft × rate)
   const typeToSvc={Roof:'Roof Wash',Driveway:'Driveway Wash',Walkway:'Deck/Patio Wash'};
   const types=Object.keys(byType);
-  if(types.length){ types.forEach(t=>addEstimateLine(typeToSvc[t]||'Other','')); }
-  else { addEstimateLine(); }
+  if(types.length){
+    types.forEach(t=>{
+      const price=(byType[t]*(priceRates[t]||0)).toFixed(2);
+      addEstimateLine(typeToSvc[t]||'Other', price);
+    });
+  } else { addEstimateLine(); }
   updateEstimateTotal();
   // currentPage stays 'measure' but saveRecord uses PAGE_TO_SHEET — force Quotes
   forceSaveSheet='Quotes';
