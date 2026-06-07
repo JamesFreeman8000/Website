@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hydro Pressure Washing — Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
@@ -438,7 +439,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.2</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.4</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -639,7 +640,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Settings:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Settings:['Key','Value']};
+const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Settings:['Key','Value']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -671,13 +672,19 @@ window.addEventListener('load',()=>{
     startAutoRefresh();
     // Load data — sheetsGet auto-refreshes the token if it has expired
     ensureSheetsExist().then(()=>loadAllData()).then(()=>renderPage(currentPage)).catch(e=>{
-      console.error('Session data load failed:',e);
-      // Token likely expired & silent refresh failed — send back to login
-      sessionStorage.removeItem('hydro_session');
-      accessToken=null;
-      document.getElementById('app').classList.add('hidden');
-      document.getElementById('login-screen').classList.remove('hidden');
-      document.getElementById('login-error').textContent='Your session expired. Please sign in again.';
+      console.error('Session data load failed, trying a silent token refresh first:',e);
+      // Before giving up, try one silent token refresh — only show login if THAT fails too
+      refreshTokenAndRetry(()=>Promise.resolve())
+        .then(()=>loadAllData())
+        .then(()=>renderPage(currentPage))
+        .catch(e2=>{
+          console.error('Silent refresh also failed:',e2);
+          sessionStorage.removeItem('hydro_session');
+          accessToken=null;
+          document.getElementById('app').classList.add('hidden');
+          document.getElementById('login-screen').classList.remove('hidden');
+          document.getElementById('login-error').textContent='Your session expired. Please sign in again.';
+        });
     });
   });
 });
@@ -740,27 +747,27 @@ function handleSignIn(){
   tokenClient.requestAccessToken();
 }
 
-// Silently refresh the token every 50 min (tokens expire after 60 min)
+// Silently refresh the token every 30 min (tokens expire after 60 min) — kept fresh
 function startAutoRefresh(){
   if(refreshTimer) clearInterval(refreshTimer);
   refreshTimer=setInterval(()=>{
     if(!tokenClient||!accessToken) return;
     tokenClient.requestAccessToken({prompt:''});// silent — no popup
-  }, 50*60*1000);
+  }, 30*60*1000);
   // Browsers pause background-tab timers, so ALSO refresh when the tab becomes visible again.
-  // This is the real fix for "left it inactive and it stopped syncing."
   if(!window._hydroVisHooked){
     window._hydroVisHooked=true;
     document.addEventListener('visibilitychange',()=>{
       if(document.visibilityState!=='visible') return;
       if(!tokenClient||!accessToken) return;
-      // If it's been more than ~45 min since the last refresh, token is likely stale — refresh + reload data
+      // Refresh whenever it's been more than 20 min since the last refresh — keeps the return-to-tab snappy
       const last=window._hydroLastRefresh||0;
       const mins=(Date.now()-last)/60000;
-      if(mins>=45){
+      if(mins>=20){
         setSyncStatus('⟳ Reconnecting...');
         refreshTokenAndRetry(()=>Promise.resolve())
           .then(()=>loadAllData())
+          .then(()=>renderPage(currentPage))
           .catch(()=>setSyncStatus('✕ Tap to refresh'));
       }
     });
@@ -1266,7 +1273,7 @@ const FORMS={
   Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address of this job" /></div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div><input type="hidden" name="Photos" /><p style="font-size:0.75rem;color:var(--text-muted);">📷 To add before/after photos: save this job, then open the customer from the Customers page and use "Add Photos" on the job.</p>`,
   Customers:()=>`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="Name" placeholder="Jane Smith" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="(555) 000-0000" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="Email" /></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Invoices:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" name="Invoice #" value="${nextId('Invoice #','Invoices','INV')}" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Unpaid</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change for a different property)</span></label><input class="form-input" name="Address" placeholder="Address this invoice is for" /></div><div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" name="Due Date" /></div></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
-  Quotes:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Quote #</label><input class="form-input" name="Quote #" value="${nextId('Quote #','Quotes','QTE')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address this quote is for" /></div><div class="form-group"><label class="form-label">Services & Pricing</label><div id="est-lines"></div><button type="button" class="action-btn est-add-line" onclick="addEstimateLine()">+ Add Service</button></div><div class="est-total-row"><span>Total Quote</span><span id="est-total">$0.00</span></div><input type="hidden" name="Service" /><input type="hidden" name="Amount" /><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option><option>Countered</option></select></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
+  Quotes:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Quote #</label><input class="form-input" name="Quote #" value="${nextId('Quote #','Quotes','QTE')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address this quote is for" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills)</span></label><input class="form-input" name="Phone" placeholder="For sending" /></div><div class="form-group"><label class="form-label">Email <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills)</span></label><input class="form-input" name="Email" placeholder="For sending" /></div></div><div class="form-group"><label class="form-label">Services & Pricing</label><div id="est-lines"></div><button type="button" class="action-btn est-add-line" onclick="addEstimateLine()">+ Add Service</button></div><div class="est-total-row"><span>Total Quote</span><span id="est-total">$0.00</span></div><input type="hidden" name="Service" /><input type="hidden" name="Amount" /><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option><option>Countered</option></select></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Schedule:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" name="Time" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="Auto-fills from customer" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" placeholder="Auto-fills from customer, or type it" /></div><div class="form-group"><label class="form-label">Services <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(check all that apply)</span></label><div class="service-checks" id="schedule-services">${svcChecks()}</div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Expenses:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Category</label><select class="form-select" name="Category"><option>Fuel</option><option>Equipment</option><option>Supplies</option><option>Marketing</option><option>Taxes</option><option>Other</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">Vendor</label><input class="form-input" name="Vendor" placeholder="e.g. Home Depot, Amazon" /></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div></div><div class="form-group"><label class="form-label">Description</label><input class="form-input" name="Description" placeholder="What was this expense for?" /></div><div class="form-group"><label class="form-label">Receipt (PDF or Image)</label><div class="file-upload-area" id="upload-drop-zone" onclick="document.getElementById('pdf-upload').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="handleFileDrop(event)"><input type="file" id="pdf-upload" accept=".pdf,.png,.jpg,.jpeg,.webp" onchange="handleFileSelect(this)" style="display:none"><div id="upload-prompt">📎 Click or drag & drop a PDF / image</div><div class="file-name" id="file-name-display" style="color:var(--cyan);margin-top:0.3rem;font-size:0.8rem;"></div></div><input class="form-input" name="ReceiptURL" id="receipt-url-input" placeholder="Upload above — or paste a Google Drive link" style="margin-top:0.5rem" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes" placeholder="Any extra details..."></textarea></div>`,
 };
@@ -1355,7 +1362,13 @@ async function getDriveFolder(name){
 }
 
 function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Quotes'){addEstimateLine();}}
-function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Quotes'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}}
+function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Quotes'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}
+  // Preserve the existing Token when editing Quotes/Invoices so the customer link keeps working
+  if((sheet==='Quotes'||sheet==='Invoices') && rec['Token']){
+    let tk=document.querySelector('[name="Token"]');
+    if(!tk){ tk=document.createElement('input'); tk.type='hidden'; tk.name='Token'; document.getElementById('modal-body').appendChild(tk); }
+    tk.value=rec['Token'];
+  }}
 async function saveRecord(){
   const sheet=editingRow?editingRow.sheet:(forceSaveSheet||PAGE_TO_SHEET[currentPage]);
 
@@ -1487,8 +1500,10 @@ function autofillCustomer(name){
   if(!c) return;
   const phoneEl=document.querySelector('[name="Phone"]');
   const addrEl=document.querySelector('[name="Address"]');
+  const emailEl=document.querySelector('[name="Email"]');
   if(phoneEl && !phoneEl.value) phoneEl.value=c['Phone']||'';
   if(addrEl && !addrEl.value) addrEl.value=c['Address']||'';
+  if(emailEl && !emailEl.value) emailEl.value=c['Email']||'';
 }
 function nextId(col,sheet,prefix){const rows=cache[sheet]||[];if(!rows.length)return `${prefix}-001`;const next=Math.max(...rows.map(r=>parseInt((r[col]||'').replace(/\D/g,''))||0))+1;return `${prefix}-${String(next).padStart(3,'0')}`;}
 function genToken(){return 'tok-'+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,6);}
