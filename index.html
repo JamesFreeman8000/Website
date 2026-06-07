@@ -1741,6 +1741,7 @@ function showToast(msg,type=''){const t=document.getElementById('toast');t.textC
 let measureMap=null, mapsLoaded=false, measureType='Roof';
 let forceSaveSheet=null;
 let currentPath=[], currentPolyline=null, currentMarkers=[];
+let AdvMarker=null; // AdvancedMarkerElement class, set once Maps loads
 let measurements=[]; // {type, sqft, pitch, polygon}
 let priceRates={Roof:0.30,Driveway:0.25,Walkway:0.25}; // $ per sq ft, editable on the Measure page
 function updateRate(type,val){
@@ -1778,7 +1779,8 @@ async function initMeasurePage(){
     // importLibrary waits until the actual classes are ready
     const {Map}=await google.maps.importLibrary("maps");
     geometryLib=await google.maps.importLibrary("geometry");
-    await google.maps.importLibrary("marker");
+    const markerLib=await google.maps.importLibrary("marker");
+    AdvMarker=markerLib.AdvancedMarkerElement;
     await google.maps.importLibrary("geocoding");
     buildMap(Map);
   }catch(err){
@@ -1798,6 +1800,7 @@ function buildMap(MapClass){
     center:{lat:39.6626,lng:-75.0935}, // Clayton, NJ default
     zoom:19, mapTypeId:'satellite', tilt:0,
     zoomControl:true, streetViewControl:false, fullscreenControl:true,
+    mapId:'eda8ecc032e1bb66c9664f8e', // your Map ID (required for AdvancedMarkerElement)
   });
   measureMap.addListener('click',(e)=>addPoint(e.latLng));
   updatePitchVisibility();
@@ -1847,16 +1850,32 @@ function runGeocode(addr){
 
 function addPoint(latLng){
   currentPath.push(latLng);
-  const marker=new google.maps.Marker({position:latLng,map:measureMap,icon:{path:google.maps.SymbolPath.CIRCLE,scale:4,fillColor:'#60A5FA',fillOpacity:1,strokeColor:'#fff',strokeWeight:1}});
+  // AdvancedMarkerElement uses a DOM element for its content — make a small dot
+  const dot=document.createElement('div');
+  dot.style.cssText='width:9px;height:9px;border-radius:50%;background:#60A5FA;border:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.3);';
+  let marker;
+  if(AdvMarker){
+    marker=new AdvMarker({position:latLng,map:measureMap,content:dot});
+  } else {
+    // Fallback if the advanced lib somehow didn't load
+    marker=new google.maps.Marker({position:latLng,map:measureMap,icon:{path:google.maps.SymbolPath.CIRCLE,scale:4,fillColor:'#60A5FA',fillOpacity:1,strokeColor:'#fff',strokeWeight:1}});
+  }
   currentMarkers.push(marker);
   if(currentPolyline) currentPolyline.setMap(null);
   currentPolyline=new google.maps.Polyline({path:currentPath,map:measureMap,strokeColor:'#3B82F6',strokeWeight:2});
 }
 
+// Remove a marker regardless of type (AdvancedMarkerElement uses .map=null, old Marker uses setMap(null))
+function removeMarker(m){
+  if(!m) return;
+  if(typeof m.setMap==='function') m.setMap(null);
+  else m.map=null;
+}
+
 function undoLastPoint(){
   if(!currentPath.length) return;
   currentPath.pop();
-  const m=currentMarkers.pop(); if(m) m.setMap(null);
+  const m=currentMarkers.pop(); removeMarker(m);
   if(currentPolyline) currentPolyline.setMap(null);
   if(currentPath.length) currentPolyline=new google.maps.Polyline({path:currentPath,map:measureMap,strokeColor:'#3B82F6',strokeWeight:2});
 }
@@ -1875,7 +1894,7 @@ function finishCurrentShape(){
   }
   measurements.push({type:measureType,sqft:Math.round(sqft),pitch,polygon});
   // reset current drawing
-  currentPath=[]; currentMarkers.forEach(m=>m.setMap(null)); currentMarkers=[];
+  currentPath=[]; currentMarkers.forEach(removeMarker); currentMarkers=[];
   if(currentPolyline){currentPolyline.setMap(null);currentPolyline=null;}
   renderMeasurements();
   showToast(`${measureType} added: ${Math.round(sqft).toLocaleString()} sq ft`,'success');
@@ -1908,7 +1927,7 @@ function deleteMeasurement(i){
 function clearAllMeasurements(){
   measurements.forEach(m=>{if(m.polygon)m.polygon.setMap(null);});
   measurements=[];
-  currentPath=[]; currentMarkers.forEach(m=>m.setMap(null)); currentMarkers=[];
+  currentPath=[]; currentMarkers.forEach(removeMarker); currentMarkers=[];
   if(currentPolyline){currentPolyline.setMap(null);currentPolyline=null;}
   renderMeasurements();
 }
