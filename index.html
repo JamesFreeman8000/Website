@@ -439,7 +439,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.4</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.5</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -750,25 +750,27 @@ function handleSignIn(){
 // Silently refresh the token every 30 min (tokens expire after 60 min) — kept fresh
 function startAutoRefresh(){
   if(refreshTimer) clearInterval(refreshTimer);
+  // make sure we have a baseline timestamp so the visibility check never thinks it's been "forever"
+  if(!window._hydroLastRefresh) window._hydroLastRefresh=Date.now();
   refreshTimer=setInterval(()=>{
     if(!tokenClient||!accessToken) return;
     tokenClient.requestAccessToken({prompt:''});// silent — no popup
   }, 30*60*1000);
-  // Browsers pause background-tab timers, so ALSO refresh when the tab becomes visible again.
+  // When returning to the tab after a LONG absence, quietly re-sync in the background.
+  // We do NOT touch anything for short absences, and we NEVER kick to the login screen from here.
   if(!window._hydroVisHooked){
     window._hydroVisHooked=true;
     document.addEventListener('visibilitychange',()=>{
       if(document.visibilityState!=='visible') return;
       if(!tokenClient||!accessToken) return;
-      // Refresh whenever it's been more than 20 min since the last refresh — keeps the return-to-tab snappy
-      const last=window._hydroLastRefresh||0;
-      const mins=(Date.now()-last)/60000;
-      if(mins>=20){
-        setSyncStatus('⟳ Reconnecting...');
+      const mins=(Date.now()-(window._hydroLastRefresh||Date.now()))/60000;
+      // Only act if it's been 45+ minutes (token nearing its 60-min expiry). Short hops do nothing.
+      if(mins>=45){
+        setSyncStatus('⟳ Syncing...');
         refreshTokenAndRetry(()=>Promise.resolve())
           .then(()=>loadAllData())
           .then(()=>renderPage(currentPage))
-          .catch(()=>setSyncStatus('✕ Tap to refresh'));
+          .catch(()=>setSyncStatus('● Live · tap to refresh')); // stay on the page; let them click if needed
       }
     });
   }
