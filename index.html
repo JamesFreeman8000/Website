@@ -480,7 +480,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.7</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.9</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -524,7 +524,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <section id="page-activity" class="page">
       <div class="filter-bar" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
         <label class="sound-toggle"><input type="checkbox" id="notif-sound-toggle" onchange="toggleNotifSound(this.checked)"> 🔔 Sound on new activity</label>
-        <button class="action-btn" onclick="markAllActivitySeen()">Mark all as seen</button>
+        <div style="display:flex;gap:0.5rem;"><button class="action-btn" onclick="markAllActivityUnread()">Mark all unread</button><button class="action-btn" onclick="markAllActivitySeen()">Mark all as seen</button></div>
       </div>
       <div class="card"><div id="activity-list" style="padding:0.5rem;"><p class="empty-state">No customer activity yet. When someone accepts, declines, replies, or pays a deposit, it'll show here.</p></div></div>
     </section>
@@ -903,23 +903,9 @@ function buildActivityItems(){
 // Compare against the "seen" set stored in Settings; flag new ones, update badge, maybe play sound.
 function detectActivity(){
   const items=buildActivityItems();
-  // FIRST-RUN / MISSING-SNAPSHOT SAFEGUARD:
-  // If no "seen" snapshot exists yet (first time, or Settings was rebuilt/cleared),
-  // silently mark everything currently here as already-seen so we DON'T dump a pile of old notifications.
-  const hasSnapshot=(cache.Settings||[]).some(r=>r['Key']==='activitySeen');
-  if(!hasSnapshot){
-    const seedSeen={};
-    items.forEach(it=>{ seedSeen[it.key]=Date.now(); });
-    saveSetting('activitySeen', JSON.stringify(seedSeen)).catch(e=>console.error('seed activitySeen:',e));
-    window._hydroPrevUnseen=0;
-    const badge0=document.getElementById('nav-activity-badge');
-    if(badge0) badge0.classList.add('hidden');
-    if(currentPage==='activity') renderActivity();
-    return; // start clean — only future activity will notify
-  }
   const seen=getSeenActivity();
   const unseen=items.filter(it=>!seen[it.key]);
-  // badge
+  // badge — show the count of items you haven't clicked yet
   const badge=document.getElementById('nav-activity-badge');
   if(badge){
     if(unseen.length){ badge.textContent=unseen.length; badge.classList.remove('hidden'); }
@@ -948,6 +934,14 @@ async function markAllActivitySeen(){
   detectActivity();
   renderActivity();
   showToast('All caught up!','success');
+}
+// Clear the seen snapshot so every current notification shows as unread again
+async function markAllActivityUnread(){
+  try{ await saveSetting('activitySeen', JSON.stringify({})); }catch(e){ console.error(e); }
+  window._hydroPrevUnseen=0;
+  detectActivity();
+  renderActivity();
+  showToast('All notifications marked unread.','success');
 }
 function renderActivity(){
   const wrap=document.getElementById('activity-list');
@@ -1225,7 +1219,7 @@ function renderDashboard(){
   const recentJobs=cache.Schedule.filter(s=>s['Status']==='Completed').sort((a,b)=>(b['Date']||'').localeCompare(a['Date']||'')).slice(0,5);
   document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<ul class="dash-list">${recentJobs.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-amount">$${parseFloat(s['Amount']||0).toFixed(2)}</div>${badge(s['Status'])}</div></li>`).join('')}</ul>`:'<p class="empty-state">No completed jobs yet.</p>';
   const upcoming=cache.Schedule.filter(s=>s['Date']>=now.toISOString().slice(0,10)&&s['Status']!=='Cancelled').sort((a,b)=>upcomingSortAsc?a['Date'].localeCompare(b['Date']):b['Date'].localeCompare(a['Date'])).slice(0,5);
-  document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<ul class="dash-list">${upcoming.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-date">${s['Date']}${s['Time']?' '+fmtTime(s['Time']):''}</div></div></li>`).join('')}</ul>`:'<p class="empty-state">Nothing scheduled.</p>';
+  document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<ul class="dash-list">${upcoming.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-date">${fmtDate(s['Date'])}${s['Time']?' '+fmtTime(s['Time']):''}</div></div></li>`).join('')}</ul>`:'<p class="empty-state">Nothing scheduled.</p>';
 }
 
 // Look up a customer's phone/email/address from the Customers list (fallback when the record itself lacks it)
@@ -1292,7 +1286,7 @@ function showScheduleDetail(rowIndex){
     <div class="jd-grid">
       <div class="jd-col">
         <div class="jd-head"><div class="jd-name">${s['Customer']||'—'}</div>${badge(s['Status'])}</div>
-        <div class="jd-when">📅 ${s['Date']||'—'}${s['Time']?' at '+fmtTime(s['Time']):''}</div>
+        <div class="jd-when">📅 ${fmtDate(s['Date'])}${s['Time']?' at '+fmtTime(s['Time']):''}</div>
         ${amount?`<div class="jd-amount">$${amount.toFixed(2)}<span class="jd-amount-lbl">job total</span></div>`:''}
         <div class="jd-quickbtns">${mapBtn}${callBtn}${mailBtn}</div>
         <div class="jd-card">
@@ -1385,9 +1379,9 @@ function invoiceFromJob(scheduleRowIndex){
 function renderTable(page,filterText='',filterStatus=''){
   const cfgs={
     customers:{sheet:'Customers',body:'customers-body',render:r=>`<td><a href="#" onclick="event.preventDefault();showCustomerDetail('${(r['Name']||'').replace(/'/g,"\\'")}')" style="color:var(--blue-glow);text-decoration:none;font-weight:500;">${r['Name']}</a></td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Schedule.filter(j=>j['Customer']===r['Name']).length}</td>`},
-    invoices:{sheet:'Invoices',body:'invoices-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Invoice #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Date']}</td><td>${r['Due Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${invoiceStatusExtras(r)}</td><td>${invoiceActionBtns(r)}</td>`},
-    quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${quoteStatusBadge(r)}${estimateStatusExtras(r)}</td><td>${estimateActionBtns(r)}</td>`},
-    expenses:{sheet:'Expenses',body:'expenses-body',statusCol:'Category',render:r=>`<td>${r['Date']}</td><td>${r['Vendor']||'—'}</td><td>${r['Description']}</td><td>${r['Category']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${r['ReceiptURL']?`<a href="${r['ReceiptURL']}" target="_blank" style="color:var(--cyan);font-size:0.75rem;">View</a>`:'—'}</td>`},
+    invoices:{sheet:'Invoices',body:'invoices-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Invoice #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${fmtDate(r['Date'])}</td><td>${fmtDate(r['Due Date'])}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${invoiceStatusExtras(r)}</td><td>${invoiceActionBtns(r)}</td>`},
+    quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${fmtDate(r['Date'])}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${quoteStatusBadge(r)}${estimateStatusExtras(r)}</td><td>${estimateActionBtns(r)}</td>`},
+    expenses:{sheet:'Expenses',body:'expenses-body',statusCol:'Category',render:r=>`<td>${fmtDate(r['Date'])}</td><td>${r['Vendor']||'—'}</td><td>${r['Description']}</td><td>${r['Category']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${r['ReceiptURL']?`<a href="${r['ReceiptURL']}" target="_blank" style="color:var(--cyan);font-size:0.75rem;">View</a>`:'—'}</td>`},
   };
   const cfg=cfgs[page];if(!cfg)return;
   let rows=cache[cfg.sheet]||[];
@@ -1515,9 +1509,11 @@ function renderScheduleList(){
   jobs.sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));
   const titleEl=document.getElementById('schedule-list-title');
   if(titleEl) titleEl.textContent=title;
-  document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${s['Date']}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td onclick="event.stopPropagation()"><div class="est-actions"><button class="tbl-btn est-view-btn" onclick="showScheduleDetail(${s._rowIndex})">👁 Details</button><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='default'?'Nothing scheduled this month or upcoming. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
+  document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${fmtDate(s['Date'])}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td onclick="event.stopPropagation()"><div class="est-actions"><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='default'?'Nothing scheduled this month or upcoming. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
 }
 function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;return `${h12}:${m} ${ap}`;}
+// Display a stored YYYY-MM-DD date as MM/DD/YYYY (cleaner for US). Storage stays YYYY-MM-DD for sorting/filtering.
+function fmtDate(d){if(!d)return'—';const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[2]}/${m[3]}/${m[1]}`:d;}
 
 function waiverBtn(s){
   if(s['WaiverStatus']==='Signed'){
