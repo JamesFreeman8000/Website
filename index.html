@@ -119,6 +119,8 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .badge-overdue{background:rgba(239,68,68,0.15);color:#FCA5A5;border:1px solid rgba(239,68,68,0.3);}
 .badge-sent{background:rgba(6,182,212,0.15);color:#67E8F9;border:1px solid rgba(6,182,212,0.3);}
 .badge-draft{background:rgba(148,163,184,0.1);color:#94A3B8;border:1px solid rgba(148,163,184,0.2);}
+.draft-clickable{cursor:pointer;transition:all .15s;}
+.draft-clickable:hover{background:rgba(37,99,235,0.15);color:var(--blue-glow);border-color:var(--blue);}
 .badge-accepted{background:rgba(34,197,94,0.15);color:#86EFAC;border:1px solid rgba(34,197,94,0.3);}
 .badge-countered{background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3);}
 .est-under-status{margin-top:6px;}
@@ -457,7 +459,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.9</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.1</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -632,7 +634,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       </div>
       <div class="card"><div class="calendar-grid" id="calendar-grid"></div></div>
       <div class="card" style="margin-top:1rem;">
-        <div class="card-header">Jobs This Month</div>
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;"><span id="schedule-list-title">Upcoming Jobs</span><select id="schedule-scope" onchange="setScheduleScope(this.value)" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;"><option value="upcoming">All Upcoming</option><option value="month">Calendar Month</option><option value="all">All Jobs</option></select></div>
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Phone</th><th>Address</th><th>Service(s)</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="schedule-body"><tr><td colspan="8" class="empty-state">No scheduled jobs.</td></tr></tbody></table></div>
       </div>
@@ -1268,7 +1270,7 @@ function renderTable(page,filterText='',filterStatus=''){
   const cfgs={
     customers:{sheet:'Customers',body:'customers-body',render:r=>`<td><a href="#" onclick="event.preventDefault();showCustomerDetail('${(r['Name']||'').replace(/'/g,"\\'")}')" style="color:var(--blue-glow);text-decoration:none;font-weight:500;">${r['Name']}</a></td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Schedule.filter(j=>j['Customer']===r['Name']).length}</td>`},
     invoices:{sheet:'Invoices',body:'invoices-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Invoice #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Date']}</td><td>${r['Due Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${invoiceStatusExtras(r)}</td><td>${invoiceActionBtns(r)}</td>`},
-    quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${estimateStatusExtras(r)}</td><td>${estimateActionBtns(r)}</td>`},
+    quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${quoteStatusBadge(r)}${estimateStatusExtras(r)}</td><td>${estimateActionBtns(r)}</td>`},
     expenses:{sheet:'Expenses',body:'expenses-body',statusCol:'Category',render:r=>`<td>${r['Date']}</td><td>${r['Vendor']||'—'}</td><td>${r['Description']}</td><td>${r['Category']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${r['ReceiptURL']?`<a href="${r['ReceiptURL']}" target="_blank" style="color:var(--cyan);font-size:0.75rem;">View</a>`:'—'}</td>`},
   };
   const cfg=cfgs[page];if(!cfg)return;
@@ -1376,7 +1378,27 @@ function renderCalendar(){
   }
   document.getElementById('calendar-grid').innerHTML=html;
 }
-function renderScheduleList(){const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td><a href="#" onclick="event.preventDefault();showScheduleDetail(${s._rowIndex})" style="color:var(--blue-glow);text-decoration:none;">${s['Date']}</a></td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><div class="est-actions"><button class="tbl-btn est-view-btn" onclick="showScheduleDetail(${s._rowIndex})">👁 Details</button><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">No jobs this month.</td></tr>`;}
+let scheduleScope='upcoming'; // 'upcoming' | 'month' | 'all'
+function setScheduleScope(v){ scheduleScope=v; renderScheduleList(); }
+function renderScheduleList(){
+  const today=new Date().toISOString().slice(0,10);
+  const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  let jobs=[...cache.Schedule];
+  let title='Upcoming Jobs';
+  if(scheduleScope==='month'){
+    jobs=jobs.filter(s=>(s['Date']||'').startsWith(mo));
+    title=`Jobs in ${['January','February','March','April','May','June','July','August','September','October','November','December'][calMonth]} ${calYear}`;
+  } else if(scheduleScope==='upcoming'){
+    jobs=jobs.filter(s=>(s['Date']||'')>=today && s['Status']!=='Cancelled' && s['Status']!=='Completed');
+    title='Upcoming Jobs';
+  } else {
+    title='All Jobs';
+  }
+  jobs.sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));
+  const titleEl=document.getElementById('schedule-list-title');
+  if(titleEl) titleEl.textContent=title;
+  document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td><a href="#" onclick="event.preventDefault();showScheduleDetail(${s._rowIndex})" style="color:var(--blue-glow);text-decoration:none;">${s['Date']}</a></td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><div class="est-actions"><button class="tbl-btn est-view-btn" onclick="showScheduleDetail(${s._rowIndex})">👁 Details</button><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='upcoming'?'No upcoming jobs. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
+}
 function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;return `${h12}:${m} ${ap}`;}
 
 function waiverBtn(s){
@@ -1800,6 +1822,53 @@ async function emailReceipt(token, customerName){
 }
 
 // Content shown in the STATUS column (under the badge): View button + deposit/reply lines
+// Status badge for quotes — if it's a Draft, make it clickable to send the quote
+function quoteStatusBadge(r){
+  if((r['Status']||'')==='Draft'){
+    return `<span class="badge badge-draft draft-clickable" onclick="sendDraftQuote(${r._rowIndex})" title="Click to send this quote">Draft 📤</span>`;
+  }
+  return badge(r['Status']);
+}
+
+// Send a Draft quote: confirm, email it, and open a pre-filled text — then mark it Sent
+async function sendDraftQuote(rowIndex){
+  const q=cache.Quotes.find(e=>e._rowIndex===rowIndex);
+  if(!q) return;
+  if(!q['Token']){ showToast('This quote has no link yet — open & save it first.','error'); return; }
+  const cust=cache.Customers.find(c=>c['Name']===q['Customer']) || {};
+  const email=q['Email']||cust['Email']||'';
+  const phone=q['Phone']||cust['Phone']||'';
+  if(!email && !phone){ showToast(`No email or phone on file for ${q['Customer']||'this customer'}. Add one first.`,'error'); return; }
+  // Confirm before sending — prevents accidental sends from a stray click
+  const channels=[email?`email (${email})`:null, phone?`text (${phone})`:null].filter(Boolean).join(' and ');
+  if(!confirm(`Send quote ${q['Quote #']||''} to ${q['Customer']||'customer'} via ${channels}?`)) return;
+
+  const base=CONFIG.CLEAN_ESTIMATE_URL || CONFIG.ESTIMATE_PORTAL_URL;
+  const link=base+'?token='+encodeURIComponent(q['Token']);
+
+  // 1) Email (auto-send via Apps Script) — only if we have an email
+  if(email){
+    try{
+      const url=CONFIG.ESTIMATE_PORTAL_URL+'?action=sendemail&kind=quote&token='+encodeURIComponent(q['Token']);
+      await fetch(url,{method:'GET',mode:'no-cors'});
+    }catch(e){ console.error('draft email:',e); }
+  }
+  // 2) Mark as Sent
+  q['Status']='Sent';
+  try{ await updateRow('Quotes', q._rowIndex, SHEETS.Quotes.map(col=>q[col]||'')); }catch(e){ console.error(e); }
+  renderTable('quotes');
+
+  // 3) Text handoff — open the phone's SMS app with a pre-filled message (you tap send)
+  if(phone){
+    const msg=`Hi ${q['Customer']||''}, here's your quote from Hydro Pressure Washing: ${link}`;
+    const smsUrl=`sms:${phone}?&body=${encodeURIComponent(msg)}`;
+    window.open(smsUrl,'_blank');
+    showToast(email?`Emailed ${email}. Text app opened — tap send to text them too.`:`Text app opened — tap send.`,'success');
+  } else {
+    showToast(`Quote emailed to ${email}. Marked as Sent.`,'success');
+  }
+}
+
 function estimateStatusExtras(r){
   const status=r['Status']||'';
   let html=`<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="openQuotePage(${r._rowIndex})">👁 View</button></div>`;
