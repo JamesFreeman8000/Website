@@ -235,6 +235,21 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-row{display:flex;justify-content:space-between;padding:0.5rem 0;border-top:1px solid var(--border-lt);}
 .jd-label{font-size:0.8rem;color:var(--text-muted);}
 .jd-val{font-size:0.85rem;color:var(--text-main);}
+/* Wide Job Details popup */
+.jd-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.jd-col{display:flex;flex-direction:column;gap:1rem;}
+.jd-amount{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;color:#86efac;line-height:1;display:flex;align-items:baseline;gap:0.5rem;}
+.jd-amount-lbl{font-family:'Inter',sans-serif;font-size:0.7rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;}
+.jd-quickbtns{display:flex;gap:0.5rem;flex-wrap:wrap;}
+.jd-bigbtn{flex:1;min-width:90px;text-align:center;padding:0.7rem 0.5rem;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:10px;font-size:0.85rem;font-weight:600;color:var(--blue-glow);text-decoration:none;transition:all .15s;}
+.jd-bigbtn:hover{background:rgba(37,99,235,0.22);border-color:var(--blue);}
+.jd-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;}
+.jd-card-title{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.7rem;}
+.jd-line{display:flex;align-items:flex-start;gap:0.6rem;padding:0.35rem 0;font-size:0.9rem;color:var(--text-main);word-break:break-word;}
+.jd-line-ic{flex-shrink:0;}
+@media(max-width:760px){.jd-grid{grid-template-columns:1fr;}}
+.clickable-row{cursor:pointer;transition:background .12s;}
+.clickable-row:hover{background:rgba(37,99,235,0.06);}
 .dash-list-left{display:flex;flex-direction:column;gap:0.2rem;min-width:0;flex:1;}
 .dash-list-name{font-size:0.875rem;font-weight:500;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dash-list-sub{font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -459,7 +474,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.1</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.4</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -634,7 +649,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       </div>
       <div class="card"><div class="calendar-grid" id="calendar-grid"></div></div>
       <div class="card" style="margin-top:1rem;">
-        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;"><span id="schedule-list-title">Upcoming Jobs</span><select id="schedule-scope" onchange="setScheduleScope(this.value)" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;"><option value="upcoming">All Upcoming</option><option value="month">Calendar Month</option><option value="all">All Jobs</option></select></div>
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;"><span id="schedule-list-title">Upcoming Jobs</span><select id="schedule-scope" onchange="setScheduleScope(this.value)" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;"><option value="default">Default</option><option value="month">This Month</option><option value="all">All Jobs</option></select></div>
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Phone</th><th>Address</th><th>Service(s)</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="schedule-body"><tr><td colspan="8" class="empty-state">No scheduled jobs.</td></tr></tbody></table></div>
       </div>
@@ -1245,23 +1260,43 @@ function showScheduleDetail(rowIndex){
   const waiver=s['WaiverStatus']==='Signed'?`<div class="jd-row"><span class="jd-label">Waiver</span><span class="jd-val" style="color:#86efac;">✓ Signed${s['WaiverSignedBy']?' by '+s['WaiverSignedBy']:''}</span></div>`:'';
 
   document.getElementById('modal-title').textContent='Job Details';
+  document.getElementById('modal').classList.add('modal-xl');
+  const mapBtn=addr?`<a class="jd-bigbtn" href="https://maps.google.com/?q=${encodeURIComponent(addr)}" target="_blank">📍 Directions</a>`:'';
+  const callBtn=phone?`<a class="jd-bigbtn" href="tel:${phone}">📞 Call</a>`:'';
+  const mailBtn=email?`<a class="jd-bigbtn" href="mailto:${email}">✉️ Email</a>`:'';
   document.getElementById('modal-body').innerHTML=`
-    <div class="jd-head"><div class="jd-name">${s['Customer']||'—'}</div>${badge(s['Status'])}</div>
-    <div class="jd-when">📅 ${s['Date']||'—'}${s['Time']?' at '+fmtTime(s['Time']):''}${amount?' · $'+amount.toFixed(2):''}</div>
-    <div class="jd-contact">
-      ${addr?`<a class="jd-contact-item" href="https://maps.google.com/?q=${encodeURIComponent(addr)}" target="_blank">📍 ${addr}</a>`:'<span class="jd-contact-item">📍 No address on file</span>'}
-      ${phone?`<a class="jd-contact-item" href="tel:${phone}">📞 ${phone}</a>`:''}
-      ${email?`<a class="jd-contact-item" href="mailto:${email}">✉️ ${email}</a>`:''}
+    <div class="jd-grid">
+      <div class="jd-col">
+        <div class="jd-head"><div class="jd-name">${s['Customer']||'—'}</div>${badge(s['Status'])}</div>
+        <div class="jd-when">📅 ${s['Date']||'—'}${s['Time']?' at '+fmtTime(s['Time']):''}</div>
+        ${amount?`<div class="jd-amount">$${amount.toFixed(2)}<span class="jd-amount-lbl">job total</span></div>`:''}
+        <div class="jd-quickbtns">${mapBtn}${callBtn}${mailBtn}</div>
+        <div class="jd-card">
+          <div class="jd-card-title">Contact</div>
+          <div class="jd-line"><span class="jd-line-ic">📍</span><span>${addr||'No address on file'}</span></div>
+          <div class="jd-line"><span class="jd-line-ic">📞</span><span>${phone||'No phone on file'}</span></div>
+          <div class="jd-line"><span class="jd-line-ic">✉️</span><span>${email||'No email on file'}</span></div>
+        </div>
+        <div class="jd-card">
+          <div class="jd-card-title">Service(s)</div>
+          <div class="jd-services">${(s['Service']||'—')}</div>
+        </div>
+      </div>
+      <div class="jd-col">
+        <div class="jd-card">
+          <div class="jd-card-title">Status & Payment</div>
+          ${payHtml}${depHtml}${waiver}
+        </div>
+        <div class="jd-card">
+          <div class="jd-card-title">Notes</div>
+          <div class="jd-notes">${s['Notes']||'<span style="color:var(--text-muted)">No notes.</span>'}</div>
+        </div>
+      </div>
     </div>
-    <div class="jd-section">Service(s)</div>
-    <div class="jd-services">${(s['Service']||'—')}</div>
-    <div class="jd-section">Status & Payment</div>
-    ${payHtml}${depHtml}${waiver}
-    ${s['Notes']?`<div class="jd-section">Notes</div><div class="jd-notes">${s['Notes']}</div>`:''}
   `;
   const footer=document.querySelector('.modal-footer');
   footer.dataset.prev=footer.innerHTML;
-  footer.innerHTML=`${quoteBtn}<button class="action-btn" onclick="closeModal();openEditModal('Schedule',${rowIndex})">Edit</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
+  footer.innerHTML=`${quoteBtn}<button class="action-btn" onclick="closeModal();openEditModal('Schedule',${rowIndex})">✎ Edit Job</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
   editingRow=null;
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
@@ -1378,26 +1413,28 @@ function renderCalendar(){
   }
   document.getElementById('calendar-grid').innerHTML=html;
 }
-let scheduleScope='upcoming'; // 'upcoming' | 'month' | 'all'
+let scheduleScope='default'; // 'default' | 'month' | 'all'
 function setScheduleScope(v){ scheduleScope=v; renderScheduleList(); }
 function renderScheduleList(){
   const today=new Date().toISOString().slice(0,10);
-  const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  const realMonth=today.slice(0,7); // actual current month (YYYY-MM), independent of calendar navigation
+  const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`; // month the calendar is showing
   let jobs=[...cache.Schedule];
-  let title='Upcoming Jobs';
-  if(scheduleScope==='month'){
+  let title='Schedule';
+  if(scheduleScope==='default'){
+    // Everything from the 1st of the REAL current month onward: this month's past days + all future jobs
+    jobs=jobs.filter(s=>(s['Date']||'')>=realMonth+'-01' && s['Status']!=='Cancelled');
+    title='Default — this month & upcoming';
+  } else if(scheduleScope==='month'){
     jobs=jobs.filter(s=>(s['Date']||'').startsWith(mo));
     title=`Jobs in ${['January','February','March','April','May','June','July','August','September','October','November','December'][calMonth]} ${calYear}`;
-  } else if(scheduleScope==='upcoming'){
-    jobs=jobs.filter(s=>(s['Date']||'')>=today && s['Status']!=='Cancelled' && s['Status']!=='Completed');
-    title='Upcoming Jobs';
   } else {
     title='All Jobs';
   }
   jobs.sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));
   const titleEl=document.getElementById('schedule-list-title');
   if(titleEl) titleEl.textContent=title;
-  document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td><a href="#" onclick="event.preventDefault();showScheduleDetail(${s._rowIndex})" style="color:var(--blue-glow);text-decoration:none;">${s['Date']}</a></td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><div class="est-actions"><button class="tbl-btn est-view-btn" onclick="showScheduleDetail(${s._rowIndex})">👁 Details</button><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='upcoming'?'No upcoming jobs. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
+  document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${s['Date']}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td onclick="event.stopPropagation()"><div class="est-actions"><button class="tbl-btn est-view-btn" onclick="showScheduleDetail(${s._rowIndex})">👁 Details</button><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='default'?'Nothing scheduled this month or upcoming. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
 }
 function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;return `${h12}:${m} ${ap}`;}
 
