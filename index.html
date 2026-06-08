@@ -480,7 +480,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.6</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.7</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -957,8 +957,21 @@ function renderActivity(){
   if(!items.length){ wrap.innerHTML='<p class="empty-state">No customer activity yet. When someone accepts, declines, replies, or pays a deposit, it\'ll show here.</p>'; return; }
   wrap.innerHTML=items.map(it=>{
     const isNew=!seen[it.key];
-    return `<div class="activity-item ${isNew?'new':''}" onclick="goToActivity(${it.row})"><div class="activity-icon">${it.icon}</div><div class="activity-main"><div class="activity-text">${isNew?'<span class="activity-dot"></span>':''}${it.text}</div><div class="activity-sub">${it.sub||''}</div></div><div class="activity-go">View →</div></div>`;
+    return `<div class="activity-item ${isNew?'new':''}" onclick="openActivityItem('${it.key.replace(/'/g,"\\'")}',${it.row})"><div class="activity-icon">${it.icon}</div><div class="activity-main"><div class="activity-text">${isNew?'<span class="activity-dot"></span>':''}${it.text}</div><div class="activity-sub">${it.sub||''}</div></div><div class="activity-go">View →</div></div>`;
   }).join('');
+}
+// Mark a single activity item as seen, then jump to its quote
+async function openActivityItem(key, rowIndex){
+  try{
+    const seen=getSeenActivity();
+    if(!seen[key]){
+      seen[key]=Date.now();
+      await saveSetting('activitySeen', JSON.stringify(seen));
+      // refresh the badge count + the list highlight
+      detectActivity();
+    }
+  }catch(e){ console.error('mark seen:',e); }
+  goToActivity(rowIndex);
 }
 function goToActivity(rowIndex){
   navigate('quotes');
