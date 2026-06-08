@@ -248,7 +248,13 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-line{display:flex;align-items:flex-start;gap:0.6rem;padding:0.35rem 0;font-size:0.9rem;color:var(--text-main);word-break:break-word;}
 .jd-line-ic{flex-shrink:0;}
 @media(max-width:760px){.jd-grid{grid-template-columns:1fr;}}
+.jd-msg{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.3);}
+.jd-msg-text{font-size:0.92rem;color:var(--text-main);line-height:1.5;font-style:italic;}
+.jd-actions{display:flex;flex-direction:column;gap:0.5rem;}
+.jd-action-btn{width:100%;text-align:left;padding:0.7rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;font-size:0.88rem;font-weight:500;color:var(--text-main);cursor:pointer;transition:all .15s;}
+.jd-action-btn:hover{background:rgba(37,99,235,0.15);border-color:var(--blue);color:var(--blue-glow);}
 .clickable-row{cursor:pointer;transition:background .12s;}
+.clickable-row:hover{background:rgba(37,99,235,0.06);}
 .clickable-row:hover{background:rgba(37,99,235,0.06);}
 .dash-list-left{display:flex;flex-direction:column;gap:0.2rem;min-width:0;flex:1;}
 .dash-list-name{font-size:0.875rem;font-weight:500;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -474,7 +480,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.4</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.6</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -1244,10 +1250,11 @@ function showScheduleDetail(rowIndex){
     payHtml=`<div class="jd-row"><span class="jd-label">Payment</span><span class="jd-val" style="color:var(--text-muted)">No invoice linked yet</span></div>`;
   }
 
-  // Deposit status from the linked quote (if any)
-  const quote=cache.Quotes.find(q=>q['Customer']===s['Customer'] && (q['Address']||'')===(addr||''))
+  // Deposit status from the linked quote — prefer the exact QuoteToken link, else match customer+address
+  const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken']))
+           || cache.Quotes.find(q=>q['Customer']===s['Customer'] && (q['Address']||'')===(addr||''))
            || cache.Quotes.find(q=>q['Customer']===s['Customer']);
-  let depHtml='', quoteBtn='';
+  let depHtml='', quoteBtn='', replyHtml='';
   if(quote){
     const dep=quote['DepositStatus']||'';
     if(dep==='Paid') depHtml=`<div class="jd-row"><span class="jd-label">Deposit</span><span class="jd-val" style="color:#86efac">✓ Paid</span></div>`;
@@ -1255,6 +1262,10 @@ function showScheduleDetail(rowIndex){
     if(quote['Token']){
       const base=CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL;
       quoteBtn=`<button class="action-btn" onclick="window.open('${base}?token=${encodeURIComponent(quote['Token'])}','_blank')">📄 View Quote</button>`;
+    }
+    // If the customer left a message on the quote, surface it here
+    if((quote['Customer Reply']||'').trim()){
+      replyHtml=`<div class="jd-card jd-msg"><div class="jd-card-title">💬 Customer's Message <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(from quote ${quote['Quote #']||''})</span></div><div class="jd-msg-text">${quote['Customer Reply']}</div></div>`;
     }
   }
   const waiver=s['WaiverStatus']==='Signed'?`<div class="jd-row"><span class="jd-label">Waiver</span><span class="jd-val" style="color:#86efac;">✓ Signed${s['WaiverSignedBy']?' by '+s['WaiverSignedBy']:''}</span></div>`:'';
@@ -1281,12 +1292,22 @@ function showScheduleDetail(rowIndex){
           <div class="jd-card-title">Service(s)</div>
           <div class="jd-services">${(s['Service']||'—')}</div>
         </div>
+        <div class="jd-card">
+          <div class="jd-card-title">Actions</div>
+          <div class="jd-actions">
+            ${quote?`<button class="jd-action-btn" onclick="window.open('${(CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL)}?token=${encodeURIComponent(quote['Token']||'')}','_blank')">📄 View Quote (${quote['Quote #']||''})</button>`:`<button class="jd-action-btn" onclick="quoteFromJob(${rowIndex})">📄 Create &amp; Send Quote</button>`}
+            ${inv?`<button class="jd-action-btn" onclick="openPaymentModal(${inv._rowIndex})">💵 Collect Deposit / Payment</button>`:`<button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice</button>`}
+            ${inv?`<button class="jd-action-btn" onclick="closeModal();navigate('invoices')">🧾 View Invoice (${inv['Invoice #']})</button>`:''}
+            <button class="jd-action-btn" onclick="copyWaiverLink(${rowIndex})">📝 Send Waiver</button>
+          </div>
+        </div>
       </div>
       <div class="jd-col">
         <div class="jd-card">
           <div class="jd-card-title">Status & Payment</div>
           ${payHtml}${depHtml}${waiver}
         </div>
+        ${replyHtml}
         <div class="jd-card">
           <div class="jd-card-title">Notes</div>
           <div class="jd-notes">${s['Notes']||'<span style="color:var(--text-muted)">No notes.</span>'}</div>
@@ -1296,9 +1317,56 @@ function showScheduleDetail(rowIndex){
   `;
   const footer=document.querySelector('.modal-footer');
   footer.dataset.prev=footer.innerHTML;
-  footer.innerHTML=`${quoteBtn}<button class="action-btn" onclick="closeModal();openEditModal('Schedule',${rowIndex})">✎ Edit Job</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
+  footer.innerHTML=`<button class="action-btn" onclick="closeModal();openEditModal('Schedule',${rowIndex})">✎ Edit Job</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
   editingRow=null;
   document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+// Create a quote FROM a scheduled job — pre-fills the quote form and links it back to the job
+function quoteFromJob(scheduleRowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
+  if(!s) return;
+  closeModal();
+  editingRow=null;
+  forceSaveSheet='Quotes';
+  window._linkQuoteToSchedule=scheduleRowIndex; // remember to link back after save
+  document.getElementById('modal-title').textContent='Create Quote for Job';
+  document.getElementById('modal-body').innerHTML=FORMS.Quotes();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  // Pre-fill customer + contact + address
+  const custEl=document.querySelector('[name="Customer"]');
+  if(custEl){ custEl.value=s['Customer']||''; autofillCustomer(s['Customer']||''); }
+  const addrEl=document.querySelector('[name="Address"]');
+  if(addrEl && s['Address']) addrEl.value=s['Address'];
+  const phoneEl=document.querySelector('[name="Phone"]');
+  if(phoneEl && s['Phone']) phoneEl.value=s['Phone'];
+  // Seed a line per service this job has
+  const svcs=(s['Service']||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(svcs.length){ svcs.forEach(svc=>addEstimateLine(svc, s['Amount']&&svcs.length===1?parseFloat(s['Amount']).toFixed(2):'')); }
+  else { addEstimateLine(); }
+  updateEstimateTotal();
+}
+
+// Create an invoice FROM a scheduled job — pre-fills the invoice form
+function invoiceFromJob(scheduleRowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
+  if(!s) return;
+  closeModal();
+  editingRow=null;
+  forceSaveSheet='Invoices';
+  document.getElementById('modal-title').textContent='Create Invoice for Job';
+  document.getElementById('modal-body').innerHTML=FORMS.Invoices();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  const custEl=document.querySelector('[name="Customer"]');
+  if(custEl){ custEl.value=s['Customer']||''; autofillCustomer(s['Customer']||''); }
+  const addrEl=document.querySelector('[name="Address"]');
+  if(addrEl && s['Address']) addrEl.value=s['Address'];
+  const amtEl=document.querySelector('[name="Amount"]');
+  if(amtEl && s['Amount']) amtEl.value=parseFloat(s['Amount']).toFixed(2);
+  // Default due date: 14 days out
+  const due=new Date(); due.setDate(due.getDate()+14);
+  const dueEl=document.querySelector('[name="Due Date"]');
+  if(dueEl) dueEl.value=due.toISOString().slice(0,10);
 }
 
 function renderTable(page,filterText='',filterStatus=''){
@@ -1628,8 +1696,27 @@ async function saveRecord(){
   }
 
   const values=SHEETS[sheet].map(col=>{const el=document.querySelector(`[name="${col}"]`);return el?el.value.trim():'';});
+  // If this quote was created from a job, grab its token so we can link it back to the schedule row
+  const linkScheduleRow=(sheet==='Quotes'||sheet==='Invoices') ? (window._linkQuoteToSchedule||null) : null;
+  const newToken=(linkScheduleRow!==null) ? (document.querySelector('[name="Token"]')||{}).value : null;
   setSyncStatus('⟳ Saving...');
-  try{if(editingRow){await updateRow(sheet,editingRow.rowIndex,values);showToast('Record updated!','success');}else{await appendRow(sheet,values);showToast('Record added!','success');}if(forceSaveSheet){clearAllMeasurements();forceSaveSheet=null;}closeModal();await loadAllData();renderPage(currentPage);}
+  try{
+    if(editingRow){await updateRow(sheet,editingRow.rowIndex,values);showToast('Record updated!','success');}
+    else{await appendRow(sheet,values);showToast('Record added!','success');}
+    // Only clear measurements if we came from the Measure page (not from a job-create flow)
+    if(forceSaveSheet && currentPage==='measure'){clearAllMeasurements();}
+    // Link the new quote back onto the schedule job's QuoteToken column
+    if(linkScheduleRow!==null && newToken){
+      const sched=cache.Schedule.find(x=>x._rowIndex===linkScheduleRow);
+      if(sched){
+        sched['QuoteToken']=newToken;
+        try{ await updateRow('Schedule', linkScheduleRow, SHEETS.Schedule.map(col=>sched[col]||'')); }catch(err){ console.error('link back:',err); }
+      }
+    }
+    window._linkQuoteToSchedule=null;
+    forceSaveSheet=null;
+    closeModal();await loadAllData();renderPage(currentPage);
+  }
   catch(e){showToast('Save failed. Check config.','error');setSyncStatus('✕ Error');console.error(e);}
 }
 async function confirmDelete(sheet,rowIndex){if(!confirm('Delete this record?'))return;setSyncStatus('⟳ Deleting...');try{await deleteRow(sheet,rowIndex);showToast('Deleted.','success');await loadAllData();renderPage(currentPage);}catch(e){showToast('Delete failed.','error');console.error(e);}}
