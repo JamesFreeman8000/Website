@@ -432,7 +432,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="nav-group" data-cat="main" id="navgroup-main">
         <a class="nav-item active" data-page="dashboard" onclick="navItemClick(event,'dashboard')">▪ Overview</a>
         <a class="nav-item" data-page="activity" onclick="navItemClick(event,'activity')">▪ Activity <span id="nav-activity-badge" class="nav-badge hidden">0</span></a>
-        <a class="nav-item" data-page="jobs" onclick="navItemClick(event,'jobs')">▪ Jobs</a>
+        <a class="nav-item" data-page="schedule" onclick="navItemClick(event,'schedule')">▪ Schedule</a>
         <a class="nav-item" data-page="customers" onclick="navItemClick(event,'customers')">▪ Customers</a>
       </div>
       <div class="nav-label" id="nav-cat-finance" data-cat="finance" style="margin-top:0.5rem">Finance</div>
@@ -445,7 +445,6 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="nav-group" data-cat="tools" id="navgroup-tools">
         <a class="nav-item" data-page="analytics" onclick="navItemClick(event,'analytics')">▪ Analytics</a>
         <a class="nav-item" data-page="measure" onclick="navItemClick(event,'measure')">▪ Measure</a>
-        <a class="nav-item" data-page="schedule" onclick="navItemClick(event,'schedule')">▪ Schedule</a>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -458,7 +457,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.8</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v2.9</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -472,18 +471,9 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
         <div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value" id="stat-customers">0</div><div class="stat-sub">All time</div></div>
       </div>
       <div class="dash-grid">
-        <div class="card"><div class="card-header">Recent Jobs</div><div id="dash-recent-jobs" class="table-wrap"><p class="empty-state">No jobs yet.</p></div></div>
+        <div class="card"><div class="card-header">Recently Completed</div><div id="dash-recent-jobs" class="table-wrap"><p class="empty-state">No completed jobs yet.</p></div></div>
         <div class="card"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">Upcoming Schedule<button id="upcoming-sort-btn" class="tbl-btn" onclick="toggleUpcomingSort()" style="font-weight:400;">↑ Soonest first</button></div><div id="dash-upcoming" class="table-wrap"><p class="empty-state">Nothing scheduled.</p></div></div>
       </div>
-    </section>
-
-    <!-- JOBS -->
-    <section id="page-jobs" class="page">
-      <div class="filter-bar">
-        <input type="text" class="search-input" placeholder="Search jobs..." oninput="filterTable('jobs',this.value)" />
-        <select class="filter-select" onchange="filterByStatus('jobs',this.value)"><option value="">All Statuses</option><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select>
-      </div>
-      <div class="card"><table class="data-table"><thead><tr><th>Job #</th><th>Customer</th><th>Service</th><th>Date</th><th>Status</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="jobs-body"><tr><td colspan="7" class="empty-state">No jobs yet.</td></tr></tbody></table></div>
     </section>
 
     <!-- CUSTOMERS -->
@@ -667,8 +657,8 @@ const CONFIG={GOOGLE_CLIENT_ID:"488984287012-eor7h4s7rfef33bm6l1mrl0lms6b5mjh.ap
 let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
-const cache={Jobs:[],Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Payments:[],Settings:[]};
-const SHEETS={Jobs:['Job #','Customer','Address','Service','Date','Status','Amount','Notes','Photos'],Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes'],Settings:['Key','Value']};
+const cache={Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Payments:[],Settings:[]};
+const SHEETS={Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','Amount','QuoteToken','Photos'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes'],Settings:['Key','Value']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -863,8 +853,8 @@ function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s
 
 async function loadAllData(){
   setSyncStatus('⟳ Syncing...');
-  try{const[j,c,i,e,s,x,p]=await Promise.all([readSheet('Jobs'),readSheet('Customers'),readSheet('Invoices'),readSheet('Quotes'),readSheet('Schedule'),readSheet('Expenses'),readSheet('Payments')]);
-  cache.Jobs=j;cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;cache.Payments=p;setSyncStatus('● Live');
+  try{const[c,i,e,s,x,p]=await Promise.all([readSheet('Customers'),readSheet('Invoices'),readSheet('Quotes'),readSheet('Schedule'),readSheet('Expenses'),readSheet('Payments')]);
+  cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;cache.Payments=p;setSyncStatus('● Live');
   await markOverdueInvoices();
   await loadNavLabels();
   detectActivity();}
@@ -1167,7 +1157,7 @@ async function manualResync(){
   }
 }
 
-const PAGE_TITLES={dashboard:'Overview',activity:'Activity',jobs:'Jobs',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',analytics:'Analytics',measure:'Measure Property'};
+const PAGE_TITLES={dashboard:'Overview',activity:'Activity',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',analytics:'Analytics',measure:'Measure Property'};
 function navigate(page){
   currentPage=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1179,7 +1169,7 @@ function navigate(page){
   addBtn.style.display=(page==='analytics'||page==='measure')?'none':'';
   renderPage(page);
 }
-function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,jobs:()=>renderTable('jobs'),customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
+function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
 
 let upcomingSortAsc=true;
 function toggleUpcomingSort(){
@@ -1192,11 +1182,12 @@ function renderDashboard(){
   const now=new Date(),mo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const revenue=cache.Invoices.filter(i=>i['Status']==='Paid'&&(i['Date']||'').startsWith(mo)).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
   document.getElementById('stat-revenue').textContent='$'+revenue.toFixed(2);
-  document.getElementById('stat-jobs').textContent=cache.Jobs.filter(j=>['Scheduled','In Progress'].includes(j['Status'])).length;
+  document.getElementById('stat-jobs').textContent=cache.Schedule.filter(j=>['Scheduled','In Progress'].includes(j['Status'])).length;
   document.getElementById('stat-outstanding').textContent='$'+cache.Invoices.filter(i=>['Unpaid','Overdue'].includes(i['Status'])).reduce((s,i)=>s+parseFloat(i['Amount']||0),0).toFixed(2);
   document.getElementById('stat-customers').textContent=cache.Customers.length;
-  const recentJobs=[...cache.Jobs].reverse().slice(0,5);
-  document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<ul class="dash-list">${recentJobs.map(j=>`<li class="dash-clickable" onclick="showJobDetail(${j._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${j['Customer']}</div><div class="dash-list-sub">${j['Service']} &middot; ${j['Job #']}</div></div><div class="dash-list-right"><div class="dash-list-amount">$${parseFloat(j['Amount']||0).toFixed(2)}</div>${badge(j['Status'])}</div></li>`).join('')}</ul>`:'<p class="empty-state">No jobs yet.</p>';
+  // Recently completed jobs come from the Schedule now (status Completed), newest date first
+  const recentJobs=cache.Schedule.filter(s=>s['Status']==='Completed').sort((a,b)=>(b['Date']||'').localeCompare(a['Date']||'')).slice(0,5);
+  document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<ul class="dash-list">${recentJobs.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-amount">$${parseFloat(s['Amount']||0).toFixed(2)}</div>${badge(s['Status'])}</div></li>`).join('')}</ul>`:'<p class="empty-state">No completed jobs yet.</p>';
   const upcoming=cache.Schedule.filter(s=>s['Date']>=now.toISOString().slice(0,10)&&s['Status']!=='Cancelled').sort((a,b)=>upcomingSortAsc?a['Date'].localeCompare(b['Date']):b['Date'].localeCompare(a['Date'])).slice(0,5);
   document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<ul class="dash-list">${upcoming.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-date">${s['Date']}${s['Time']?' '+fmtTime(s['Time']):''}</div></div></li>`).join('')}</ul>`:'<p class="empty-state">Nothing scheduled.</p>';
 }
@@ -1206,7 +1197,8 @@ function customerContact(name){
   return cache.Customers.find(c=>c['Name']===name) || {};
 }
 
-// Detail popup for a SCHEDULED job (from the Upcoming list)
+// Rich detail popup for a scheduled job — pulls together everything: contact, services,
+// amount, payment/deposit status (from linked invoice + payments), waiver, and the linked quote.
 function showScheduleDetail(rowIndex){
   const s=cache.Schedule.find(x=>x._rowIndex===rowIndex);
   if(!s) return;
@@ -1214,11 +1206,46 @@ function showScheduleDetail(rowIndex){
   const phone=s['Phone']||c['Phone']||'';
   const addr=s['Address']||c['Address']||'';
   const email=c['Email']||'';
+  const amount=parseFloat(s['Amount']||0);
+
+  // Find the related invoice (same customer + address) to compute payment status
+  const inv=cache.Invoices.find(i=>i['Customer']===s['Customer'] && (i['Address']||'')===(addr||''))
+         || cache.Invoices.find(i=>i['Customer']===s['Customer']);
+  let payHtml='';
+  if(inv){
+    const total=parseFloat(inv['Amount']||0);
+    const pays=(cache.Payments||[]).filter(p=>p['Invoice #']===inv['Invoice #']);
+    const paid=pays.reduce((t,p)=>t+parseFloat(p['Amount']||0),0);
+    const bal=total-paid;
+    let payLabel, payColor;
+    if(paid<=0.001){ payLabel='Not paid yet'; payColor='#fbbf24'; }
+    else if(bal<=0.001){ payLabel='✓ Paid in full'; payColor='#86efac'; }
+    else { payLabel=`Partially paid — $${paid.toFixed(2)} of $${total.toFixed(2)} ($${bal.toFixed(2)} left)`; payColor='#fbbf24'; }
+    payHtml=`<div class="jd-row"><span class="jd-label">Payment</span><span class="jd-val" style="color:${payColor}">${payLabel}</span></div>
+             <div class="jd-row"><span class="jd-label">Invoice</span><span class="jd-val"><a href="#" onclick="event.preventDefault();closeModal();navigate('invoices')" style="color:var(--blue-glow)">${inv['Invoice #']}</a></span></div>`;
+  } else {
+    payHtml=`<div class="jd-row"><span class="jd-label">Payment</span><span class="jd-val" style="color:var(--text-muted)">No invoice linked yet</span></div>`;
+  }
+
+  // Deposit status from the linked quote (if any)
+  const quote=cache.Quotes.find(q=>q['Customer']===s['Customer'] && (q['Address']||'')===(addr||''))
+           || cache.Quotes.find(q=>q['Customer']===s['Customer']);
+  let depHtml='', quoteBtn='';
+  if(quote){
+    const dep=quote['DepositStatus']||'';
+    if(dep==='Paid') depHtml=`<div class="jd-row"><span class="jd-label">Deposit</span><span class="jd-val" style="color:#86efac">✓ Paid</span></div>`;
+    else if(dep==='Requested') depHtml=`<div class="jd-row"><span class="jd-label">Deposit</span><span class="jd-val" style="color:#fbbf24">Requested (not yet paid)</span></div>`;
+    if(quote['Token']){
+      const base=CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL;
+      quoteBtn=`<button class="action-btn" onclick="window.open('${base}?token=${encodeURIComponent(quote['Token'])}','_blank')">📄 View Quote</button>`;
+    }
+  }
   const waiver=s['WaiverStatus']==='Signed'?`<div class="jd-row"><span class="jd-label">Waiver</span><span class="jd-val" style="color:#86efac;">✓ Signed${s['WaiverSignedBy']?' by '+s['WaiverSignedBy']:''}</span></div>`:'';
-  document.getElementById('modal-title').textContent='Scheduled Job';
+
+  document.getElementById('modal-title').textContent='Job Details';
   document.getElementById('modal-body').innerHTML=`
     <div class="jd-head"><div class="jd-name">${s['Customer']||'—'}</div>${badge(s['Status'])}</div>
-    <div class="jd-when">📅 ${s['Date']||'—'}${s['Time']?' at '+fmtTime(s['Time']):''}</div>
+    <div class="jd-when">📅 ${s['Date']||'—'}${s['Time']?' at '+fmtTime(s['Time']):''}${amount?' · $'+amount.toFixed(2):''}</div>
     <div class="jd-contact">
       ${addr?`<a class="jd-contact-item" href="https://maps.google.com/?q=${encodeURIComponent(addr)}" target="_blank">📍 ${addr}</a>`:'<span class="jd-contact-item">📍 No address on file</span>'}
       ${phone?`<a class="jd-contact-item" href="tel:${phone}">📞 ${phone}</a>`:''}
@@ -1226,48 +1253,20 @@ function showScheduleDetail(rowIndex){
     </div>
     <div class="jd-section">Service(s)</div>
     <div class="jd-services">${(s['Service']||'—')}</div>
+    <div class="jd-section">Status & Payment</div>
+    ${payHtml}${depHtml}${waiver}
     ${s['Notes']?`<div class="jd-section">Notes</div><div class="jd-notes">${s['Notes']}</div>`:''}
-    ${waiver}
   `;
   const footer=document.querySelector('.modal-footer');
   footer.dataset.prev=footer.innerHTML;
-  footer.innerHTML=`<button class="action-btn" onclick="closeModal();navigate('schedule')">Go to Schedule</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
-  editingRow=null;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-// Detail popup for a completed/recorded JOB (from the Recent Jobs list)
-function showJobDetail(rowIndex){
-  const j=cache.Jobs.find(x=>x._rowIndex===rowIndex);
-  if(!j) return;
-  const c=customerContact(j['Customer']);
-  const addr=j['Address']||c['Address']||'';
-  const phone=c['Phone']||'';
-  const email=c['Email']||'';
-  document.getElementById('modal-title').textContent=`Job ${j['Job #']||''}`;
-  document.getElementById('modal-body').innerHTML=`
-    <div class="jd-head"><div class="jd-name">${j['Customer']||'—'}</div>${badge(j['Status'])}</div>
-    <div class="jd-when">📅 ${j['Date']||'—'} &middot; $${parseFloat(j['Amount']||0).toFixed(2)}</div>
-    <div class="jd-contact">
-      ${addr?`<a class="jd-contact-item" href="https://maps.google.com/?q=${encodeURIComponent(addr)}" target="_blank">📍 ${addr}</a>`:'<span class="jd-contact-item">📍 No address on file</span>'}
-      ${phone?`<a class="jd-contact-item" href="tel:${phone}">📞 ${phone}</a>`:''}
-      ${email?`<a class="jd-contact-item" href="mailto:${email}">✉️ ${email}</a>`:''}
-    </div>
-    <div class="jd-section">Service</div>
-    <div class="jd-services">${(j['Service']||'—')}</div>
-    ${j['Notes']?`<div class="jd-section">Notes</div><div class="jd-notes">${j['Notes']}</div>`:''}
-  `;
-  const footer=document.querySelector('.modal-footer');
-  footer.dataset.prev=footer.innerHTML;
-  footer.innerHTML=`<button class="action-btn" onclick="closeModal();openEditModal('Jobs',${rowIndex})">Edit Job</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
+  footer.innerHTML=`${quoteBtn}<button class="action-btn" onclick="closeModal();openEditModal('Schedule',${rowIndex})">Edit</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
   editingRow=null;
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
 function renderTable(page,filterText='',filterStatus=''){
   const cfgs={
-    jobs:{sheet:'Jobs',body:'jobs-body',statusCol:'Status',render:r=>`<td>${r['Job #']}</td><td>${r['Customer']}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>${badge(r['Status'])}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td>`},
-    customers:{sheet:'Customers',body:'customers-body',render:r=>`<td><a href="#" onclick="event.preventDefault();showCustomerDetail('${(r['Name']||'').replace(/'/g,"\\'")}')" style="color:var(--blue-glow);text-decoration:none;font-weight:500;">${r['Name']}</a></td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Jobs.filter(j=>j['Customer']===r['Name']).length}</td>`},
+    customers:{sheet:'Customers',body:'customers-body',render:r=>`<td><a href="#" onclick="event.preventDefault();showCustomerDetail('${(r['Name']||'').replace(/'/g,"\\'")}')" style="color:var(--blue-glow);text-decoration:none;font-weight:500;">${r['Name']}</a></td><td>${r['Phone']}</td><td>${r['Email']}</td><td>${r['Address']}</td><td>${cache.Schedule.filter(j=>j['Customer']===r['Name']).length}</td>`},
     invoices:{sheet:'Invoices',body:'invoices-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Invoice #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Date']}</td><td>${r['Due Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${invoiceStatusExtras(r)}</td><td>${invoiceActionBtns(r)}</td>`},
     quotes:{sheet:'Quotes',body:'quotes-body',statusCol:'Status',customActions:true,render:r=>`<td>${r['Quote #']}</td><td>${r['Customer']}</td><td>${r['Address']||'—'}</td><td>${r['Service']}</td><td>${r['Date']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${badge(r['Status'])}${estimateStatusExtras(r)}</td><td>${estimateActionBtns(r)}</td>`},
     expenses:{sheet:'Expenses',body:'expenses-body',statusCol:'Category',render:r=>`<td>${r['Date']}</td><td>${r['Vendor']||'—'}</td><td>${r['Description']}</td><td>${r['Category']}</td><td>$${parseFloat(r['Amount']||0).toFixed(2)}</td><td>${r['ReceiptURL']?`<a href="${r['ReceiptURL']}" target="_blank" style="color:var(--cyan);font-size:0.75rem;">View</a>`:'—'}</td>`},
@@ -1292,7 +1291,7 @@ function renderAnalytics(){
   const mo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const moRev=cache.Invoices.filter(i=>i['Status']==='Paid'&&(i['Date']||'').startsWith(mo)).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
   const moExp=cache.Expenses.filter(e=>(e['Date']||'').startsWith(mo)).reduce((s,e)=>s+parseFloat(e['Amount']||0),0);
-  const avgJob=cache.Jobs.filter(j=>j['Status']==='Completed').length?allRevenue/cache.Jobs.filter(j=>j['Status']==='Completed').length:0;
+  const avgJob=cache.Schedule.filter(j=>j['Status']==='Completed').length?allRevenue/cache.Schedule.filter(j=>j['Status']==='Completed').length:0;
   const convRate=cache.Quotes.length?(cache.Quotes.filter(e=>e['Status']==='Accepted').length/cache.Quotes.length*100):0;
 
   // Schedule stats
@@ -1324,7 +1323,7 @@ function renderAnalytics(){
   mkChart('chart-expenses','doughnut',{labels:cats,datasets:[{data:catAmts,backgroundColor:['#3B82F6','#06B6D4','#8B5CF6','#F59E0B','#EF4444','#6B7280'],borderWidth:0}]});
 
   // Jobs by service
-  const svcMap={};cache.Jobs.forEach(j=>{svcMap[j['Service']]=(svcMap[j['Service']]||0)+1;});
+  const svcMap={};cache.Schedule.forEach(j=>{svcMap[j['Service']]=(svcMap[j['Service']]||0)+1;});
   mkChart('chart-services','doughnut',{labels:Object.keys(svcMap),datasets:[{data:Object.values(svcMap),backgroundColor:['#2563EB','#06B6D4','#10B981','#F59E0B','#8B5CF6','#EF4444','#EC4899','#14B8A6','#6366F1'],borderWidth:0}]},false);
 
   // Invoice status
@@ -1339,7 +1338,7 @@ function renderAnalytics(){
   // Most requested services (counts each service across schedule entries, which can list multiple)
   const popMap={};
   cache.Schedule.forEach(s=>{(s['Service']||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(svc=>{popMap[svc]=(popMap[svc]||0)+1;});});
-  cache.Jobs.forEach(j=>{if(j['Service']){popMap[j['Service']]=(popMap[j['Service']]||0)+1;}});
+  cache.Schedule.forEach(j=>{if(j['Service']){popMap[j['Service']]=(popMap[j['Service']]||0)+1;}});
   const popLabels=Object.keys(popMap), popData=Object.values(popMap);
   mkChart('chart-popular-services','bar',{labels:popLabels,datasets:[{label:'Times requested',data:popData,backgroundColor:'rgba(6,182,212,0.6)',borderColor:'#06B6D4',borderWidth:1}]},false);
 
@@ -1349,7 +1348,7 @@ function renderAnalytics(){
   document.getElementById('top-customers').innerHTML=topC.length?topC.map(([n,v],i)=>`<li><span class="rank">#${i+1}</span><span>${n}</span><span class="val">$${v.toFixed(0)}</span></li>`).join(''):'<li style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">No data yet.</li>';
 
   // Top jobs by amount
-  const topJ=[...cache.Jobs].filter(j=>j['Amount']).sort((a,b)=>parseFloat(b['Amount'])-parseFloat(a['Amount'])).slice(0,5);
+  const topJ=[...cache.Schedule].filter(j=>j['Amount']).sort((a,b)=>parseFloat(b['Amount'])-parseFloat(a['Amount'])).slice(0,5);
   document.getElementById('top-jobs').innerHTML=topJ.length?topJ.map((j,i)=>`<li><span class="rank">#${i+1}</span><span>${j['Customer']} — ${j['Service']}</span><span class="val">$${parseFloat(j['Amount']).toFixed(0)}</span></li>`).join(''):'<li style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">No data yet.</li>';
 }
 
@@ -1377,7 +1376,7 @@ function renderCalendar(){
   }
   document.getElementById('calendar-grid').innerHTML=html;
 }
-function renderScheduleList(){const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td>${s['Date']}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><div class="est-actions"><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">No jobs this month.</td></tr>`;}
+function renderScheduleList(){const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;const jobs=cache.Schedule.filter(s=>(s['Date']||'').startsWith(mo)).sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr><td><a href="#" onclick="event.preventDefault();showScheduleDetail(${s._rowIndex})" style="color:var(--blue-glow);text-decoration:none;">${s['Date']}</a></td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td><div class="est-actions"><button class="tbl-btn est-view-btn" onclick="showScheduleDetail(${s._rowIndex})">👁 Details</button><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">No jobs this month.</td></tr>`;}
 function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;return `${h12}:${m} ${ap}`;}
 
 function waiverBtn(s){
@@ -1408,14 +1407,13 @@ function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderSche
 function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderSchedule();}
 
 // ── MODALS ──
-const PAGE_TO_SHEET={jobs:'Jobs',customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',dashboard:'Jobs',analytics:'Jobs'};
-const SHEET_SINGULAR={Jobs:'Job',Customers:'Customer',Invoices:'Invoice',Quotes:'Quote',Schedule:'Schedule Entry',Expenses:'Expense'};
+const PAGE_TO_SHEET={customers:'Customers',invoices:'Invoices',quotes:'Quotes',schedule:'Schedule',expenses:'Expenses',dashboard:'Schedule',analytics:'Schedule'};
+const SHEET_SINGULAR={Customers:'Customer',Invoices:'Invoice',Quotes:'Quote',Schedule:'Schedule Entry',Expenses:'Expense'};
 const FORMS={
-  Jobs:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Job #</label><input class="form-input" name="Job #" value="${nextId('Job #','Jobs','JOB')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address of this job" /></div><div class="form-group"><label class="form-label">Service</label><select class="form-select" name="Service">${svcOpts()}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div><input type="hidden" name="Photos" /><p style="font-size:0.75rem;color:var(--text-muted);">📷 To add before/after photos: save this job, then open the customer from the Customers page and use "Add Photos" on the job.</p>`,
   Customers:()=>`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="Name" placeholder="Jane Smith" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="(555) 000-0000" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="Email" /></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Invoices:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" name="Invoice #" value="${nextId('Invoice #','Invoices','INV')}" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Unpaid</option><option>Paid</option><option>Overdue</option></select></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change for a different property)</span></label><input class="form-input" name="Address" placeholder="Address this invoice is for" /></div><div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" name="Due Date" /></div></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Quotes:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Quote #</label><input class="form-input" name="Quote #" value="${nextId('Quote #','Quotes','QTE')}" /></div><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Property Address <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills; change it for a different property)</span></label><input class="form-input" name="Address" placeholder="Address this quote is for" /></div><div class="form-row"><div class="form-group"><label class="form-label">Phone <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills)</span></label><input class="form-input" name="Phone" placeholder="For sending" /></div><div class="form-group"><label class="form-label">Email <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(auto-fills)</span></label><input class="form-input" name="Email" placeholder="For sending" /></div></div><div class="form-group"><label class="form-label">Services & Pricing</label><div id="est-lines"></div><button type="button" class="action-btn est-add-line" onclick="addEstimateLine()">+ Add Service</button></div><div class="est-total-row"><span>Total Quote</span><span id="est-total">$0.00</span></div><input type="hidden" name="Service" /><input type="hidden" name="Amount" /><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option><option>Countered</option></select></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
-  Schedule:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" name="Time" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="Auto-fills from customer" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" placeholder="Auto-fills from customer, or type it" /></div><div class="form-group"><label class="form-label">Services <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(check all that apply)</span></label><div class="service-checks" id="schedule-services">${svcChecks()}</div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
+  Schedule:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time" name="Time" /></div></div><div class="form-group"><label class="form-label">Customer</label><select class="form-select" name="Customer" onchange="autofillCustomer(this.value)"><option value="">— Select Customer —</option>${cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" name="Phone" placeholder="Auto-fills from customer" /></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" name="Status"><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select></div></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" name="Address" placeholder="Auto-fills from customer, or type it" /></div><div class="form-group"><label class="form-label">Services <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(check all that apply)</span></label><div class="service-checks" id="schedule-services">${svcChecks()}</div></div><div class="form-group"><label class="form-label">Amount ($) <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(what you're getting paid)</span></label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes"></textarea></div>`,
   Expenses:()=>`<div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" name="Date" value="${tod()}" /></div><div class="form-group"><label class="form-label">Category</label><select class="form-select" name="Category"><option>Fuel</option><option>Equipment</option><option>Supplies</option><option>Marketing</option><option>Taxes</option><option>Other</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">Vendor</label><input class="form-input" name="Vendor" placeholder="e.g. Home Depot, Amazon" /></div><div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" name="Amount" placeholder="0.00" /></div></div><div class="form-group"><label class="form-label">Description</label><input class="form-input" name="Description" placeholder="What was this expense for?" /></div><div class="form-group"><label class="form-label">Receipt (PDF or Image)</label><div class="file-upload-area" id="upload-drop-zone" onclick="document.getElementById('pdf-upload').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="handleFileDrop(event)"><input type="file" id="pdf-upload" accept=".pdf,.png,.jpg,.jpeg,.webp" onchange="handleFileSelect(this)" style="display:none"><div id="upload-prompt">📎 Click or drag & drop a PDF / image</div><div class="file-name" id="file-name-display" style="color:var(--cyan);margin-top:0.3rem;font-size:0.8rem;"></div></div><input class="form-input" name="ReceiptURL" id="receipt-url-input" placeholder="Upload above — or paste a Google Drive link" style="margin-top:0.5rem" /></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" name="Notes" placeholder="Any extra details..."></textarea></div>`,
 };
 
@@ -1502,7 +1500,7 @@ async function getDriveFolder(name){
   return cd.id;
 }
 
-function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Jobs';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Quotes'){addEstimateLine();}}
+function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Schedule';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Quotes'){addEstimateLine();}}
 function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Quotes'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}
   // Preserve the existing Token when editing Quotes/Invoices so the customer link keeps working
   if((sheet==='Quotes'||sheet==='Invoices') && rec['Token']){
@@ -1992,6 +1990,15 @@ function scheduleFromEstimate(rowIndex){
   // Check the service boxes that match the estimate's services
   const estServices=parseEstimateLines(est['Service'], est['Amount']).map(l=>l.service);
   document.querySelectorAll('.schedule-svc').forEach(cb=>{ cb.checked=estServices.includes(cb.value); });
+  // Carry the quote amount into the Amount field
+  const amtEl=document.querySelector('[name="Amount"]');
+  if(amtEl) amtEl.value=parseFloat(est['Amount']||0).toFixed(2);
+  // Carry the quote's token so the schedule entry links back to the quote
+  if(est['Token']){
+    let qt=document.querySelector('[name="QuoteToken"]');
+    if(!qt){ qt=document.createElement('input'); qt.type='hidden'; qt.name='QuoteToken'; document.getElementById('modal-body').appendChild(qt); }
+    qt.value=est['Token'];
+  }
   // Note which estimate this came from
   const notesEl=document.querySelector('[name="Notes"]');
   if(notesEl) notesEl.value=`From accepted quote ${est['Quote #']||''} — $${parseFloat(est['Amount']||0).toFixed(2)}`;
@@ -2229,7 +2236,7 @@ let detailCustomerName=null;
 function showCustomerDetail(name){
   detailCustomerName=name;
   const cust=cache.Customers.find(c=>c['Name']===name);
-  const jobs=cache.Jobs.filter(j=>j['Customer']===name);
+  const jobs=cache.Schedule.filter(j=>j['Customer']===name);
   const invoices=cache.Invoices.filter(i=>i['Customer']===name);
   const totalRevenue=invoices.filter(i=>i['Status']==='Paid').reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
   const outstanding=invoices.filter(i=>['Unpaid','Overdue'].includes(i['Status'])).reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
@@ -2320,7 +2327,7 @@ async function saveCustomerNotes(){
 async function uploadJobPhotos(rowIndex, files){
   if(!files||!files.length) return;
   const statusEl=document.getElementById('photo-status-'+rowIndex);
-  const job=cache.Jobs.find(j=>j._rowIndex===rowIndex);
+  const job=cache.Schedule.find(j=>j._rowIndex===rowIndex);
   if(!job) return;
   const existing=(job['Photos']||'').split(',').map(x=>x.trim()).filter(Boolean);
   try{
@@ -2333,8 +2340,8 @@ async function uploadJobPhotos(rowIndex, files){
     }
     job['Photos']=existing.join(', ');
     // Write the Jobs row back to the sheet
-    const values=SHEETS.Jobs.map(col=>job[col]||'');
-    await updateRow('Jobs', rowIndex, values);
+    const values=SHEETS.Schedule.map(col=>job[col]||'');
+    await updateRow('Schedule', rowIndex, values);
     if(statusEl) statusEl.textContent='';
     showToast(`${done} photo${done>1?'s':''} uploaded`,'success');
     showCustomerDetail(detailCustomerName); // refresh the view
@@ -2347,13 +2354,13 @@ async function uploadJobPhotos(rowIndex, files){
 
 async function removeJobPhoto(rowIndex, photoId){
   if(!confirm('Remove this photo from the job? (It stays in your Google Drive.)')) return;
-  const job=cache.Jobs.find(j=>j._rowIndex===rowIndex);
+  const job=cache.Schedule.find(j=>j._rowIndex===rowIndex);
   if(!job) return;
   const remaining=(job['Photos']||'').split(',').map(x=>x.trim()).filter(Boolean).filter(id=>id!==photoId);
   job['Photos']=remaining.join(', ');
   try{
-    const values=SHEETS.Jobs.map(col=>job[col]||'');
-    await updateRow('Jobs', rowIndex, values);
+    const values=SHEETS.Schedule.map(col=>job[col]||'');
+    await updateRow('Schedule', rowIndex, values);
     showToast('Photo removed.','success');
     showCustomerDetail(detailCustomerName);
   }catch(e){ console.error(e); showToast('Could not remove photo.','error'); }
