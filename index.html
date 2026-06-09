@@ -493,7 +493,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.0</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.1</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -1867,9 +1867,9 @@ function autofillCustomer(name){
 function nextId(col,sheet,prefix){const rows=cache[sheet]||[];if(!rows.length)return `${prefix}-001`;const next=Math.max(...rows.map(r=>parseInt((r[col]||'').replace(/\D/g,''))||0))+1;return `${prefix}-${String(next).padStart(3,'0')}`;}
 function genToken(){return 'tok-'+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,6);}
 
-// ── INVOICE table content (mirrors quotes) ──
+// ── INVOICE table content (invoices are documents now; payments are tracked on the JOB) ──
 function invoiceStatusExtras(r){
-  return `<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="openInvoicePage(${r._rowIndex})">👁 View</button></div>`+invoicePaymentSummary(r);
+  return `<div class="est-under-status"><button class="tbl-btn est-view-btn" onclick="openInvoicePage(${r._rowIndex})">👁 View</button></div>`;
 }
 function invoiceActionBtns(r){
   let html='<div class="est-actions">';
@@ -1877,7 +1877,6 @@ function invoiceActionBtns(r){
     html+=`<button class="tbl-btn est-link-btn" onclick="copyInvoiceLink('${r['Token']}','${(r['Invoice #']||'').replace(/'/g,"")}')">🔗 Copy Link</button>`;
     html+=`<button class="tbl-btn est-email-btn" onclick="emailInvoice(${r._rowIndex})">📧 Email Invoice</button>`;
   }
-  html+=`<button class="tbl-btn est-dep-btn" onclick="openPaymentModal(${r._rowIndex})">💵 Log Payment</button>`;
   html+=`<button class="tbl-btn" onclick="openEditModal('Invoices',${r._rowIndex})">Edit</button>`;
   html+=`<button class="tbl-btn del" onclick="confirmDelete('Invoices',${r._rowIndex})">Delete</button>`;
   html+='</div>';
