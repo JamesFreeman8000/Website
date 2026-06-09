@@ -251,6 +251,19 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-msg{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.3);}
 .jd-msg-text{font-size:0.92rem;color:var(--text-main);line-height:1.5;font-style:italic;}
 .jd-actions{display:flex;flex-direction:column;gap:0.5rem;}
+.jd-money{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:0.5rem 0.8rem;margin-bottom:0.6rem;}
+.jd-money-row{display:flex;justify-content:space-between;font-size:0.9rem;padding:0.25rem 0;color:var(--text-main);}
+.jd-money-bal{border-top:1px solid var(--border-lt);margin-top:0.2rem;padding-top:0.45rem;font-weight:700;}
+.jd-paylist{margin-top:0.5rem;}
+.jd-pay{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.4rem 0;border-top:1px solid var(--border-lt);font-size:0.82rem;flex-wrap:wrap;}
+.jd-pay-type{font-size:0.65rem;font-weight:600;color:var(--text-muted);background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:8px;}
+.jd-pay-meta{color:var(--text-muted);font-size:0.75rem;}
+.jpills{display:flex;flex-direction:column;gap:0.25rem;align-items:flex-start;}
+.jpill{font-size:0.66rem;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.pill-green{background:rgba(16,185,129,0.15);color:#86efac;border:1px solid rgba(16,185,129,0.3);}
+.pill-amber{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);}
+.pill-red{background:rgba(220,38,38,0.15);color:#fca5a5;border:1px solid rgba(220,38,38,0.3);}
+.pill-grey{background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.25);}
 .jd-action-btn{width:100%;text-align:left;padding:0.7rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;font-size:0.88rem;font-weight:500;color:var(--text-main);cursor:pointer;transition:all .15s;}
 .jd-action-btn:hover{background:rgba(37,99,235,0.15);border-color:var(--blue);color:var(--blue-glow);}
 .clickable-row{cursor:pointer;transition:background .12s;}
@@ -480,7 +493,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v3.9</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.0</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -656,7 +669,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="card"><div class="calendar-grid" id="calendar-grid"></div></div>
       <div class="card" style="margin-top:1rem;">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;"><span id="schedule-list-title">Upcoming Jobs</span><select id="schedule-scope" onchange="setScheduleScope(this.value)" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;"><option value="default">Default</option><option value="month">This Month</option><option value="all">All Jobs</option></select></div>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Phone</th><th>Address</th><th>Service(s)</th><th>Status</th><th>Actions</th></tr></thead>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Phone</th><th>Address</th><th>Service(s)</th><th>Status</th><th>Progress</th><th>Actions</th></tr></thead>
         <tbody id="schedule-body"><tr><td colspan="8" class="empty-state">No scheduled jobs.</td></tr></tbody></table></div>
       </div>
     </section>
@@ -681,7 +694,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Payments:[],Settings:[]};
-const SHEETS={Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','Amount','QuoteToken','Photos'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes'],Settings:['Key','Value']};
+const SHEETS={Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','Amount','QuoteToken','Photos','JobToken'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes','JobToken'],Settings:['Key','Value']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -1227,6 +1240,23 @@ function customerContact(name){
   return cache.Customers.find(c=>c['Name']===name) || {};
 }
 
+// Option A money model: the JOB owns the money. Total = job Amount, Paid = sum of payments tied to this
+// job's JobToken, Balance = Total - Paid. Returns a tidy object used everywhere money shows.
+function jobMoney(job){
+  const total=parseFloat(job['Amount']||0);
+  const jt=job['JobToken']||'';
+  // payments tied to this job (by JobToken); fall back to customer match for older payments without a token
+  let pays=(cache.Payments||[]).filter(p=>jt && p['JobToken']===jt);
+  const paid=pays.reduce((t,p)=>t+parseFloat(p['Amount']||0),0);
+  const balance=total-paid;
+  let state, color;
+  if(total<=0){ state='No price set'; color='#94A3B8'; }
+  else if(paid<=0.001){ state='Unpaid'; color='#fbbf24'; }
+  else if(balance<=0.001){ state='Paid in full'; color='#86efac'; }
+  else { state='Partially paid'; color='#fbbf24'; }
+  return {total,paid,balance,pays,state,color,paidInFull:total>0&&balance<=0.001};
+}
+
 // Rich detail popup for a scheduled job — pulls together everything: contact, services,
 // amount, payment/deposit status (from linked invoice + payments), waiver, and the linked quote.
 function showScheduleDetail(rowIndex){
@@ -1238,24 +1268,19 @@ function showScheduleDetail(rowIndex){
   const email=c['Email']||'';
   const amount=parseFloat(s['Amount']||0);
 
-  // Find the related invoice (same customer + address) to compute payment status
-  const inv=cache.Invoices.find(i=>i['Customer']===s['Customer'] && (i['Address']||'')===(addr||''))
-         || cache.Invoices.find(i=>i['Customer']===s['Customer']);
-  let payHtml='';
-  if(inv){
-    const total=parseFloat(inv['Amount']||0);
-    const pays=(cache.Payments||[]).filter(p=>p['Invoice #']===inv['Invoice #']);
-    const paid=pays.reduce((t,p)=>t+parseFloat(p['Amount']||0),0);
-    const bal=total-paid;
-    let payLabel, payColor;
-    if(paid<=0.001){ payLabel='Not paid yet'; payColor='#fbbf24'; }
-    else if(bal<=0.001){ payLabel='✓ Paid in full'; payColor='#86efac'; }
-    else { payLabel=`Partially paid — $${paid.toFixed(2)} of $${total.toFixed(2)} ($${bal.toFixed(2)} left)`; payColor='#fbbf24'; }
-    payHtml=`<div class="jd-row"><span class="jd-label">Payment</span><span class="jd-val" style="color:${payColor}">${payLabel}</span></div>
-             <div class="jd-row"><span class="jd-label">Invoice</span><span class="jd-val"><a href="#" onclick="event.preventDefault();closeModal();navigate('invoices')" style="color:var(--blue-glow)">${inv['Invoice #']}</a></span></div>`;
-  } else {
-    payHtml=`<div class="jd-row"><span class="jd-label">Payment</span><span class="jd-val" style="color:var(--text-muted)">No invoice linked yet</span></div>`;
+  // Option A: the job owns the money. Compute Total / Paid / Balance from this job + its payments.
+  const M=jobMoney(s);
+  let payHtml=`<div class="jd-money">
+      <div class="jd-money-row"><span>Total</span><span>$${M.total.toFixed(2)}</span></div>
+      <div class="jd-money-row"><span>Paid</span><span style="color:#86efac">$${M.paid.toFixed(2)}</span></div>
+      <div class="jd-money-row jd-money-bal"><span>Balance</span><span style="color:${M.balance<=0.001&&M.total>0?'#86efac':'#fbbf24'}">$${M.balance.toFixed(2)}</span></div>
+    </div>
+    <div class="jd-row"><span class="jd-label">Status</span><span class="jd-val" style="color:${M.color}">${M.paidInFull?'✓ ':''}${M.state}</span></div>`;
+  // List each payment with a receipt link
+  if(M.pays.length){
+    payHtml+=`<div class="jd-paylist">${M.pays.map(p=>`<div class="jd-pay"><span>$${parseFloat(p['Amount']||0).toFixed(2)} <span class="jd-pay-type">${p['Type']||''}</span></span><span class="jd-pay-meta">${fmtDate(p['Date'])} · ${p['Method']||''}</span><a href="#" onclick="event.preventDefault();copyReceiptLink('${p['Token']}','${p['Payment #']}')" style="color:var(--blue-glow);font-size:0.75rem;">🔗 Receipt</a></div>`).join('')}</div>`;
   }
+  const inv=null; // (Option A: invoices are optional documents now, not the money source)
 
   // Deposit status from the linked quote — prefer the exact QuoteToken link, else match customer+address
   const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken']))
@@ -1303,8 +1328,10 @@ function showScheduleDetail(rowIndex){
           <div class="jd-card-title">Actions</div>
           <div class="jd-actions">
             ${quote?`<button class="jd-action-btn" onclick="window.open('${(CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL)}?token=${encodeURIComponent(quote['Token']||'')}','_blank')">📄 View Quote (${quote['Quote #']||''})</button>`:`<button class="jd-action-btn" onclick="quoteFromJob(${rowIndex})">📄 Create &amp; Send Quote</button>`}
-            ${inv?`<button class="jd-action-btn" onclick="openPaymentModal(${inv._rowIndex})">💵 Collect Deposit / Payment</button>`:`<button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice</button>`}
-            ${inv?`<button class="jd-action-btn" onclick="closeModal();navigate('invoices')">🧾 View Invoice (${inv['Invoice #']})</button>`:''}
+            <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'deposit')">💸 Request Deposit</button>
+            <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'full')">💸 Request Full Payment</button>
+            <button class="jd-action-btn" onclick="logJobPayment(${rowIndex})">💵 Log Payment Received</button>
+            <button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice / Bill</button>
             <button class="jd-action-btn" onclick="copyWaiverLink(${rowIndex})">📝 Send Waiver</button>
           </div>
         </div>
@@ -1489,6 +1516,26 @@ function renderCalendar(){
   document.getElementById('calendar-grid').innerHTML=html;
 }
 let scheduleScope='default'; // 'default' | 'month' | 'all'
+// Build small status pills for a job: Quote, Payment, Waiver — color-coded for quick scanning
+function jobStatusPills(s){
+  const pills=[];
+  const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken']))
+           || cache.Quotes.find(q=>q['Customer']===s['Customer'] && (q['Address']||'')===(s['Address']||''));
+  if(quote){
+    const st=(quote['Status']||'').trim();
+    const cls=st==='Accepted'?'pill-green':st==='Declined'?'pill-red':st==='Sent'?'pill-amber':'pill-grey';
+    pills.push(`<span class="jpill ${cls}">Quote · ${st||'Draft'}</span>`);
+  }
+  const M=jobMoney(s);
+  if(M.total>0){
+    const cls=M.paidInFull?'pill-green':M.paid>0?'pill-amber':'pill-grey';
+    const lbl=M.paidInFull?'Paid':M.paid>0?'Partial':'Unpaid';
+    pills.push(`<span class="jpill ${cls}">Pay · ${lbl}</span>`);
+  }
+  if(s['WaiverStatus']==='Signed') pills.push(`<span class="jpill pill-green">Waiver · Signed</span>`);
+  else if(s['WaiverToken']) pills.push(`<span class="jpill pill-amber">Waiver · Sent</span>`);
+  return pills.length?`<div class="jpills">${pills.join('')}</div>`:'<span style="color:var(--text-muted);font-size:0.75rem;">—</span>';
+}
 function setScheduleScope(v){ scheduleScope=v; renderScheduleList(); }
 function renderScheduleList(){
   const today=new Date().toISOString().slice(0,10);
@@ -1509,7 +1556,7 @@ function renderScheduleList(){
   jobs.sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));
   const titleEl=document.getElementById('schedule-list-title');
   if(titleEl) titleEl.textContent=title;
-  document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${fmtDate(s['Date'])}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td onclick="event.stopPropagation()"><div class="est-actions"><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="8" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='default'?'Nothing scheduled this month or upcoming. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
+  document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${fmtDate(s['Date'])}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td>${jobStatusPills(s)}</td><td onclick="event.stopPropagation()"><div class="est-actions"><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="9" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='default'?'Nothing scheduled this month or upcoming. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
 }
 function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;return `${h12}:${m} ${ap}`;}
 // Display a stored YYYY-MM-DD date as MM/DD/YYYY (cleaner for US). Storage stays YYYY-MM-DD for sorting/filtering.
@@ -1643,6 +1690,14 @@ function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowInde
     let tk=document.querySelector('[name="Token"]');
     if(!tk){ tk=document.createElement('input'); tk.type='hidden'; tk.name='Token'; document.getElementById('modal-body').appendChild(tk); }
     tk.value=rec['Token'];
+  }
+  // Preserve Schedule hidden fields not shown on the form (else editing would wipe them)
+  if(sheet==='Schedule'){
+    ['JobToken','QuoteToken','Photos','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'].forEach(col=>{
+      let h=document.querySelector(`[name="${col}"]`);
+      if(!h){ h=document.createElement('input'); h.type='hidden'; h.name=col; document.getElementById('modal-body').appendChild(h); }
+      h.value=rec[col]||'';
+    });
   }}
 async function saveRecord(){
   const sheet=editingRow?editingRow.sheet:(forceSaveSheet||PAGE_TO_SHEET[currentPage]);
@@ -1702,6 +1757,16 @@ async function saveRecord(){
       document.getElementById('modal-body').appendChild(tokenEl);
     }
     if(!tokenEl.value){ tokenEl.value=genToken(); }
+  }
+
+  // For Schedule jobs, ensure a unique JobToken (the money/payment pages key off this)
+  if(sheet === 'Schedule'){
+    let jt=document.querySelector('[name="JobToken"]');
+    if(!jt){
+      jt=document.createElement('input'); jt.type='hidden'; jt.name='JobToken';
+      document.getElementById('modal-body').appendChild(jt);
+    }
+    if(!jt.value){ jt.value=genToken(); }
   }
 
   const values=SHEETS[sheet].map(col=>{const el=document.querySelector(`[name="${col}"]`);return el?el.value.trim():'';});
@@ -1862,6 +1927,77 @@ async function emailInvoice(rowIndex){
 
 // ── PAYMENTS / RECEIPTS ──
 let payingInvoiceRow=null;
+const JOB_DEPOSIT_PERCENT=35; // matches the Apps Script DEPOSIT_PERCENT
+
+// Request a deposit or full payment from the customer for a JOB — copies a payment link + opens text/email handoff
+function requestJobPayment(scheduleRowIndex, kind){
+  const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
+  if(!s) return;
+  if(!s['JobToken']){ showToast('Save this job once first so it has a payment link.','error'); return; }
+  const M=jobMoney(s);
+  if(M.total<=0){ showToast('Set a job Amount (price) first — edit the job and add what you\'re charging.','error'); return; }
+  const isDeposit=(kind==='deposit');
+  const amt=isDeposit ? (M.total*JOB_DEPOSIT_PERCENT/100) : M.balance;
+  const base=CONFIG.CLEAN_INVOICE_URL || CONFIG.ESTIMATE_PORTAL_URL;
+  const link=base+'?token='+encodeURIComponent(s['JobToken'])+'&type='+(isDeposit?'deposit':'pay');
+  const label=isDeposit?`${JOB_DEPOSIT_PERCENT}% deposit ($${amt.toFixed(2)})`:`full balance ($${amt.toFixed(2)})`;
+  navigator.clipboard.writeText(link).then(()=>{
+    showToast(`Payment link for ${label} copied! Paste it to the customer.`,'success');
+  }).catch(()=>{ window.prompt('Copy this payment link to send the customer:', link); });
+}
+
+// Log a payment RECEIVED against a job (deposit / partial / final). Ties to the job's JobToken.
+function logJobPayment(scheduleRowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
+  if(!s) return;
+  if(!s['JobToken']){ showToast('Save this job once first so payments can link to it.','error'); return; }
+  payingJobRow=scheduleRowIndex;
+  const M=jobMoney(s);
+  const methods=['Cash','Check','Cash App','Venmo','Zelle','Wire Transfer','Debit/Credit Card','Other'];
+  // suggest a type based on what's been paid
+  const suggestType = M.paid<=0.001 ? 'Deposit' : (M.balance>0 ? 'Partial' : 'Final');
+  document.getElementById('modal-title').textContent=`Log Payment — ${s['Customer']||''}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="pay-modal-summary">Job total: <strong>$${M.total.toFixed(2)}</strong> · Paid so far: <strong>$${M.paid.toFixed(2)}</strong> · Balance: <strong style="color:${M.balance<=0.001&&M.total>0?'#86efac':'#fbbf24'}">$${M.balance.toFixed(2)}</strong></div>
+    <div class="form-group"><label class="form-label">Payment Amount ($)</label><input class="form-input" type="number" step="0.01" id="pay-amount" value="${M.balance>0?M.balance.toFixed(2):''}" placeholder="0.00" /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Method</label><select class="form-select" id="pay-method">${methods.map(m=>`<option>${m}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="pay-type"><option ${suggestType==='Deposit'?'selected':''}>Deposit</option><option ${suggestType==='Partial'?'selected':''}>Partial</option><option ${suggestType==='Final'?'selected':''}>Final</option><option>Full</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="pay-date" value="${tod()}" /></div>
+    <div class="form-group"><label class="form-label">Notes (optional)</label><input class="form-input" id="pay-notes" placeholder="e.g. paid on-site" /></div>
+  `;
+  const footer=document.querySelector('.modal-footer');
+  footer.dataset.prev=footer.innerHTML;
+  footer.innerHTML=`<button class="action-btn" onclick="closeModal()">Cancel</button><button class="action-btn primary" onclick="saveJobPayment()">Record Payment</button>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+let payingJobRow=null;
+async function saveJobPayment(){
+  const s=cache.Schedule.find(x=>x._rowIndex===payingJobRow);
+  if(!s){ closeModal(); return; }
+  const amount=parseFloat(document.getElementById('pay-amount').value||0);
+  if(!amount||amount<=0){ showToast('Enter a payment amount.','error'); return; }
+  const method=document.getElementById('pay-method').value;
+  const type=document.getElementById('pay-type').value;
+  const date=document.getElementById('pay-date').value||tod();
+  const notes=document.getElementById('pay-notes').value||'';
+  const payNum=nextId('Payment #','Payments','PMT');
+  const token=genToken();
+  // Payments columns: Payment #, Invoice #, Customer, Amount, Method, Type, Date, Token, Notes, JobToken
+  const values=[payNum, '', s['Customer']||'', amount.toFixed(2), method, type, date, token, notes, s['JobToken']||''];
+  setSyncStatus('⟳ Saving payment...');
+  try{
+    await appendRow('Payments', values);
+    // If the job is now fully paid, optionally flip status — but leave job status to the user; just refresh
+    await loadAllData();
+    closeModal();
+    renderPage(currentPage);
+    showScheduleDetail(payingJobRow); // reopen the job so they see the updated balance + receipt link
+    showToast('Payment recorded. Open the job to grab the receipt link.','success');
+  }catch(e){ showToast('Could not save payment.','error'); setSyncStatus('✕ Error'); console.error('saveJobPayment:',e); }
+}
+
 function openPaymentModal(invRowIndex){
   const inv=cache.Invoices.find(e=>e._rowIndex===invRowIndex);
   if(!inv) return;
