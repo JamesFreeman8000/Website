@@ -493,7 +493,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.1</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.3</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -1361,6 +1361,7 @@ function quoteFromJob(scheduleRowIndex){
   const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
   if(!s) return;
   closeModal();
+  resetModalFooter();
   editingRow=null;
   forceSaveSheet='Quotes';
   window._linkQuoteToSchedule=scheduleRowIndex; // remember to link back after save
@@ -1386,6 +1387,7 @@ function invoiceFromJob(scheduleRowIndex){
   const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
   if(!s) return;
   closeModal();
+  resetModalFooter();
   editingRow=null;
   forceSaveSheet='Invoices';
   document.getElementById('modal-title').textContent='Create Invoice for Job';
@@ -1683,8 +1685,18 @@ async function getDriveFolder(name){
   return cd.id;
 }
 
-function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Schedule';editingRow=null;document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Quotes'){addEstimateLine();}}
-function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Quotes'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}
+// Restore the standard form footer (Cancel + Save). Call before showing any add/edit form,
+// because the Job Details / payment popups swap the footer out.
+function resetModalFooter(){
+  const footer=document.querySelector('.modal-footer');
+  if(footer){
+    footer.innerHTML=`<button class="action-btn" onclick="closeModal()">Cancel</button><button class="action-btn primary" onclick="saveRecord()">Save</button>`;
+    delete footer.dataset.prev;
+  }
+  const mdl=document.getElementById('modal'); if(mdl) mdl.classList.remove('modal-xl');
+}
+function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Schedule';editingRow=null;resetModalFooter();document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Quotes'){addEstimateLine();}}
+function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};resetModalFooter();document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Quotes'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}
   // Preserve the existing Token when editing Quotes/Invoices so the customer link keeps working
   if((sheet==='Quotes'||sheet==='Invoices') && rec['Token']){
     let tk=document.querySelector('[name="Token"]');
@@ -1936,7 +1948,7 @@ function requestJobPayment(scheduleRowIndex, kind){
   const M=jobMoney(s);
   if(M.total<=0){ showToast('Set a job Amount (price) first — edit the job and add what you\'re charging.','error'); return; }
   const isDeposit=(kind==='deposit');
-  const amt=isDeposit ? (M.total*JOB_DEPOSIT_PERCENT/100) : M.balance;
+  const amt=isDeposit ? Math.ceil(M.total*JOB_DEPOSIT_PERCENT/100) : M.balance;
   const base=CONFIG.CLEAN_INVOICE_URL || CONFIG.ESTIMATE_PORTAL_URL;
   const link=base+'?token='+encodeURIComponent(s['JobToken'])+'&type='+(isDeposit?'deposit':'pay');
   const label=isDeposit?`${JOB_DEPOSIT_PERCENT}% deposit ($${amt.toFixed(2)})`:`full balance ($${amt.toFixed(2)})`;
