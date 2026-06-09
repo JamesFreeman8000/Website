@@ -251,6 +251,20 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-msg{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.3);}
 .jd-msg-text{font-size:0.92rem;color:var(--text-main);line-height:1.5;font-style:italic;}
 .jd-actions{display:flex;flex-direction:column;gap:0.5rem;}
+.jd-timer-card{text-align:center;}
+.jd-timer-wrap{display:flex;flex-direction:column;align-items:center;gap:0.5rem;}
+.jd-timer-display{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:600;color:var(--cyan);letter-spacing:0.02em;}
+.jd-timer-display.done{color:#86efac;}
+.jd-timer-running{font-size:0.75rem;color:#86efac;font-weight:600;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.jd-timer-label{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;}
+.jd-timer-btn{width:100%;padding:0.85rem;border-radius:10px;border:none;font-size:1rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.jd-timer-btn.start{background:#10B981;color:#03291d;}
+.jd-timer-btn.start:hover{background:#34d399;}
+.jd-timer-btn.end{background:#dc2626;color:#fff;}
+.jd-timer-btn.end:hover{background:#ef4444;}
+.jd-timer-reset{background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;text-decoration:underline;}
+.jd-timer-reset:hover{color:var(--text-main);}
 .jd-money{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:0.5rem 0.8rem;margin-bottom:0.6rem;}
 .jd-money-row{display:flex;justify-content:space-between;font-size:0.9rem;padding:0.25rem 0;color:var(--text-main);}
 .jd-money-bal{border-top:1px solid var(--border-lt);margin-top:0.2rem;padding-top:0.45rem;font-weight:700;}
@@ -493,7 +507,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.3</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.4</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -694,7 +708,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Payments:[],Settings:[]};
-const SHEETS={Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','Amount','QuoteToken','Photos','JobToken'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes','JobToken'],Settings:['Key','Value']};
+const SHEETS={Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','Amount','QuoteToken','Photos','JobToken','StartedAt','EndedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes','JobToken'],Settings:['Key','Value']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -1257,6 +1271,55 @@ function jobMoney(job){
   return {total,paid,balance,pays,state,color,paidInFull:total>0&&balance<=0.001};
 }
 
+// ── JOB TIMER ── (timestamp-based, so it survives closing the tab)
+let _jobTimerInterval=null;
+function fmtDuration(ms){
+  if(!ms||ms<0) return '0:00:00';
+  const s=Math.floor(ms/1000);
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+// Returns the elapsed time for a job: if running, now - start; if done, end - start; else null
+function jobElapsedMs(s){
+  const start=s['StartedAt']?Date.parse(s['StartedAt']):null;
+  if(!start) return null;
+  const end=s['EndedAt']?Date.parse(s['EndedAt']):null;
+  return (end?end:Date.now())-start;
+}
+function jobTimerState(s){
+  if(s['StartedAt'] && !s['EndedAt']) return 'running';
+  if(s['StartedAt'] && s['EndedAt']) return 'done';
+  return 'idle';
+}
+async function startJob(rowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===rowIndex);
+  if(!s) return;
+  s['StartedAt']=new Date().toISOString();
+  s['EndedAt']='';
+  s['Status']='In Progress';
+  setSyncStatus('⟳ Starting job...');
+  try{ await updateRow('Schedule', rowIndex, SHEETS.Schedule.map(col=>s[col]||'')); setSyncStatus('● Live'); }catch(e){ console.error('startJob:',e); setSyncStatus('✕ Error'); }
+  showScheduleDetail(rowIndex); // reopen with the running timer
+}
+async function endJob(rowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===rowIndex);
+  if(!s || !s['StartedAt']) return;
+  s['EndedAt']=new Date().toISOString();
+  s['Status']='Completed';
+  setSyncStatus('⟳ Finishing job...');
+  try{ await updateRow('Schedule', rowIndex, SHEETS.Schedule.map(col=>s[col]||'')); setSyncStatus('● Live'); }catch(e){ console.error('endJob:',e); setSyncStatus('✕ Error'); }
+  showScheduleDetail(rowIndex);
+}
+// Reset a timer (in case of a mistaken start)
+async function resetJobTimer(rowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===rowIndex);
+  if(!s) return;
+  if(!confirm('Clear this job\'s timer? This erases the recorded start/end times.')) return;
+  s['StartedAt']=''; s['EndedAt']='';
+  try{ await updateRow('Schedule', rowIndex, SHEETS.Schedule.map(col=>s[col]||'')); }catch(e){ console.error(e); }
+  showScheduleDetail(rowIndex);
+}
+
 // Rich detail popup for a scheduled job — pulls together everything: contact, services,
 // amount, payment/deposit status (from linked invoice + payments), waiver, and the linked quote.
 function showScheduleDetail(rowIndex){
@@ -1280,7 +1343,8 @@ function showScheduleDetail(rowIndex){
   if(M.pays.length){
     payHtml+=`<div class="jd-paylist">${M.pays.map(p=>`<div class="jd-pay"><span>$${parseFloat(p['Amount']||0).toFixed(2)} <span class="jd-pay-type">${p['Type']||''}</span></span><span class="jd-pay-meta">${fmtDate(p['Date'])} · ${p['Method']||''}</span><a href="#" onclick="event.preventDefault();copyReceiptLink('${p['Token']}','${p['Payment #']}')" style="color:var(--blue-glow);font-size:0.75rem;">🔗 Receipt</a></div>`).join('')}</div>`;
   }
-  const inv=null; // (Option A: invoices are optional documents now, not the money source)
+  const inv=cache.Invoices.find(i=>i['Customer']===s['Customer'] && (i['Address']||'')===(addr||''))
+         || cache.Invoices.find(i=>i['Customer']===s['Customer']); // best-effort invoice link for this job
 
   // Deposit status from the linked quote — prefer the exact QuoteToken link, else match customer+address
   const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken']))
@@ -1307,6 +1371,17 @@ function showScheduleDetail(rowIndex){
   const mapBtn=addr?`<a class="jd-bigbtn" href="https://maps.google.com/?q=${encodeURIComponent(addr)}" target="_blank">📍 Directions</a>`:'';
   const callBtn=phone?`<a class="jd-bigbtn" href="tel:${phone}">📞 Call</a>`:'';
   const mailBtn=email?`<a class="jd-bigbtn" href="mailto:${email}">✉️ Email</a>`:'';
+  // Timer card
+  const tState=jobTimerState(s);
+  const elapsed=jobElapsedMs(s);
+  let timerInner='';
+  if(tState==='idle'){
+    timerInner=`<button class="jd-timer-btn start" onclick="startJob(${rowIndex})">▶ Start Job</button>`;
+  } else if(tState==='running'){
+    timerInner=`<div class="jd-timer-display" id="jd-timer-live" data-start="${s['StartedAt']}">${fmtDuration(elapsed)}</div><div class="jd-timer-running">● Running</div><button class="jd-timer-btn end" onclick="endJob(${rowIndex})">■ Done</button><button class="jd-timer-reset" onclick="resetJobTimer(${rowIndex})">reset</button>`;
+  } else { // done
+    timerInner=`<div class="jd-timer-display done">${fmtDuration(elapsed)}</div><div class="jd-timer-label">total time on this job</div><button class="jd-timer-reset" onclick="resetJobTimer(${rowIndex})">reset timer</button>`;
+  }
   document.getElementById('modal-body').innerHTML=`
     <div class="jd-grid">
       <div class="jd-col">
@@ -1314,6 +1389,10 @@ function showScheduleDetail(rowIndex){
         <div class="jd-when">📅 ${fmtDate(s['Date'])}${s['Time']?' at '+fmtTime(s['Time']):''}</div>
         ${amount?`<div class="jd-amount">$${amount.toFixed(2)}<span class="jd-amount-lbl">job total</span></div>`:''}
         <div class="jd-quickbtns">${mapBtn}${callBtn}${mailBtn}</div>
+        <div class="jd-card jd-timer-card">
+          <div class="jd-card-title">⏱ Job Timer</div>
+          <div class="jd-timer-wrap">${timerInner}</div>
+        </div>
         <div class="jd-card">
           <div class="jd-card-title">Contact</div>
           <div class="jd-line"><span class="jd-line-ic">📍</span><span>${addr||'No address on file'}</span></div>
@@ -1331,7 +1410,7 @@ function showScheduleDetail(rowIndex){
             <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'deposit')">💸 Request Deposit</button>
             <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'full')">💸 Request Full Payment</button>
             <button class="jd-action-btn" onclick="logJobPayment(${rowIndex})">💵 Log Payment Received</button>
-            <button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice / Bill</button>
+            ${inv?`<button class="jd-action-btn" onclick="openInvoicePage(${inv._rowIndex})">🧾 View Invoice (${inv['Invoice #']}) · ${inv['Status']}</button>`:`<button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice / Bill</button>`}
             <button class="jd-action-btn" onclick="copyWaiverLink(${rowIndex})">📝 Send Waiver</button>
           </div>
         </div>
@@ -1354,6 +1433,17 @@ function showScheduleDetail(rowIndex){
   footer.innerHTML=`<button class="action-btn" onclick="closeModal();openEditModal('Schedule',${rowIndex})">✎ Edit Job</button><button class="action-btn primary" onclick="closeModal()">Close</button>`;
   editingRow=null;
   document.getElementById('modal-overlay').classList.remove('hidden');
+  // Live-tick the timer display if this job is running
+  if(_jobTimerInterval){ clearInterval(_jobTimerInterval); _jobTimerInterval=null; }
+  const liveEl=document.getElementById('jd-timer-live');
+  if(liveEl){
+    _jobTimerInterval=setInterval(()=>{
+      const el=document.getElementById('jd-timer-live');
+      if(!el){ clearInterval(_jobTimerInterval); _jobTimerInterval=null; return; }
+      const start=Date.parse(el.dataset.start);
+      el.textContent=fmtDuration(Date.now()-start);
+    },1000);
+  }
 }
 
 // Create a quote FROM a scheduled job — pre-fills the quote form and links it back to the job
@@ -1442,6 +1532,18 @@ function renderAnalytics(){
   const schTotal=cache.Schedule.length;
   const cancelRate=schTotal?(schCancelled/schTotal*100):0;
 
+  // Timer-based stats: only jobs that have a recorded start AND end
+  const timedJobs=cache.Schedule.filter(s=>s['StartedAt']&&s['EndedAt']);
+  let totalMs=0, timedRevenue=0;
+  timedJobs.forEach(s=>{
+    const dur=Date.parse(s['EndedAt'])-Date.parse(s['StartedAt']);
+    if(dur>0){ totalMs+=dur; timedRevenue+=parseFloat(s['Amount']||0); }
+  });
+  const totalHours=totalMs/3600000;
+  const avgMs=timedJobs.length?totalMs/timedJobs.length:0;
+  const avgHrs=Math.floor(avgMs/3600000), avgMin=Math.round((avgMs%3600000)/60000);
+  const revPerHour=totalHours>0?timedRevenue/totalHours:0;
+
   document.getElementById('analytics-kpis').innerHTML=`
     <div class="kpi-card green"><div class="kpi-label">Total Revenue</div><div class="kpi-value">$${allRevenue.toFixed(0)}</div><div class="kpi-sub">All time paid</div></div>
     <div class="kpi-card red"><div class="kpi-label">Total Expenses</div><div class="kpi-value">$${allExpenses.toFixed(0)}</div><div class="kpi-sub">All time</div></div>
@@ -1451,6 +1553,9 @@ function renderAnalytics(){
     <div class="kpi-card blue"><div class="kpi-label">Quote Conv.</div><div class="kpi-value">${convRate.toFixed(0)}%</div><div class="kpi-sub">${cache.Quotes.filter(e=>e['Status']==='Accepted').length} of ${cache.Quotes.length} accepted</div></div>
     <div class="kpi-card blue"><div class="kpi-label">Upcoming Jobs</div><div class="kpi-value">${schScheduled}</div><div class="kpi-sub">Currently scheduled</div></div>
     <div class="kpi-card ${cancelRate>20?'red':'green'}"><div class="kpi-label">Cancellation Rate</div><div class="kpi-value">${cancelRate.toFixed(0)}%</div><div class="kpi-sub">${schCancelled} of ${schTotal} scheduled</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Total Hours Worked</div><div class="kpi-value">${totalHours.toFixed(1)}</div><div class="kpi-sub">${timedJobs.length} timed job${timedJobs.length===1?'':'s'}</div></div>
+    <div class="kpi-card purple"><div class="kpi-label">Avg Job Duration</div><div class="kpi-value">${timedJobs.length?`${avgHrs}h ${avgMin}m`:'—'}</div><div class="kpi-sub">Per completed job</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Revenue / Hour</div><div class="kpi-value">$${revPerHour.toFixed(0)}</div><div class="kpi-sub">From timed jobs</div></div>
   `;
 
   // Revenue vs Expenses by month (last 6 months)
@@ -1705,7 +1810,7 @@ function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowInde
   }
   // Preserve Schedule hidden fields not shown on the form (else editing would wipe them)
   if(sheet==='Schedule'){
-    ['JobToken','QuoteToken','Photos','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt'].forEach(col=>{
+    ['JobToken','QuoteToken','Photos','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','StartedAt','EndedAt'].forEach(col=>{
       let h=document.querySelector(`[name="${col}"]`);
       if(!h){ h=document.createElement('input'); h.type='hidden'; h.name=col; document.getElementById('modal-body').appendChild(h); }
       h.value=rec[col]||'';
@@ -1806,7 +1911,7 @@ async function saveRecord(){
   catch(e){showToast('Save failed. Check config.','error');setSyncStatus('✕ Error');console.error(e);}
 }
 async function confirmDelete(sheet,rowIndex){if(!confirm('Delete this record?'))return;setSyncStatus('⟳ Deleting...');try{await deleteRow(sheet,rowIndex);showToast('Deleted.','success');await loadAllData();renderPage(currentPage);}catch(e){showToast('Delete failed.','error');console.error(e);}}
-function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.add('hidden');const mdl=document.getElementById('modal');if(mdl)mdl.classList.remove('modal-xl');editingRow=null;pendingUploadFile=null;forceSaveSheet=null;detailCustomerName=null;const footer=document.querySelector('.modal-footer');if(footer&&footer.dataset.prev){footer.innerHTML=footer.dataset.prev;delete footer.dataset.prev;}}
+function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;if(_jobTimerInterval){clearInterval(_jobTimerInterval);_jobTimerInterval=null;}document.getElementById('modal-overlay').classList.add('hidden');const mdl=document.getElementById('modal');if(mdl)mdl.classList.remove('modal-xl');editingRow=null;pendingUploadFile=null;forceSaveSheet=null;detailCustomerName=null;const footer=document.querySelector('.modal-footer');if(footer&&footer.dataset.prev){footer.innerHTML=footer.dataset.prev;delete footer.dataset.prev;}}
 
 function badge(status){const map={'Scheduled':'scheduled','In Progress':'inprogress','Completed':'completed','Cancelled':'cancelled','Paid':'paid','Unpaid':'unpaid','Overdue':'overdue','Sent':'sent','Draft':'draft','Accepted':'accepted','Declined':'cancelled','Countered':'countered'};return `<span class="badge badge-${map[status]||'draft'}">${status||'—'}</span>`;}
 function tod(){return new Date().toISOString().slice(0,10);}
