@@ -520,7 +520,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.6</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.7</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -831,26 +831,26 @@ function handleSignIn(){
 // Silently refresh the token every 30 min (tokens expire after 60 min) — kept fresh
 function startAutoRefresh(){
   if(refreshTimer) clearInterval(refreshTimer);
-  // make sure we have a baseline timestamp so the visibility check never thinks it's been "forever"
   if(!window._hydroLastRefresh) window._hydroLastRefresh=Date.now();
+  // Proactively refresh every 20 min (well before the ~60-min expiry) via the SHARED refresh
   refreshTimer=setInterval(()=>{
     if(!tokenClient||!accessToken) return;
-    tokenClient.requestAccessToken({prompt:''});// silent — no popup
-  }, 30*60*1000);
-  // When returning to the tab after a LONG absence, quietly re-sync in the background.
-  // We do NOT touch anything for short absences, and we NEVER kick to the login screen from here.
+    refreshAccessToken().catch(()=>{ /* will retry on next tick or on a 401 */ });
+  }, 20*60*1000);
+  // When returning to the tab, refresh if it's been a while. Uses the shared refresh, never kicks to login.
   if(!window._hydroVisHooked){
     window._hydroVisHooked=true;
     document.addEventListener('visibilitychange',()=>{
       if(document.visibilityState!=='visible') return;
       if(!tokenClient||!accessToken) return;
       const mins=(Date.now()-(window._hydroLastRefresh||Date.now()))/60000;
-      // Only act if it's been 45+ minutes (token nearing its 60-min expiry). Short hops do nothing.
-      if(mins>=45){
+      // Refresh after 15+ min away so the token is fresh when you start clicking again
+      if(mins>=15){
         setSyncStatus('⟳ Syncing...');
-        refreshTokenAndRetry(()=>Promise.resolve())
+        refreshAccessToken()
           .then(()=>loadAllData())
           .then(()=>renderPage(currentPage))
+          .then(()=>setSyncStatus('● Live'))
           .catch(()=>setSyncStatus('● Live · tap to refresh')); // stay on the page; let them click if needed
       }
     });
@@ -858,13 +858,16 @@ function startAutoRefresh(){
 }
 
 // Called when a Sheets API call gets a 401 — refreshes token then retries
-async function refreshTokenAndRetry(fn){
-  return new Promise((resolve,reject)=>{
+// A single in-flight refresh shared by all callers. If 6 reads 401 at once, they all await
+// the SAME refresh instead of each kicking off their own (which caused repeated login prompts).
+let _refreshInFlight=null;
+function refreshAccessToken(){
+  if(_refreshInFlight) return _refreshInFlight; // reuse the one already running
+  _refreshInFlight=new Promise((resolve,reject)=>{
     if(!tokenClient){reject(new Error('No token client'));return;}
     const prev=tokenClient.callback;
     let done=false;
-    // If silent refresh doesn't respond in 8s, give up and ask for fresh sign-in
-    const timer=setTimeout(()=>{ if(!done){done=true;tokenClient.callback=prev;reject(new Error('refresh timeout'));} },8000);
+    const timer=setTimeout(()=>{ if(!done){done=true;tokenClient.callback=prev;reject(new Error('refresh timeout'));} },12000);
     tokenClient.callback=(resp)=>{
       if(done)return; done=true; clearTimeout(timer);
       tokenClient.callback=prev;
@@ -872,10 +875,17 @@ async function refreshTokenAndRetry(fn){
       accessToken=resp.access_token;
       window._hydroLastRefresh=Date.now();
       try{const s=JSON.parse(sessionStorage.getItem('hydro_session')||'{}');s.token=accessToken;sessionStorage.setItem('hydro_session',JSON.stringify(s));}catch(e){}
-      fn().then(resolve).catch(reject);
+      resolve(accessToken);
     };
-    tokenClient.requestAccessToken({prompt:''});
-  });
+    try{ tokenClient.requestAccessToken({prompt:''}); }
+    catch(e){ clearTimeout(timer); reject(e); }
+  }).finally(()=>{ _refreshInFlight=null; });
+  return _refreshInFlight;
+}
+// Backwards-compatible wrapper: refresh (shared), then run fn
+async function refreshTokenAndRetry(fn){
+  await refreshAccessToken();
+  return fn?fn():undefined;
 }
 function handleSignOut(){accessToken=null;sessionStorage.removeItem('hydro_session');document.getElementById('app').classList.add('hidden');document.getElementById('login-screen').classList.remove('hidden');document.getElementById('login-error').textContent='';}
 
