@@ -280,6 +280,11 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-photo-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:0.7rem;cursor:pointer;line-height:1;}
 .jd-photo-add{display:inline-block;padding:0.5rem 0.9rem;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:9px;font-size:0.85rem;font-weight:600;color:var(--blue-glow);cursor:pointer;}
 .jd-photo-add:hover{background:rgba(37,99,235,0.22);}
+.jd-invlist{display:flex;flex-direction:column;gap:0.4rem;}
+.jd-inv{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.7rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-lt);border-radius:8px;cursor:pointer;transition:border-color .15s;}
+.jd-inv:hover{border-color:var(--blue);}
+.jd-inv-num{font-weight:600;font-size:0.85rem;color:var(--text-main);}
+.jd-inv-amt{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text-main);}
 .jpills{display:flex;flex-direction:column;gap:0.25rem;align-items:flex-start;}
 .jpill{font-size:0.66rem;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
 .pill-green{background:rgba(16,185,129,0.15);color:#86efac;border:1px solid rgba(16,185,129,0.3);}
@@ -515,7 +520,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.5</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.6</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -716,7 +721,7 @@ let accessToken=null,currentPage='dashboard',editingRow=null;
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let chartInstances={};
 const cache={Customers:[],Invoices:[],Quotes:[],Schedule:[],Expenses:[],Payments:[],Settings:[]};
-const SHEETS={Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','Amount','QuoteToken','Photos','JobToken','StartedAt','EndedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes','JobToken'],Settings:['Key','Value']};
+const SHEETS={Customers:['Name','Phone','Email','Address','Notes'],Invoices:['Invoice #','Customer','Address','Date','Due Date','Amount','Status','Notes','Token','JobToken'],Quotes:['Quote #','Customer','Address','Phone','Email','Service','Date','Amount','Status','Notes','Token','Customer Reply','DepositStatus'],Schedule:['Date','Time','Customer','Phone','Address','Service','Status','Notes','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','Amount','QuoteToken','Photos','JobToken','StartedAt','EndedAt'],Expenses:['Date','Vendor','Description','Category','Amount','ReceiptURL','Notes'],Payments:['Payment #','Invoice #','Customer','Amount','Method','Type','Date','Token','Notes','JobToken'],Settings:['Key','Value']};
 
 // Restore session on page load
 // Wait until the Google Identity script is fully loaded before using it
@@ -1279,6 +1284,24 @@ function jobMoney(job){
   return {total,paid,balance,pays,state,color,paidInFull:total>0&&balance<=0.001};
 }
 
+// Return all invoices linked to a job (by JobToken), each tagged with its cumulative paid status.
+// Invoices "fill up" oldest-first from the job's total payments (the cumulative model).
+function jobInvoices(s){
+  const jt=s['JobToken']||'';
+  let invs=(cache.Invoices||[]).filter(i=>jt && i['JobToken']===jt);
+  // sort oldest-first by date then invoice number, so payments apply in order
+  invs.sort((a,b)=>((a['Date']||'')+a['Invoice #']).localeCompare((b['Date']||'')+b['Invoice #']));
+  let pool=jobMoney(s).paid; // total money collected on the job
+  return invs.map(inv=>{
+    const amt=parseFloat(inv['Amount']||0);
+    let status, color;
+    if(pool>=amt-0.001){ status='Paid'; color='#86efac'; pool-=amt; }
+    else if(pool>0.001){ status='Partial'; color='#fbbf24'; pool=0; }
+    else { status='Unpaid'; color='#fbbf24'; }
+    return {inv, amt, status, color};
+  });
+}
+
 // ── JOB TIMER ── (timestamp-based, so it survives closing the tab)
 let _jobTimerInterval=null;
 function fmtDuration(ms){
@@ -1352,8 +1375,12 @@ function showScheduleDetail(rowIndex){
   if(M.pays.length){
     payHtml+=`<div class="jd-paylist">${M.pays.map(p=>`<div class="jd-pay"><span>$${parseFloat(p['Amount']||0).toFixed(2)} <span class="jd-pay-type">${p['Type']||''}</span></span><span class="jd-pay-meta">${fmtDate(p['Date'])} · ${p['Method']||''}</span><span class="jd-pay-acts"><a href="#" onclick="event.preventDefault();copyReceiptLink('${p['Token']}','${p['Payment #']}')" title="Copy receipt link">🔗</a><a href="#" onclick="event.preventDefault();editPayment(${p._rowIndex},${rowIndex})" title="Edit payment">✎</a><a href="#" onclick="event.preventDefault();deletePayment(${p._rowIndex},${rowIndex})" title="Delete payment" style="color:#fca5a5;">🗑</a></span></div>`).join('')}</div>`;
   }
-  const inv=cache.Invoices.find(i=>i['Customer']===s['Customer'] && (i['Address']||'')===(addr||''))
-         || cache.Invoices.find(i=>i['Customer']===s['Customer']); // best-effort invoice link for this job
+  // All invoices linked to this job (cumulative paid status)
+  const jInvs=jobInvoices(s);
+  let invListHtml='';
+  if(jInvs.length){
+    invListHtml=`<div class="jd-card"><div class="jd-card-title">🧾 Invoices</div><div class="jd-invlist">${jInvs.map(ji=>`<div class="jd-inv" onclick="openInvoicePage(${ji.inv._rowIndex})"><span class="jd-inv-num">${ji.inv['Invoice #']}</span><span class="jd-inv-amt">$${ji.amt.toFixed(2)}</span><span class="jpill ${ji.status==='Paid'?'pill-green':ji.status==='Partial'?'pill-amber':'pill-grey'}">${ji.status}</span></div>`).join('')}</div><button class="jd-action-btn" style="margin-top:0.5rem;" onclick="invoiceFromJob(${rowIndex})">+ New Invoice</button></div>`;
+  }
 
   // Deposit status from the linked quote — prefer the exact QuoteToken link, else match customer+address
   const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken']))
@@ -1424,7 +1451,7 @@ function showScheduleDetail(rowIndex){
             <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'deposit')">💸 Request Deposit</button>
             <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'full')">💸 Request Full Payment</button>
             <button class="jd-action-btn" onclick="logJobPayment(${rowIndex})">💵 Log Payment Received</button>
-            ${inv?`<button class="jd-action-btn" onclick="openInvoicePage(${inv._rowIndex})">🧾 View Invoice (${inv['Invoice #']}) · ${inv['Status']}</button>`:`<button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice / Bill</button>`}
+            <button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice / Bill</button>
             <button class="jd-action-btn" onclick="copyWaiverLink(${rowIndex})">📝 Send Waiver</button>
           </div>
         </div>
@@ -1434,6 +1461,7 @@ function showScheduleDetail(rowIndex){
           <div class="jd-card-title">Status & Payment</div>
           ${payHtml}${depHtml}${waiver}
         </div>
+        ${invListHtml}
         ${replyHtml}
         <div class="jd-card">
           <div class="jd-card-title">Notes</div>
@@ -1487,7 +1515,7 @@ function quoteFromJob(scheduleRowIndex){
   updateEstimateTotal();
 }
 
-// Create an invoice FROM a scheduled job — pre-fills the invoice form
+// Create an invoice FROM a scheduled job — pre-fills the invoice form and links it to the job
 function invoiceFromJob(scheduleRowIndex){
   const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
   if(!s) return;
@@ -1502,8 +1530,18 @@ function invoiceFromJob(scheduleRowIndex){
   if(custEl){ custEl.value=s['Customer']||''; autofillCustomer(s['Customer']||''); }
   const addrEl=document.querySelector('[name="Address"]');
   if(addrEl && s['Address']) addrEl.value=s['Address'];
+  // Pre-fill amount with what's not yet invoiced for this job (remaining), so multiple invoices add up to the total
+  const already=cache.Invoices.filter(i=>i['JobToken']===s['JobToken']).reduce((t,i)=>t+parseFloat(i['Amount']||0),0);
+  const M=jobMoney(s);
+  const remainingToInvoice=Math.max(0, M.total-already);
   const amtEl=document.querySelector('[name="Amount"]');
-  if(amtEl && s['Amount']) amtEl.value=parseFloat(s['Amount']).toFixed(2);
+  if(amtEl) amtEl.value=remainingToInvoice>0?remainingToInvoice.toFixed(2):(s['Amount']?parseFloat(s['Amount']).toFixed(2):'');
+  // Carry the JobToken so this invoice links to the job (enables multiple invoices per job)
+  if(s['JobToken']){
+    let jt=document.querySelector('[name="JobToken"]');
+    if(!jt){ jt=document.createElement('input'); jt.type='hidden'; jt.name='JobToken'; document.getElementById('modal-body').appendChild(jt); }
+    jt.value=s['JobToken'];
+  }
   // Default due date: 14 days out
   const due=new Date(); due.setDate(due.getDate()+14);
   const dueEl=document.querySelector('[name="Due Date"]');
@@ -1823,6 +1861,12 @@ function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowInde
     if(!tk){ tk=document.createElement('input'); tk.type='hidden'; tk.name='Token'; document.getElementById('modal-body').appendChild(tk); }
     tk.value=rec['Token'];
   }
+  // Preserve an invoice's JobToken (its link to the job) when editing
+  if(sheet==='Invoices' && rec['JobToken']){
+    let jt=document.querySelector('[name="JobToken"]');
+    if(!jt){ jt=document.createElement('input'); jt.type='hidden'; jt.name='JobToken'; document.getElementById('modal-body').appendChild(jt); }
+    jt.value=rec['JobToken'];
+  }
   // Preserve Schedule hidden fields not shown on the form (else editing would wipe them)
   if(sheet==='Schedule'){
     ['JobToken','QuoteToken','Photos','WaiverToken','WaiverStatus','WaiverSignedBy','WaiverSignedAt','StartedAt','EndedAt'].forEach(col=>{
@@ -2104,6 +2148,18 @@ function logJobPayment(scheduleRowIndex){
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 let payingJobRow=null;
+// After any payment change, recompute & save each linked invoice's Status (cumulative model)
+async function syncJobInvoiceStatuses(scheduleRowIndex){
+  const s=cache.Schedule.find(x=>x._rowIndex===scheduleRowIndex);
+  if(!s) return;
+  const jInvs=jobInvoices(s);
+  for(const ji of jInvs){
+    if((ji.inv['Status']||'')!==ji.status && ji.inv['Status']!=='Overdue'){
+      ji.inv['Status']=ji.status==='Paid'?'Paid':(ji.status==='Partial'?'Partial':'Unpaid');
+      try{ await updateRow('Invoices', ji.inv._rowIndex, SHEETS.Invoices.map(col=>ji.inv[col]||'')); }catch(e){ console.error('sync invoice status:',e); }
+    }
+  }
+}
 let editingPaymentRow=null;
 // Edit an existing payment (fix a wrong type/amount/method/date)
 function editPayment(payRowIndex, scheduleRowIndex){
@@ -2142,6 +2198,8 @@ async function saveEditedPayment(){
   try{
     await updateRow('Payments', editingPaymentRow, SHEETS.Payments.map(col=>p[col]||''));
     await loadAllData();
+    await syncJobInvoiceStatuses(payingJobRow);
+    await loadAllData();
     closeModal();
     showScheduleDetail(payingJobRow);
     showToast('Payment updated.','success');
@@ -2154,6 +2212,8 @@ async function deletePayment(payRowIndex, scheduleRowIndex){
   setSyncStatus('⟳ Deleting payment...');
   try{
     await deleteRow('Payments', payRowIndex);
+    await loadAllData();
+    await syncJobInvoiceStatuses(scheduleRowIndex);
     await loadAllData();
     closeModal();
     showScheduleDetail(scheduleRowIndex);
@@ -2176,12 +2236,13 @@ async function saveJobPayment(){
   setSyncStatus('⟳ Saving payment...');
   try{
     await appendRow('Payments', values);
-    // If the job is now fully paid, optionally flip status — but leave job status to the user; just refresh
+    await loadAllData();
+    await syncJobInvoiceStatuses(payingJobRow); // flip linked invoices to Paid/Partial as covered
     await loadAllData();
     closeModal();
     renderPage(currentPage);
     showScheduleDetail(payingJobRow); // reopen the job so they see the updated balance + receipt link
-    showToast('Payment recorded. Open the job to grab the receipt link.','success');
+    showToast('Payment recorded.','success');
   }catch(e){ showToast('Could not save payment.','error'); setSyncStatus('✕ Error'); console.error('saveJobPayment:',e); }
 }
 
