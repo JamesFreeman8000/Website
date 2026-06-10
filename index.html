@@ -272,6 +272,14 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-pay{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.4rem 0;border-top:1px solid var(--border-lt);font-size:0.82rem;flex-wrap:wrap;}
 .jd-pay-type{font-size:0.65rem;font-weight:600;color:var(--text-muted);background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:8px;}
 .jd-pay-meta{color:var(--text-muted);font-size:0.75rem;}
+.jd-pay-acts{display:flex;gap:0.5rem;font-size:0.8rem;}
+.jd-pay-acts a{color:var(--blue-glow);text-decoration:none;}
+.jd-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:0.5rem;margin-bottom:0.6rem;}
+.jd-photo{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.jd-photo img{width:100%;height:100%;object-fit:cover;cursor:pointer;display:block;}
+.jd-photo-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:0.7rem;cursor:pointer;line-height:1;}
+.jd-photo-add{display:inline-block;padding:0.5rem 0.9rem;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:9px;font-size:0.85rem;font-weight:600;color:var(--blue-glow);cursor:pointer;}
+.jd-photo-add:hover{background:rgba(37,99,235,0.22);}
 .jpills{display:flex;flex-direction:column;gap:0.25rem;align-items:flex-start;}
 .jpill{font-size:0.66rem;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
 .pill-green{background:rgba(16,185,129,0.15);color:#86efac;border:1px solid rgba(16,185,129,0.3);}
@@ -507,7 +515,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.4</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.5</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -1325,6 +1333,7 @@ async function resetJobTimer(rowIndex){
 function showScheduleDetail(rowIndex){
   const s=cache.Schedule.find(x=>x._rowIndex===rowIndex);
   if(!s) return;
+  window._photoCtx='job';
   const c=customerContact(s['Customer']);
   const phone=s['Phone']||c['Phone']||'';
   const addr=s['Address']||c['Address']||'';
@@ -1341,7 +1350,7 @@ function showScheduleDetail(rowIndex){
     <div class="jd-row"><span class="jd-label">Status</span><span class="jd-val" style="color:${M.color}">${M.paidInFull?'✓ ':''}${M.state}</span></div>`;
   // List each payment with a receipt link
   if(M.pays.length){
-    payHtml+=`<div class="jd-paylist">${M.pays.map(p=>`<div class="jd-pay"><span>$${parseFloat(p['Amount']||0).toFixed(2)} <span class="jd-pay-type">${p['Type']||''}</span></span><span class="jd-pay-meta">${fmtDate(p['Date'])} · ${p['Method']||''}</span><a href="#" onclick="event.preventDefault();copyReceiptLink('${p['Token']}','${p['Payment #']}')" style="color:var(--blue-glow);font-size:0.75rem;">🔗 Receipt</a></div>`).join('')}</div>`;
+    payHtml+=`<div class="jd-paylist">${M.pays.map(p=>`<div class="jd-pay"><span>$${parseFloat(p['Amount']||0).toFixed(2)} <span class="jd-pay-type">${p['Type']||''}</span></span><span class="jd-pay-meta">${fmtDate(p['Date'])} · ${p['Method']||''}</span><span class="jd-pay-acts"><a href="#" onclick="event.preventDefault();copyReceiptLink('${p['Token']}','${p['Payment #']}')" title="Copy receipt link">🔗</a><a href="#" onclick="event.preventDefault();editPayment(${p._rowIndex},${rowIndex})" title="Edit payment">✎</a><a href="#" onclick="event.preventDefault();deletePayment(${p._rowIndex},${rowIndex})" title="Delete payment" style="color:#fca5a5;">🗑</a></span></div>`).join('')}</div>`;
   }
   const inv=cache.Invoices.find(i=>i['Customer']===s['Customer'] && (i['Address']||'')===(addr||''))
          || cache.Invoices.find(i=>i['Customer']===s['Customer']); // best-effort invoice link for this job
@@ -1365,6 +1374,11 @@ function showScheduleDetail(rowIndex){
     }
   }
   const waiver=s['WaiverStatus']==='Signed'?`<div class="jd-row"><span class="jd-label">Waiver</span><span class="jd-val" style="color:#86efac;">✓ Signed${s['WaiverSignedBy']?' by '+s['WaiverSignedBy']:''}</span></div>`:'';
+  // Before/after photos for this job
+  const photoIds=(s['Photos']||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const photosHtml=`<div class="jd-card"><div class="jd-card-title">📷 Job Photos</div>`+
+    (photoIds.length?`<div class="jd-photos">${photoIds.map(id=>`<div class="jd-photo"><img src="${driveImgUrl(id)}" loading="lazy" onclick="window.open('${driveViewUrl(id)}','_blank')" alt="job photo"><button class="jd-photo-del" title="Remove" onclick="removeJobPhoto(${rowIndex},'${id}')">✕</button></div>`).join('')}</div>`:`<div style="color:var(--text-muted);font-size:0.82rem;margin-bottom:0.5rem;">No photos yet — add before/after shots.</div>`)+
+    `<label class="jd-photo-add">📷 Add Photos<input type="file" accept="image/*" multiple style="display:none;" onchange="uploadJobPhotos(${rowIndex}, this.files)"></label><span id="photo-status-${rowIndex}" style="font-size:0.75rem;color:var(--cyan);margin-left:0.5rem;"></span></div>`;
 
   document.getElementById('modal-title').textContent='Job Details';
   document.getElementById('modal').classList.add('modal-xl');
@@ -1425,6 +1439,7 @@ function showScheduleDetail(rowIndex){
           <div class="jd-card-title">Notes</div>
           <div class="jd-notes">${s['Notes']||'<span style="color:var(--text-muted)">No notes.</span>'}</div>
         </div>
+        ${photosHtml}
       </div>
     </div>
   `;
@@ -2089,6 +2104,62 @@ function logJobPayment(scheduleRowIndex){
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 let payingJobRow=null;
+let editingPaymentRow=null;
+// Edit an existing payment (fix a wrong type/amount/method/date)
+function editPayment(payRowIndex, scheduleRowIndex){
+  const p=cache.Payments.find(x=>x._rowIndex===payRowIndex);
+  if(!p) return;
+  editingPaymentRow=payRowIndex;
+  payingJobRow=scheduleRowIndex;
+  const methods=['Cash','Check','Cash App','Venmo','Zelle','Wire Transfer','Debit/Credit Card','Other'];
+  document.getElementById('modal-title').textContent=`Edit Payment — ${p['Payment #']||''}`;
+  document.getElementById('modal').classList.remove('modal-xl');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="form-group"><label class="form-label">Payment Amount ($)</label><input class="form-input" type="number" step="0.01" id="pay-amount" value="${parseFloat(p['Amount']||0).toFixed(2)}" /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Method</label><select class="form-select" id="pay-method">${methods.map(m=>`<option ${p['Method']===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="pay-type">${['Deposit','Partial','Final','Full'].map(t=>`<option ${p['Type']===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="pay-date" value="${(p['Date']||'').slice(0,10)}" /></div>
+    <div class="form-group"><label class="form-label">Notes (optional)</label><input class="form-input" id="pay-notes" value="${(p['Notes']||'').replace(/"/g,'&quot;')}" /></div>
+  `;
+  const footer=document.querySelector('.modal-footer');
+  footer.dataset.prev=footer.innerHTML;
+  footer.innerHTML=`<button class="action-btn" onclick="closeModal();showScheduleDetail(${scheduleRowIndex})">Cancel</button><button class="action-btn primary" onclick="saveEditedPayment()">Save Changes</button>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+async function saveEditedPayment(){
+  const p=cache.Payments.find(x=>x._rowIndex===editingPaymentRow);
+  if(!p){ closeModal(); return; }
+  const amount=parseFloat(document.getElementById('pay-amount').value||0);
+  if(!amount||amount<=0){ showToast('Enter a valid amount.','error'); return; }
+  p['Amount']=amount.toFixed(2);
+  p['Method']=document.getElementById('pay-method').value;
+  p['Type']=document.getElementById('pay-type').value;
+  p['Date']=document.getElementById('pay-date').value||p['Date'];
+  p['Notes']=document.getElementById('pay-notes').value||'';
+  setSyncStatus('⟳ Updating payment...');
+  try{
+    await updateRow('Payments', editingPaymentRow, SHEETS.Payments.map(col=>p[col]||''));
+    await loadAllData();
+    closeModal();
+    showScheduleDetail(payingJobRow);
+    showToast('Payment updated.','success');
+  }catch(e){ showToast('Could not update payment.','error'); setSyncStatus('✕ Error'); console.error(e); }
+}
+async function deletePayment(payRowIndex, scheduleRowIndex){
+  const p=cache.Payments.find(x=>x._rowIndex===payRowIndex);
+  if(!p) return;
+  if(!confirm(`Delete this $${parseFloat(p['Amount']||0).toFixed(2)} ${p['Type']||''} payment? This can't be undone.`)) return;
+  setSyncStatus('⟳ Deleting payment...');
+  try{
+    await deleteRow('Payments', payRowIndex);
+    await loadAllData();
+    closeModal();
+    showScheduleDetail(scheduleRowIndex);
+    showToast('Payment deleted.','success');
+  }catch(e){ showToast('Could not delete payment.','error'); setSyncStatus('✕ Error'); console.error(e); }
+}
 async function saveJobPayment(){
   const s=cache.Schedule.find(x=>x._rowIndex===payingJobRow);
   if(!s){ closeModal(); return; }
@@ -2689,6 +2760,7 @@ let detailCustomerName=null;
 
 function showCustomerDetail(name){
   detailCustomerName=name;
+  window._photoCtx='customer';
   const cust=cache.Customers.find(c=>c['Name']===name);
   const jobs=cache.Schedule.filter(j=>j['Customer']===name);
   const invoices=cache.Invoices.filter(i=>i['Customer']===name);
@@ -2798,7 +2870,7 @@ async function uploadJobPhotos(rowIndex, files){
     await updateRow('Schedule', rowIndex, values);
     if(statusEl) statusEl.textContent='';
     showToast(`${done} photo${done>1?'s':''} uploaded`,'success');
-    showCustomerDetail(detailCustomerName); // refresh the view
+    if(window._photoCtx==='job'){ showScheduleDetail(rowIndex); } else { showCustomerDetail(detailCustomerName); }
   }catch(e){
     console.error('Photo upload failed:',e);
     if(statusEl) statusEl.textContent='Upload failed.';
@@ -2816,7 +2888,7 @@ async function removeJobPhoto(rowIndex, photoId){
     const values=SHEETS.Schedule.map(col=>job[col]||'');
     await updateRow('Schedule', rowIndex, values);
     showToast('Photo removed.','success');
-    showCustomerDetail(detailCustomerName);
+    if(window._photoCtx==='job'){ showScheduleDetail(rowIndex); } else { showCustomerDetail(detailCustomerName); }
   }catch(e){ console.error(e); showToast('Could not remove photo.','error'); }
 }
 
