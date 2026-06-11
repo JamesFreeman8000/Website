@@ -533,7 +533,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.8</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.9</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -2537,10 +2537,10 @@ async function confirmSend(){
     const q=cache.Quotes.find(e=>e._rowIndex===ctx.rowIndex); if(!q){ closeModal(); return; }
     const base=CONFIG.CLEAN_ESTIMATE_URL || CONFIG.ESTIMATE_PORTAL_URL;
     const link=base+'?token='+encodeURIComponent(q['Token']);
-    // Email via Apps Script (uses the quote's stored email; update it first if changed)
+    // Email via Apps Script — pass the email typed in the popup so it goes exactly there
     if(email){
       if(email!==(q['Email']||'')){ q['Email']=email; try{ await updateRow('Quotes', q._rowIndex, SHEETS.Quotes.map(col=>q[col]||'')); }catch(e){} }
-      try{ await fetch(CONFIG.ESTIMATE_PORTAL_URL+'?action=sendemail&kind=quote&token='+encodeURIComponent(q['Token']),{method:'GET',mode:'no-cors'}); }catch(e){ console.error(e); }
+      try{ await fetch(CONFIG.ESTIMATE_PORTAL_URL+'?action=sendemail&kind=quote&token='+encodeURIComponent(q['Token'])+'&email='+encodeURIComponent(email),{method:'GET',mode:'no-cors'}); }catch(e){ console.error(e); }
     }
     q['Status']='Sent';
     try{ await updateRow('Quotes', q._rowIndex, SHEETS.Quotes.map(col=>q[col]||'')); }catch(e){}
