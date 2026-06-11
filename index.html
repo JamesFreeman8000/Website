@@ -52,7 +52,9 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text-main
 .activity-text{font-size:0.92rem;color:var(--white);font-weight:500;display:flex;align-items:center;gap:0.4rem;}
 .activity-sub{font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .activity-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3B82F6;flex-shrink:0;}
-.activity-go{font-size:0.78rem;color:var(--blue-glow);flex-shrink:0;}
+.activity-go{font-size:0.78rem;color:var(--blue-glow);flex-shrink:0;display:flex;align-items:center;gap:0.6rem;}
+.activity-unread-btn{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:0.7rem;padding:3px 8px;border-radius:6px;cursor:pointer;transition:all .15s;}
+.activity-unread-btn:hover{border-color:var(--blue);color:var(--blue-glow);}
 .pay-modal-summary{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:0.7rem 0.9rem;font-size:0.85rem;color:var(--text-main);margin-bottom:1rem;}
 .pay-hist-item{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:0.7rem 0;border-bottom:1px solid var(--border-lt);}
 .pay-hist-amt{font-size:1rem;font-weight:700;color:#86efac;}
@@ -293,6 +295,11 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .pill-grey{background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.25);}
 .jd-action-btn{width:100%;text-align:left;padding:0.7rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;font-size:0.88rem;font-weight:500;color:var(--text-main);cursor:pointer;transition:all .15s;}
 .jd-action-btn:hover{background:rgba(37,99,235,0.15);border-color:var(--blue);color:var(--blue-glow);}
+.jd-action-row{display:flex;gap:0.5rem;}
+.jd-action-split{flex:1;}
+.jd-action-second{flex:0 0 auto;white-space:nowrap;}
+.jd-action-second.revise{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35);color:#fbbf24;}
+.jd-action-second.revise:hover{background:rgba(245,158,11,0.22);border-color:#fbbf24;color:#fbbf24;}
 .clickable-row{cursor:pointer;transition:background .12s;}
 .clickable-row:hover{background:rgba(37,99,235,0.06);}
 .clickable-row:hover{background:rgba(37,99,235,0.06);}
@@ -500,6 +507,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       </div>
       <div class="nav-label" id="nav-cat-finance" data-cat="finance" style="margin-top:0.5rem">Finance</div>
       <div class="nav-group" data-cat="finance" id="navgroup-finance">
+        <a class="nav-item" data-page="owed" onclick="navItemClick(event,'owed')">▪ Money Owed <span id="nav-owed-badge" class="nav-badge hidden">0</span></a>
         <a class="nav-item" data-page="invoices" onclick="navItemClick(event,'invoices')">▪ Invoices</a>
         <a class="nav-item" data-page="quotes" onclick="navItemClick(event,'quotes')">▪ Quotes</a>
         <a class="nav-item" data-page="expenses" onclick="navItemClick(event,'expenses')">▪ Expenses</a>
@@ -520,7 +528,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.1</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.5</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -552,6 +560,22 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
         <select class="filter-select" onchange="filterByStatus('invoices',this.value)"><option value="">All</option><option>Unpaid</option><option>Paid</option><option>Overdue</option></select>
       </div>
       <div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Address</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="invoices-body"><tr><td colspan="8" class="empty-state">No invoices yet.</td></tr></tbody></table></div></div>
+    </section>
+
+    <!-- MONEY OWED -->
+    <section id="page-owed" class="page">
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+          <span id="owed-summary">Money Owed</span>
+          <select id="owed-sort" onchange="renderOwed()" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;">
+            <option value="overdue">Most overdue first</option>
+            <option value="balance">Highest balance</option>
+            <option value="newest">Newest job</option>
+            <option value="oldest">Oldest job</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Customer</th><th>Phone</th><th>Service(s)</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody id="owed-body"><tr><td colspan="8" class="empty-state">Nothing owed — all caught up! 🎉</td></tr></tbody></table></div>
+      </div>
     </section>
 
     <!-- QUOTES -->
@@ -912,8 +936,16 @@ async function loadAllData(){
   cache.Customers=c;cache.Invoices=i;cache.Quotes=e;cache.Schedule=s;cache.Expenses=x;cache.Payments=p;setSyncStatus('● Live');
   await markOverdueInvoices();
   await loadNavLabels();
-  detectActivity();}
+  detectActivity();
+  updateOwedBadge();}
   catch(e){setSyncStatus('✕ Error');console.error(e);}
+}
+// Keep the Money Owed nav badge in sync (count of overdue jobs) regardless of current page
+function updateOwedBadge(){
+  let overdueCount=0;
+  (cache.Schedule||[]).forEach(s=>{ const o=owedInfo(s); if(o&&o.overdue) overdueCount++; });
+  const badge=document.getElementById('nav-owed-badge');
+  if(badge){ if(overdueCount){ badge.textContent=overdueCount; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
 }
 
 // ── ACTIVITY / NOTIFICATIONS ──
@@ -983,28 +1015,46 @@ function renderActivity(){
   if(!items.length){ wrap.innerHTML='<p class="empty-state">No customer activity yet. When someone accepts, declines, replies, or pays a deposit, it\'ll show here.</p>'; return; }
   wrap.innerHTML=items.map(it=>{
     const isNew=!seen[it.key];
-    return `<div class="activity-item ${isNew?'new':''}" onclick="openActivityItem('${it.key.replace(/'/g,"\\'")}',${it.row})"><div class="activity-icon">${it.icon}</div><div class="activity-main"><div class="activity-text">${isNew?'<span class="activity-dot"></span>':''}${it.text}</div><div class="activity-sub">${it.sub||''}</div></div><div class="activity-go">View →</div></div>`;
+    const unreadBtn=isNew?'':`<button class="activity-unread-btn" title="Mark unread" onclick="markActivityUnread(event,'${it.key.replace(/'/g,"\\'")}')">Mark unread</button>`;
+    return `<div class="activity-item ${isNew?'new':''}" onclick="openActivityItem('${it.key.replace(/'/g,"\\'")}',${it.row})"><div class="activity-icon">${it.icon}</div><div class="activity-main"><div class="activity-text">${isNew?'<span class="activity-dot"></span>':''}${it.text}</div><div class="activity-sub">${it.sub||''}</div></div><div class="activity-go">${unreadBtn}<span class="activity-go-arrow">View →</span></div></div>`;
   }).join('');
 }
-// Mark a single activity item as seen, then jump to its quote
+// Mark a single activity item as seen, then jump to the linked JOB (or the quote if no job yet)
 async function openActivityItem(key, rowIndex){
   try{
     const seen=getSeenActivity();
     if(!seen[key]){
       seen[key]=Date.now();
       await saveSetting('activitySeen', JSON.stringify(seen));
-      // refresh the badge count + the list highlight
       detectActivity();
     }
   }catch(e){ console.error('mark seen:',e); }
   goToActivity(rowIndex);
 }
-function goToActivity(rowIndex){
+// Mark a single notification back to UNREAD so you can revisit it later
+async function markActivityUnread(event, key){
+  if(event) event.stopPropagation();
+  try{
+    const seen=getSeenActivity();
+    if(seen[key]){ delete seen[key]; await saveSetting('activitySeen', JSON.stringify(seen)); }
+    detectActivity();
+    renderActivity();
+    showToast('Marked unread.','success');
+  }catch(e){ console.error('mark unread:',e); }
+}
+function goToActivity(quoteRowIndex){
+  // The notification came from a quote. If a job was scheduled from that quote, open the JOB popup.
+  const q=cache.Quotes.find(e=>e._rowIndex===quoteRowIndex);
+  if(q && q['Token']){
+    const job=cache.Schedule.find(s=>s['QuoteToken']===q['Token']);
+    if(job){
+      navigate('schedule');
+      setTimeout(()=>showScheduleDetail(job._rowIndex),150);
+      return;
+    }
+  }
+  // No linked job yet (e.g. accepted but not scheduled) — land on Quotes so they can schedule it
   navigate('quotes');
-  setTimeout(()=>{
-    const q=cache.Quotes.find(e=>e._rowIndex===rowIndex);
-    if(q && q['Token']){ /* could scroll/highlight; for now just land on quotes */ }
-  },100);
 }
 
 // ── SOUND ──
@@ -1231,7 +1281,7 @@ function navigate(page){
   addBtn.style.display=(page==='analytics'||page==='measure')?'none':'';
   renderPage(page);
 }
-function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage}[page]||function(){})();}
+function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage,owed:renderOwed}[page]||function(){})();}
 
 let upcomingSortAsc=true;
 function toggleUpcomingSort(){
@@ -1292,6 +1342,57 @@ function jobInvoices(s){
     else { status='Unpaid'; color='#fbbf24'; }
     return {inv, amt, status, color};
   });
+}
+
+// For the Money Owed tab: a job's balance + whether it's overdue (an unpaid linked invoice past its due date).
+// Returns {balance, overdue, daysOverdue, dueDate} — or null if nothing is owed.
+function owedInfo(s){
+  const M=jobMoney(s);
+  if(M.total<=0 || M.balance<=0.001) return null; // nothing owed
+  if(s['Status']==='Cancelled') return null;
+  // Find the earliest past-due unpaid/partial invoice tied to this job
+  const today=localDateStr();
+  let overdue=false, daysOverdue=0, dueDate='';
+  jobInvoices(s).forEach(ji=>{
+    if(ji.status!=='Paid' && ji.inv['Due Date'] && ji.inv['Due Date']<today){
+      overdue=true;
+      const d=Math.floor((Date.parse(today)-Date.parse(ji.inv['Due Date']))/86400000);
+      if(d>daysOverdue){ daysOverdue=d; dueDate=ji.inv['Due Date']; }
+    }
+  });
+  return {balance:M.balance, total:M.total, paid:M.paid, overdue, daysOverdue, dueDate};
+}
+
+function renderOwed(){
+  const sortBy=document.getElementById('owed-sort')?.value||'overdue';
+  // Gather every job that has a balance owed
+  let rows=[];
+  (cache.Schedule||[]).forEach(s=>{ const o=owedInfo(s); if(o) rows.push({s,o}); });
+  // Sort
+  rows.sort((a,b)=>{
+    if(sortBy==='balance') return b.o.balance-a.o.balance;
+    if(sortBy==='newest')  return (b.s['Date']||'').localeCompare(a.s['Date']||'');
+    if(sortBy==='oldest')  return (a.s['Date']||'').localeCompare(b.s['Date']||'');
+    // default: most overdue first (overdue before non-overdue, then by days overdue desc, then oldest job)
+    if(a.o.overdue!==b.o.overdue) return a.o.overdue?-1:1;
+    if(a.o.overdue&&b.o.overdue) return b.o.daysOverdue-a.o.daysOverdue;
+    return (a.s['Date']||'').localeCompare(b.s['Date']||'');
+  });
+  const totalOwed=rows.reduce((t,r)=>t+r.o.balance,0);
+  const overdueCount=rows.filter(r=>r.o.overdue).length;
+  const summary=document.getElementById('owed-summary');
+  if(summary) summary.innerHTML=`Money Owed: <strong style="color:#fbbf24">$${totalOwed.toFixed(2)}</strong> across ${rows.length} job${rows.length===1?'':'s'}${overdueCount?` · <span style="color:#fca5a5">${overdueCount} overdue</span>`:''}`;
+  // Badge on the nav
+  const badge=document.getElementById('nav-owed-badge');
+  if(badge){ if(overdueCount){ badge.textContent=overdueCount; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
+  const body=document.getElementById('owed-body');
+  if(!body) return;
+  body.innerHTML=rows.length?rows.map(({s,o})=>{
+    const pill=o.overdue
+      ? `<span class="jpill pill-red">🔴 Overdue ${o.daysOverdue}d</span>`
+      : `<span class="jpill pill-amber">🟡 Owed</span>`;
+    return `<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${fmtDate(s['Date'])}</td><td>${s['Customer']||'—'}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Service']||'—'}</td><td>$${o.total.toFixed(2)}</td><td style="color:#86efac">$${o.paid.toFixed(2)}</td><td style="color:#fbbf24;font-weight:600;">$${o.balance.toFixed(2)}</td><td>${pill}</td></tr>`;
+  }).join(''):`<tr><td colspan="8" class="empty-state">Nothing owed — all caught up! 🎉</td></tr>`;
 }
 
 // ── JOB TIMER ── (timestamp-based, so it survives closing the tab)
@@ -1379,9 +1480,20 @@ function showScheduleDetail(rowIndex){
   const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken'])) || null;
   let depHtml='', quoteBtn='', replyHtml='';
   if(quote){
+    // Colored quote status pill — scannable at a glance
+    const qst=(quote['Status']||'Draft').trim();
+    const qmap={
+      'Accepted':{c:'pill-green',  t:'✅ Accepted'},
+      'Declined':{c:'pill-red',    t:'❌ Declined'},
+      'Sent':    {c:'pill-amber',  t:'📤 Sent · awaiting reply'},
+      'Countered':{c:'pill-amber', t:'↔️ Countered'},
+      'Draft':   {c:'pill-grey',   t:'📝 Draft · not sent'}
+    };
+    const qm=qmap[qst]||{c:'pill-grey',t:qst};
+    depHtml=`<div class="jd-row"><span class="jd-label">Quote ${quote['Quote #']||''}</span><span class="jpill ${qm.c}">${qm.t}</span></div>`;
     const dep=quote['DepositStatus']||'';
-    if(dep==='Paid') depHtml=`<div class="jd-row"><span class="jd-label">Deposit</span><span class="jd-val" style="color:#86efac">✓ Paid</span></div>`;
-    else if(dep==='Requested') depHtml=`<div class="jd-row"><span class="jd-label">Deposit</span><span class="jd-val" style="color:#fbbf24">Requested (not yet paid)</span></div>`;
+    if(dep==='Paid') depHtml+=`<div class="jd-row"><span class="jd-label">Deposit</span><span class="jd-val" style="color:#86efac">✓ Paid</span></div>`;
+    else if(dep==='Requested') depHtml+=`<div class="jd-row"><span class="jd-label">Deposit</span><span class="jd-val" style="color:#fbbf24">Requested (not yet paid)</span></div>`;
     if(quote['Token']){
       const base=CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL;
       quoteBtn=`<button class="action-btn" onclick="window.open('${base}?token=${encodeURIComponent(quote['Token'])}','_blank')">📄 View Quote</button>`;
@@ -1438,7 +1550,16 @@ function showScheduleDetail(rowIndex){
         <div class="jd-card">
           <div class="jd-card-title">Actions</div>
           <div class="jd-actions">
-            ${quote?`<button class="jd-action-btn" onclick="window.open('${(CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL)}?token=${encodeURIComponent(quote['Token']||'')}','_blank')">📄 View Quote (${quote['Quote #']||''})</button>`:`<button class="jd-action-btn" onclick="quoteFromJob(${rowIndex})">📄 Create &amp; Send Quote</button>`}
+            ${(()=>{
+              if(!quote) return `<button class="jd-action-btn" onclick="quoteFromJob(${rowIndex})">📄 Create &amp; Send Quote</button>`;
+              const base=CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL;
+              const viewBtn=`<button class="jd-action-btn jd-action-split" onclick="window.open('${base}?token=${encodeURIComponent(quote['Token']||'')}','_blank')">📄 View Quote (${quote['Quote #']||''})</button>`;
+              const st=(quote['Status']||'').trim();
+              const second = st==='Declined'
+                ? `<button class="jd-action-btn jd-action-second revise" onclick="closeModal();openEditModal('Quotes',${quote._rowIndex})">✏️ Revise</button>`
+                : `<button class="jd-action-btn jd-action-second" onclick="closeModal();sendDraftQuote(${quote._rowIndex})">📤 ${st==='Sent'?'Resend':'Send'}</button>`;
+              return `<div class="jd-action-row">${viewBtn}${second}</div>`;
+            })()}
             <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'deposit')">💸 Request Deposit</button>
             <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'full')">💸 Request Full Payment</button>
             <button class="jd-action-btn" onclick="logJobPayment(${rowIndex})">💵 Log Payment Received</button>
