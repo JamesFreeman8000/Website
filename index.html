@@ -295,9 +295,10 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .pill-grey{background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.25);}
 .jd-action-btn{width:100%;text-align:left;padding:0.7rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;font-size:0.88rem;font-weight:500;color:var(--text-main);cursor:pointer;transition:all .15s;}
 .jd-action-btn:hover{background:rgba(37,99,235,0.15);border-color:var(--blue);color:var(--blue-glow);}
-.jd-action-row{display:flex;gap:0.5rem;}
-.jd-action-split{flex:1;}
-.jd-action-second{flex:0 0 auto;white-space:nowrap;}
+.jd-action-row{display:flex;gap:0.5rem;align-items:stretch;}
+.jd-action-row .jd-action-btn{width:auto;}
+.jd-action-split{flex:1 1 auto;min-width:0;}
+.jd-action-second{flex:0 0 auto;white-space:nowrap;text-align:center;}
 .jd-action-second.revise{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35);color:#fbbf24;}
 .jd-action-second.revise:hover{background:rgba(245,158,11,0.22);border-color:#fbbf24;color:#fbbf24;}
 .clickable-row{cursor:pointer;transition:background .12s;}
@@ -528,7 +529,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.5</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.6</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
