@@ -520,7 +520,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v4.7</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.1</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -695,7 +695,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       </div>
       <div class="card"><div class="calendar-grid" id="calendar-grid"></div></div>
       <div class="card" style="margin-top:1rem;">
-        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;"><span id="schedule-list-title">Upcoming Jobs</span><select id="schedule-scope" onchange="setScheduleScope(this.value)" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;"><option value="default">Default</option><option value="month">This Month</option><option value="all">All Jobs</option></select></div>
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;"><span id="schedule-list-title">Upcoming Jobs</span><div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;"><input id="schedule-search" type="text" placeholder="🔍 Search name, phone, address..." oninput="renderScheduleList()" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:5px 10px;font-size:0.8rem;min-width:200px;"><select id="schedule-scope" onchange="setScheduleScope(this.value)" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;"><option value="default">Default</option><option value="month">This Month</option><option value="all">All Jobs</option></select></div></div>
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Phone</th><th>Address</th><th>Service(s)</th><th>Status</th><th>Progress</th><th>Actions</th></tr></thead>
         <tbody id="schedule-body"><tr><td colspan="8" class="empty-state">No scheduled jobs.</td></tr></tbody></table></div>
       </div>
@@ -733,19 +733,15 @@ function whenGoogleReady(cb,tries=0){
 
 window.addEventListener('load',()=>{
   whenGoogleReady(()=>{
-    // Init token client so login + silent refresh both work
-    tokenClient=google.accounts.oauth2.initTokenClient({
-      client_id:CONFIG.GOOGLE_CLIENT_ID,
-      scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-      callback:()=>{}
-    });
+    initTokenClient();
     // Try to restore a saved session
-    const saved=sessionStorage.getItem('hydro_session');
+    const saved=localStorage.getItem('hydro_session');
     if(!saved) return;
     let s;
-    try{ s=JSON.parse(saved); }catch(e){ sessionStorage.removeItem('hydro_session'); return; }
-    if(!s||!s.token||!s.name){ sessionStorage.removeItem('hydro_session'); return; }
+    try{ s=JSON.parse(saved); }catch(e){ localStorage.removeItem('hydro_session'); return; }
+    if(!s||!s.token||!s.name){ localStorage.removeItem('hydro_session'); return; }
     accessToken=s.token;
+    window._hydroLastRefresh=Date.now();
     document.getElementById('user-avatar').src=s.avatar||'';
     document.getElementById('user-name').textContent=s.name;
     document.getElementById('login-screen').classList.add('hidden');
@@ -754,21 +750,29 @@ window.addEventListener('load',()=>{
     // Load data — sheetsGet auto-refreshes the token if it has expired
     ensureSheetsExist().then(()=>loadAllData()).then(()=>renderPage(currentPage)).catch(e=>{
       console.error('Session data load failed, trying a silent token refresh first:',e);
-      // Before giving up, try one silent token refresh — only show login if THAT fails too
-      refreshTokenAndRetry(()=>Promise.resolve())
+      refreshAccessToken()
         .then(()=>loadAllData())
         .then(()=>renderPage(currentPage))
         .catch(e2=>{
           console.error('Silent refresh also failed:',e2);
-          sessionStorage.removeItem('hydro_session');
-          accessToken=null;
-          document.getElementById('app').classList.add('hidden');
-          document.getElementById('login-screen').classList.remove('hidden');
-          document.getElementById('login-error').textContent='Your session expired. Please sign in again.';
+          // DON'T wipe the session or force login here — keep them on the page and let them tap to refresh.
+          setSyncStatus('● Live · tap to refresh');
         });
     });
   });
 });
+
+// ONE token client for the whole app. Its callback is routed via _tokenResolver so login and
+// silent refresh share the same client (two clients was causing stray login popups).
+let _tokenResolver=null;
+function initTokenClient(){
+  if(tokenClient) return;
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CONFIG.GOOGLE_CLIENT_ID,
+    scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+    callback:(resp)=>{ if(_tokenResolver){ const r=_tokenResolver; _tokenResolver=null; r(resp); } }
+  });
+}
 
 // US Federal Holidays — floating ones calculated correctly each year
 function getHolidays(year){
@@ -804,57 +808,38 @@ let tokenClient=null;
 let refreshTimer=null;
 
 function handleSignIn(){
-  tokenClient=google.accounts.oauth2.initTokenClient({
-    client_id:CONFIG.GOOGLE_CLIENT_ID,
-    scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-    callback:async(resp)=>{
-      if(resp.error){showError('Sign-in failed: '+resp.error);return;}
-      accessToken=resp.access_token;
-      window._hydroLastRefresh=Date.now();
-      try{
-        const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:`Bearer ${accessToken}`}});
-        const user=await r.json();
-        if(user.email.toLowerCase()!==CONFIG.AUTHORIZED_EMAIL.toLowerCase()){accessToken=null;document.getElementById('login-error').textContent='⛔ Access denied.';return;}
-        document.getElementById('user-avatar').src=user.picture||'';
-        document.getElementById('user-name').textContent=user.given_name||user.email;
-        sessionStorage.setItem('hydro_session',JSON.stringify({token:accessToken,name:user.given_name||user.email,avatar:user.picture||''}));
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        startAutoRefresh();
-        await ensureSheetsExist();await loadAllData();renderPage(currentPage);
-      }catch(e){showError('Could not verify your account.');console.error(e);}
-    }
-  });
-  tokenClient.requestAccessToken();
+  initTokenClient();
+  _tokenResolver=async(resp)=>{
+    if(resp.error){showError('Sign-in failed: '+resp.error);return;}
+    accessToken=resp.access_token;
+    window._hydroLastRefresh=Date.now();
+    try{
+      const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:`Bearer ${accessToken}`}});
+      const user=await r.json();
+      if(user.email.toLowerCase()!==CONFIG.AUTHORIZED_EMAIL.toLowerCase()){accessToken=null;document.getElementById('login-error').textContent='⛔ Access denied.';return;}
+      document.getElementById('user-avatar').src=user.picture||'';
+      document.getElementById('user-name').textContent=user.given_name||user.email;
+      localStorage.setItem('hydro_session',JSON.stringify({token:accessToken,name:user.given_name||user.email,avatar:user.picture||''}));
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      startAutoRefresh();
+      await ensureSheetsExist();await loadAllData();renderPage(currentPage);
+    }catch(e){showError('Could not verify your account.');console.error(e);}
+  };
+  tokenClient.requestAccessToken(); // interactive sign-in (allows popup/consent)
 }
 
-// Silently refresh the token every 30 min (tokens expire after 60 min) — kept fresh
+// Token refresh strategy (IMPORTANT):
+// Google Identity token clients can pop a login/account-picker when requestAccessToken is called —
+// even with prompt:''. So we do NOT call it on a background timer (that caused stray popups, even
+// when the tab was closed). Instead we refresh ONLY reactively: when a real API call returns 401.
+// That's driven by your actual activity, never by a timer firing in the background.
 function startAutoRefresh(){
   if(refreshTimer) clearInterval(refreshTimer);
+  refreshTimer=null;
   if(!window._hydroLastRefresh) window._hydroLastRefresh=Date.now();
-  // Proactively refresh every 20 min (well before the ~60-min expiry) via the SHARED refresh
-  refreshTimer=setInterval(()=>{
-    if(!tokenClient||!accessToken) return;
-    refreshAccessToken().catch(()=>{ /* will retry on next tick or on a 401 */ });
-  }, 20*60*1000);
-  // When returning to the tab, refresh if it's been a while. Uses the shared refresh, never kicks to login.
-  if(!window._hydroVisHooked){
-    window._hydroVisHooked=true;
-    document.addEventListener('visibilitychange',()=>{
-      if(document.visibilityState!=='visible') return;
-      if(!tokenClient||!accessToken) return;
-      const mins=(Date.now()-(window._hydroLastRefresh||Date.now()))/60000;
-      // Refresh after 15+ min away so the token is fresh when you start clicking again
-      if(mins>=15){
-        setSyncStatus('⟳ Syncing...');
-        refreshAccessToken()
-          .then(()=>loadAllData())
-          .then(()=>renderPage(currentPage))
-          .then(()=>setSyncStatus('● Live'))
-          .catch(()=>setSyncStatus('● Live · tap to refresh')); // stay on the page; let them click if needed
-      }
-    });
-  }
+  // We intentionally do NOT set up a proactive refresh interval anymore.
+  // Returning to the tab no longer force-refreshes either; the next real API call handles it.
 }
 
 // Called when a Sheets API call gets a 401 — refreshes token then retries
@@ -865,29 +850,26 @@ function refreshAccessToken(){
   if(_refreshInFlight) return _refreshInFlight; // reuse the one already running
   _refreshInFlight=new Promise((resolve,reject)=>{
     if(!tokenClient){reject(new Error('No token client'));return;}
-    const prev=tokenClient.callback;
     let done=false;
-    const timer=setTimeout(()=>{ if(!done){done=true;tokenClient.callback=prev;reject(new Error('refresh timeout'));} },12000);
-    tokenClient.callback=(resp)=>{
+    const timer=setTimeout(()=>{ if(!done){done=true;_tokenResolver=null;reject(new Error('refresh timeout'));} },12000);
+    _tokenResolver=(resp)=>{
       if(done)return; done=true; clearTimeout(timer);
-      tokenClient.callback=prev;
       if(resp.error){reject(new Error(resp.error));return;}
       accessToken=resp.access_token;
       window._hydroLastRefresh=Date.now();
-      try{const s=JSON.parse(sessionStorage.getItem('hydro_session')||'{}');s.token=accessToken;sessionStorage.setItem('hydro_session',JSON.stringify(s));}catch(e){}
+      try{const s=JSON.parse(localStorage.getItem('hydro_session')||'{}');s.token=accessToken;localStorage.setItem('hydro_session',JSON.stringify(s));}catch(e){}
       resolve(accessToken);
     };
     try{ tokenClient.requestAccessToken({prompt:''}); }
-    catch(e){ clearTimeout(timer); reject(e); }
+    catch(e){ clearTimeout(timer); _tokenResolver=null; reject(e); }
   }).finally(()=>{ _refreshInFlight=null; });
   return _refreshInFlight;
 }
-// Backwards-compatible wrapper: refresh (shared), then run fn
 async function refreshTokenAndRetry(fn){
   await refreshAccessToken();
   return fn?fn():undefined;
 }
-function handleSignOut(){accessToken=null;sessionStorage.removeItem('hydro_session');document.getElementById('app').classList.add('hidden');document.getElementById('login-screen').classList.remove('hidden');document.getElementById('login-error').textContent='';}
+function handleSignOut(){accessToken=null;localStorage.removeItem('hydro_session');document.getElementById('app').classList.add('hidden');document.getElementById('login-screen').classList.remove('hidden');document.getElementById('login-error').textContent='';}
 
 const BASE=()=>`https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}`;
 const hdrs=()=>({'Authorization':`Bearer ${accessToken}`,'Content-Type':'application/json'});
@@ -1205,7 +1187,7 @@ async function saveSetting(key,val){
 // Auto-flip Unpaid invoices to Overdue once their due date has passed.
 // Rule: Status==='Unpaid' AND Due Date < today  ->  set 'Overdue'. Paid invoices are never touched.
 async function markOverdueInvoices(){
-  const today=new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  const today=localDateStr(); // YYYY-MM-DD (local)
   const toFlip=cache.Invoices.filter(inv=>{
     const due=(inv['Due Date']||'').trim();
     return inv['Status']==='Unpaid' && due && due < today;
@@ -1268,7 +1250,7 @@ function renderDashboard(){
   // Recently completed jobs come from the Schedule now (status Completed), newest date first
   const recentJobs=cache.Schedule.filter(s=>s['Status']==='Completed').sort((a,b)=>(b['Date']||'').localeCompare(a['Date']||'')).slice(0,5);
   document.getElementById('dash-recent-jobs').innerHTML=recentJobs.length?`<ul class="dash-list">${recentJobs.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-amount">$${parseFloat(s['Amount']||0).toFixed(2)}</div>${badge(s['Status'])}</div></li>`).join('')}</ul>`:'<p class="empty-state">No completed jobs yet.</p>';
-  const upcoming=cache.Schedule.filter(s=>s['Date']>=now.toISOString().slice(0,10)&&s['Status']!=='Cancelled').sort((a,b)=>upcomingSortAsc?a['Date'].localeCompare(b['Date']):b['Date'].localeCompare(a['Date'])).slice(0,5);
+  const upcoming=cache.Schedule.filter(s=>s['Date']>=localDateStr()&&s['Status']!=='Cancelled').sort((a,b)=>upcomingSortAsc?a['Date'].localeCompare(b['Date']):b['Date'].localeCompare(a['Date'])).slice(0,5);
   document.getElementById('dash-upcoming').innerHTML=upcoming.length?`<ul class="dash-list">${upcoming.map(s=>`<li class="dash-clickable" onclick="showScheduleDetail(${s._rowIndex})"><div class="dash-list-left"><div class="dash-list-name">${s['Customer']}</div><div class="dash-list-sub">${s['Service']}</div></div><div class="dash-list-right"><div class="dash-list-date">${fmtDate(s['Date'])}${s['Time']?' '+fmtTime(s['Time']):''}</div></div></li>`).join('')}</ul>`:'<p class="empty-state">Nothing scheduled.</p>';
 }
 
@@ -1392,10 +1374,9 @@ function showScheduleDetail(rowIndex){
     invListHtml=`<div class="jd-card"><div class="jd-card-title">🧾 Invoices</div><div class="jd-invlist">${jInvs.map(ji=>`<div class="jd-inv" onclick="openInvoicePage(${ji.inv._rowIndex})"><span class="jd-inv-num">${ji.inv['Invoice #']}</span><span class="jd-inv-amt">$${ji.amt.toFixed(2)}</span><span class="jpill ${ji.status==='Paid'?'pill-green':ji.status==='Partial'?'pill-amber':'pill-grey'}">${ji.status}</span></div>`).join('')}</div><button class="jd-action-btn" style="margin-top:0.5rem;" onclick="invoiceFromJob(${rowIndex})">+ New Invoice</button></div>`;
   }
 
-  // Deposit status from the linked quote — prefer the exact QuoteToken link, else match customer+address
-  const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken']))
-           || cache.Quotes.find(q=>q['Customer']===s['Customer'] && (q['Address']||'')===(addr||''))
-           || cache.Quotes.find(q=>q['Customer']===s['Customer']);
+  // Only show a quote that's EXACTLY linked to this job via QuoteToken.
+  // (Fuzzy customer/address matching was wrongly attaching a customer's old quote to a new job.)
+  const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken'])) || null;
   let depHtml='', quoteBtn='', replyHtml='';
   if(quote){
     const dep=quote['DepositStatus']||'';
@@ -1555,7 +1536,7 @@ function invoiceFromJob(scheduleRowIndex){
   // Default due date: 14 days out
   const due=new Date(); due.setDate(due.getDate()+14);
   const dueEl=document.querySelector('[name="Due Date"]');
-  if(dueEl) dueEl.value=due.toISOString().slice(0,10);
+  if(dueEl) dueEl.value=localDateStr(due);
 }
 
 function renderTable(page,filterText='',filterStatus=''){
@@ -1673,7 +1654,7 @@ function renderSchedule(){renderCalendar();renderScheduleList();}
 function renderCalendar(){
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-month-label').textContent=`${months[calMonth]} ${calYear}`;
-  const firstDay=new Date(calYear,calMonth,1).getDay(),days=new Date(calYear,calMonth+1,0).getDate(),todayStr=new Date().toISOString().slice(0,10);
+  const firstDay=new Date(calYear,calMonth,1).getDay(),days=new Date(calYear,calMonth+1,0).getDate(),todayStr=localDateStr();
   const holidays=getHolidays(calYear);
   let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-day-header">${d}</div>`).join('');
   for(let i=0;i<firstDay;i++)html+=`<div class="cal-day other-month"></div>`;
@@ -1689,8 +1670,7 @@ let scheduleScope='default'; // 'default' | 'month' | 'all'
 // Build small status pills for a job: Quote, Payment, Waiver — color-coded for quick scanning
 function jobStatusPills(s){
   const pills=[];
-  const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken']))
-           || cache.Quotes.find(q=>q['Customer']===s['Customer'] && (q['Address']||'')===(s['Address']||''));
+  const quote=(s['QuoteToken'] && cache.Quotes.find(q=>q['Token']===s['QuoteToken'])) || null;
   if(quote){
     const st=(quote['Status']||'').trim();
     const cls=st==='Accepted'?'pill-green':st==='Declined'?'pill-red':st==='Sent'?'pill-amber':'pill-grey';
@@ -1708,12 +1688,17 @@ function jobStatusPills(s){
 }
 function setScheduleScope(v){ scheduleScope=v; renderScheduleList(); }
 function renderScheduleList(){
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateStr();
   const realMonth=today.slice(0,7); // actual current month (YYYY-MM), independent of calendar navigation
   const mo=`${calYear}-${String(calMonth+1).padStart(2,'0')}`; // month the calendar is showing
   let jobs=[...cache.Schedule];
   let title='Schedule';
-  if(scheduleScope==='default'){
+  const q=(document.getElementById('schedule-search')?.value||'').trim().toLowerCase();
+  if(q){
+    // Search spans ALL jobs (ignores the month/scope filter) so you can find anything
+    jobs=jobs.filter(s=>['Customer','Phone','Address','Service','Notes','Status','Date'].some(k=>String(s[k]||'').toLowerCase().includes(q)));
+    title=`Search: "${q}" (${jobs.length})`;
+  } else if(scheduleScope==='default'){
     // Everything from the 1st of the REAL current month onward: this month's past days + all future jobs
     jobs=jobs.filter(s=>(s['Date']||'')>=realMonth+'-01' && s['Status']!=='Cancelled');
     title='Default — this month & upcoming';
@@ -1723,7 +1708,15 @@ function renderScheduleList(){
   } else {
     title='All Jobs';
   }
-  jobs.sort((a,b)=>(a['Date']+' '+(a['Time']||'')).localeCompare(b['Date']+' '+(b['Time']||'')));
+  // Sort: upcoming jobs (today or later) first, soonest at the very top; then past jobs, most-recent first
+  jobs.sort((a,b)=>{
+    const ad=(a['Date']||''), bd=(b['Date']||'');
+    const aUp=ad>=today, bUp=bd>=today;
+    if(aUp!==bUp) return aUp?-1:1; // upcoming group always above past group
+    const ak=ad+' '+(a['Time']||''), bk=bd+' '+(b['Time']||'');
+    return aUp ? ak.localeCompare(bk)   // upcoming: soonest first
+               : bk.localeCompare(ak);  // past: most recent first
+  });
   const titleEl=document.getElementById('schedule-list-title');
   if(titleEl) titleEl.textContent=title;
   document.getElementById('schedule-body').innerHTML=jobs.length?jobs.map(s=>`<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${fmtDate(s['Date'])}</td><td>${fmtTime(s['Time'])}</td><td>${s['Customer']}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Address']||'—'}</td><td>${s['Service']||'—'}</td><td>${badge(s['Status'])}</td><td>${jobStatusPills(s)}</td><td onclick="event.stopPropagation()"><div class="est-actions"><button class="tbl-btn" onclick="openEditModal('Schedule',${s._rowIndex})">Edit</button><button class="tbl-btn del" onclick="confirmDelete('Schedule',${s._rowIndex})">Delete</button>${waiverBtn(s)}</div></td></tr>`).join(''):`<tr><td colspan="9" class="empty-state">${scheduleScope==='month'?'No jobs this month.':scheduleScope==='default'?'Nothing scheduled this month or upcoming. Switch to "All Jobs" to see past ones.':'No jobs yet.'}</td></tr>`;
@@ -1983,7 +1976,10 @@ async function confirmDelete(sheet,rowIndex){if(!confirm('Delete this record?'))
 function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;if(_jobTimerInterval){clearInterval(_jobTimerInterval);_jobTimerInterval=null;}document.getElementById('modal-overlay').classList.add('hidden');const mdl=document.getElementById('modal');if(mdl)mdl.classList.remove('modal-xl');editingRow=null;pendingUploadFile=null;forceSaveSheet=null;detailCustomerName=null;const footer=document.querySelector('.modal-footer');if(footer&&footer.dataset.prev){footer.innerHTML=footer.dataset.prev;delete footer.dataset.prev;}}
 
 function badge(status){const map={'Scheduled':'scheduled','In Progress':'inprogress','Completed':'completed','Cancelled':'cancelled','Paid':'paid','Unpaid':'unpaid','Overdue':'overdue','Sent':'sent','Draft':'draft','Accepted':'accepted','Declined':'cancelled','Countered':'countered'};return `<span class="badge badge-${map[status]||'draft'}">${status||'—'}</span>`;}
-function tod(){return new Date().toISOString().slice(0,10);}
+// LOCAL calendar date as YYYY-MM-DD (NOT UTC). Using toISOString() here was the timezone bug:
+// in the evening, UTC is already tomorrow, so "today" jumped a day and hid same-day jobs.
+function localDateStr(d){d=d||new Date();const p=v=>String(v).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
+function tod(){return localDateStr();}
 function custSelect(name){const opts=cache.Customers.map(c=>`<option>${c['Name']}</option>`).join('');return `<select class="form-select" name="${name}"><option value="">— Select Customer —</option>${opts}</select><input class="form-input" name="${name}_manual" placeholder="Or type name directly" style="margin-top:0.4rem" />`;}
 function svcOpts(){return['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'].map(s=>`<option>${s}</option>`).join('');}
 const SERVICE_LIST=['House Wash','Driveway Wash','Deck/Patio Wash','Fence Wash','Roof Wash','Gutter Cleaning','Commercial Wash','Fleet Wash','Other'];
