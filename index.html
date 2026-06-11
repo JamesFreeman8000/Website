@@ -533,7 +533,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.9</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v6.0</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -2499,27 +2499,33 @@ function quoteStatusBadge(r){
 // Open a small popup to confirm/edit the email & phone before sending a quote/waiver/etc.
 // kind: 'quote' | 'waiver'. rowIndex is the relevant row (quote row or schedule row).
 function openSendModal(kind, rowIndex){
-  let customer='', email='', phone='', title='', subtitle='';
+  let customer='', email='', phone='', title='', subtitle='', defaultMsg='';
   if(kind==='quote'){
     const q=cache.Quotes.find(e=>e._rowIndex===rowIndex); if(!q) return;
     if(!q['Token']){ showToast('This quote has no link yet — open & save it first.','error'); return; }
     const cust=cache.Customers.find(c=>c['Name']===q['Customer'])||{};
     customer=q['Customer']||''; email=q['Email']||cust['Email']||''; phone=q['Phone']||cust['Phone']||'';
     title=`Send Quote ${q['Quote #']||''}`; subtitle=`To ${customer||'customer'}`;
+    const base=CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL;
+    defaultMsg=`Hi ${customer}, here's your quote from Hydro Pressure Washing: ${base}?token=${encodeURIComponent(q['Token'])}`;
   } else if(kind==='waiver'){
     const s=cache.Schedule.find(r=>r._rowIndex===rowIndex); if(!s) return;
     const cust=cache.Customers.find(c=>c['Name']===s['Customer'])||{};
     customer=s['Customer']||''; email=cust['Email']||''; phone=s['Phone']||cust['Phone']||'';
     title='Send Waiver'; subtitle=`To ${customer||'customer'}`;
+    const tok=s['WaiverToken']||'(link will be created on send)';
+    const base=CONFIG.WAIVER_URL||CONFIG.ESTIMATE_PORTAL_URL;
+    defaultMsg=`Hi ${customer}, please sign your service waiver for Hydro Pressure Washing: ${base}?type=waiver&token=${encodeURIComponent(tok)}`;
   }
   window._sendCtx={kind,rowIndex};
   document.getElementById('modal-title').textContent=title;
   document.getElementById('modal').classList.remove('modal-xl');
   document.getElementById('modal-body').innerHTML=`
-    <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">${subtitle} — review or edit how to reach them, then send.</div>
+    <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">${subtitle} — review or edit, then send.</div>
     <div class="form-group"><label class="form-label">✉️ Email</label><input class="form-input" id="send-email" value="${email.replace(/"/g,'&quot;')}" placeholder="Leave blank to skip email"></div>
     <div class="form-group"><label class="form-label">📱 Phone (text)</label><input class="form-input" id="send-phone" value="${phone.replace(/"/g,'&quot;')}" placeholder="Leave blank to skip text"></div>
-    <div style="font-size:0.78rem;color:var(--text-muted);">Email sends automatically. Text opens your phone's messaging app with the message pre-filled (you tap send).</div>
+    <div class="form-group"><label class="form-label">💬 Text message (edit as needed)</label><textarea class="form-input" id="send-msg" rows="3" style="resize:vertical;font-family:inherit;">${defaultMsg.replace(/</g,'&lt;')}</textarea></div>
+    <div style="font-size:0.78rem;color:var(--text-muted);">Email sends automatically with our standard wording. The text message above opens in your messaging app (you tap send).</div>
   `;
   const footer=document.querySelector('.modal-footer');
   footer.dataset.prev=footer.innerHTML;
@@ -2544,9 +2550,10 @@ async function confirmSend(){
     }
     q['Status']='Sent';
     try{ await updateRow('Quotes', q._rowIndex, SHEETS.Quotes.map(col=>q[col]||'')); }catch(e){}
+    const customMsg=(document.getElementById('send-msg')?.value||'').trim();
     closeModal();
     if(phone){
-      const msg=`Hi ${q['Customer']||''}, here's your quote from Hydro Pressure Washing: ${link}`;
+      const msg=customMsg||`Hi ${q['Customer']||''}, here's your quote from Hydro Pressure Washing: ${link}`;
       window.open(`sms:${phone}?&body=${encodeURIComponent(msg)}`,'_blank');
     }
     showToast(email&&phone?`Emailed ${email}. Text app opened — tap send.`:email?`Quote emailed to ${email}.`:'Text app opened — tap send.','success');
@@ -2560,9 +2567,11 @@ async function confirmSend(){
     if(email){
       try{ await fetch(CONFIG.ESTIMATE_PORTAL_URL+'?action=sendemail&kind=waiver&token='+encodeURIComponent(s['WaiverToken'])+'&email='+encodeURIComponent(email),{method:'GET',mode:'no-cors'}); }catch(e){ console.error(e); }
     }
+    const customMsgW=(document.getElementById('send-msg')?.value||'').trim();
     closeModal();
     if(phone){
-      const msg=`Hi ${s['Customer']||''}, please sign your service waiver for Hydro Pressure Washing: ${link}`;
+      // If the message still has the placeholder (token was created just now), rebuild with the real link
+      const msg=(customMsgW && !customMsgW.includes('link will be created'))?customMsgW:`Hi ${s['Customer']||''}, please sign your service waiver for Hydro Pressure Washing: ${link}`;
       window.open(`sms:${phone}?&body=${encodeURIComponent(msg)}`,'_blank');
     }
     showToast(email&&phone?`Waiver emailed to ${email}. Text app opened — tap send.`:email?`Waiver emailed to ${email}.`:'Text app opened — tap send.','success');
