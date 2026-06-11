@@ -299,6 +299,10 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-action-row .jd-action-btn{width:auto;}
 .jd-action-split{flex:1 1 auto;min-width:0;}
 .jd-action-second{flex:0 0 auto;white-space:nowrap;text-align:center;}
+.jd-action-btn.status-green{border-left:4px solid #10B981;}
+.jd-action-btn.status-amber{border-left:4px solid #f59e0b;}
+.jd-action-btn.status-red{border-left:4px solid #dc2626;}
+.jd-action-btn.status-grey{border-left:4px solid #94A3B8;}
 .jd-action-second.revise{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35);color:#fbbf24;}
 .jd-action-second.revise:hover{background:rgba(245,158,11,0.22);border-color:#fbbf24;color:#fbbf24;}
 .clickable-row{cursor:pointer;transition:background .12s;}
@@ -529,7 +533,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.6</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v5.7</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -1554,8 +1558,9 @@ function showScheduleDetail(rowIndex){
             ${(()=>{
               if(!quote) return `<button class="jd-action-btn" onclick="quoteFromJob(${rowIndex})">📄 Create &amp; Send Quote</button>`;
               const base=CONFIG.CLEAN_ESTIMATE_URL||CONFIG.ESTIMATE_PORTAL_URL;
-              const viewBtn=`<button class="jd-action-btn jd-action-split" onclick="window.open('${base}?token=${encodeURIComponent(quote['Token']||'')}','_blank')">📄 View Quote (${quote['Quote #']||''})</button>`;
               const st=(quote['Status']||'').trim();
+              const qcls=st==='Accepted'?'status-green':st==='Declined'?'status-red':st==='Sent'?'status-amber':'status-grey';
+              const viewBtn=`<button class="jd-action-btn jd-action-split ${qcls}" onclick="window.open('${base}?token=${encodeURIComponent(quote['Token']||'')}','_blank')">📄 View Quote (${quote['Quote #']||''})</button>`;
               const second = st==='Declined'
                 ? `<button class="jd-action-btn jd-action-second revise" onclick="closeModal();openEditModal('Quotes',${quote._rowIndex})">✏️ Revise</button>`
                 : `<button class="jd-action-btn jd-action-second" onclick="closeModal();sendDraftQuote(${quote._rowIndex})">📤 ${st==='Sent'?'Resend':'Send'}</button>`;
@@ -1565,7 +1570,15 @@ function showScheduleDetail(rowIndex){
             <button class="jd-action-btn" onclick="requestJobPayment(${rowIndex},'full')">💸 Request Full Payment</button>
             <button class="jd-action-btn" onclick="logJobPayment(${rowIndex})">💵 Log Payment Received</button>
             <button class="jd-action-btn" onclick="invoiceFromJob(${rowIndex})">🧾 Create Invoice / Bill</button>
-            <button class="jd-action-btn" onclick="copyWaiverLink(${rowIndex})">📝 Send Waiver</button>
+            ${(()=>{
+              const ws=s['WaiverStatus']==='Signed'?'signed':(s['WaiverToken']?'sent':'none');
+              if(ws==='none') return `<button class="jd-action-btn" onclick="copyWaiverLink(${rowIndex})">📝 Send Waiver</button>`;
+              const wcls=ws==='signed'?'status-green':'status-amber';
+              const label=ws==='signed'?`📝 View Waiver ✓ Signed${s['WaiverSignedBy']?' · '+s['WaiverSignedBy']:''}`:'📝 View Waiver';
+              const viewW=`<button class="jd-action-btn jd-action-split ${wcls}" onclick="viewWaiver(${rowIndex})">${label}</button>`;
+              const sendW=ws==='signed'?'':`<button class="jd-action-btn jd-action-second" onclick="copyWaiverLink(${rowIndex})">📤 Resend</button>`;
+              return ws==='signed'?viewW:`<div class="jd-action-row">${viewW}${sendW}</div>`;
+            })()}
           </div>
         </div>
       </div>
@@ -1870,6 +1883,13 @@ async function copyWaiverLink(rowIndex){
   navigator.clipboard.writeText(link).then(()=>{
     showToast('Waiver link copied! Send it to '+(s['Customer']||'your customer')+'.','success');
   }).catch(()=>{ window.prompt('Copy this waiver link for your customer:', link); });
+}
+// Open the waiver page (the same page the customer sees / signs). Needs a token to exist.
+function viewWaiver(rowIndex){
+  const s=cache.Schedule.find(r=>r._rowIndex===rowIndex);
+  if(!s || !s['WaiverToken']){ showToast('No waiver sent yet — click Send Waiver first.',''); return; }
+  const base=CONFIG.WAIVER_URL || CONFIG.ESTIMATE_PORTAL_URL;
+  window.open(base+'?type=waiver&token='+encodeURIComponent(s['WaiverToken']),'_blank');
 }
 function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderSchedule();}
 function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderSchedule();}
