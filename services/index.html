@@ -94,6 +94,17 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 .svc-block p{font-size:0.97rem;color:var(--slate);}
 @media(max-width:780px){.svc-detail{grid-template-columns:1fr;}}
 
+
+.faq-wrap{max-width:760px;margin:0 auto;}
+.faq-item{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:0.8rem;overflow:hidden;transition:box-shadow .2s;}
+.faq-item:hover{box-shadow:0 8px 24px -14px rgba(11,79,92,0.25);}
+.faq-q{display:flex;align-items:center;justify-content:space-between;gap:1rem;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:1.2rem 1.4rem;font-family:'Archivo',sans-serif;font-weight:700;font-size:1.05rem;color:var(--ocean);}
+.faq-q .chev{flex-shrink:0;width:22px;height:22px;transition:transform .25s;color:var(--spray);}
+.faq-item.open .chev{transform:rotate(180deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.faq-a-inner{padding:0 1.4rem 1.3rem;color:var(--slate);font-size:1rem;line-height:1.65;}
+.faq-item.open .faq-a{max-height:300px;}
+
 </style>
 </head>
 <body class="inner"><header id="header">
@@ -121,6 +132,18 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 <section style="background:var(--mist);"><div class="wrap">
   <div class="svc-section-head reveal-up"><span class="svc-tag">🏢 Commercial</span><h2>For Your Business</h2><p>Keep your property looking sharp and professional. Reliable commercial exterior cleaning.</p></div>
   <div class="svc-detail"><div class="svc-block reveal-up" style="background:#fff;"><div class="ic">🏢</div><div><h3>Storefront &amp; Building Exterior</h3><p>A clean storefront makes a first impression. We wash building faces, entrances, and exterior walls to keep your business looking its best.</p></div></div><div class="svc-block reveal-up" style="background:#fff;"><div class="ic">🚶</div><div><h3>Sidewalks &amp; Walkways</h3><p>High-traffic concrete picks up gum, stains, and grime fast. We surface-clean sidewalks and walkways for a safe, sharp look.</p></div></div><div class="svc-block reveal-up" style="background:#fff;"><div class="ic">🚛</div><div><h3>Dumpster Pad Cleaning</h3><p>Dumpster areas get filthy and smell. We degrease and sanitize the pad to keep it clean and code-friendly.</p></div></div><div class="svc-block reveal-up" style="background:#fff;"><div class="ic">🚗</div><div><h3>Drive-Thru Lanes</h3><p>Drive-thru lanes collect spills, grease, and tire marks. We clean them up so the path to your window looks professional.</p></div></div><div class="svc-block reveal-up" style="background:#fff;"><div class="ic">⛺</div><div><h3>Awnings &amp; Signage</h3><p>Faded, dirty awnings and signs hurt your image. A careful cleaning brings back the color and visibility.</p></div></div></div>
+</div></section>
+<section id="faq"><div class="wrap">
+  <div class="sec-head reveal-up"><span class="sec-eyebrow">Questions</span><h2>Frequently Asked</h2><p>Everything you need to know before you book. Still curious? Just ask.</p></div>
+  <div class="faq-wrap">
+    <div class="faq-item reveal-up"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">How much does it cost?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">Every property is different, so we provide a free, no-obligation quote up front. You'll know the exact price before any work begins — no surprises.</div></div></div>
+    <div class="faq-item reveal-up"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is pressure washing safe for my roof and siding?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">Yes. For delicate surfaces like roofs and siding, we use a gentle low-pressure “soft wash” method that cleans deeply without causing damage. We match the method to the surface every time.</div></div></div>
+    <div class="faq-item reveal-up"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do I need to be home during the service?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">Not necessarily. As long as we have access to the areas being cleaned and a water source, you don't have to be present. We'll confirm the details with you beforehand.</div></div></div>
+    <div class="faq-item reveal-up"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">How long does a typical job take?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">Most residential jobs are completed the same day — usually anywhere from one to a few hours depending on the size and what's being cleaned.</div></div></div>
+    <div class="faq-item reveal-up"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">What areas do you serve?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">We serve homeowners and businesses throughout South Jersey.</div></div></div>
+    <div class="faq-item reveal-up"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">How often should I get my house washed?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">For most homes, a yearly exterior wash keeps mold, algae, and grime from building up and protects your siding. Homes in shaded or damp areas may benefit from more frequent cleaning.</div></div></div>
+    <div class="faq-item reveal-up"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I pay? What payment methods do you accept?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">We accept cash, check, and card, along with other convenient options. We'll go over payment with you when we provide your quote.</div></div></div>
+  </div>
 </div></section>
 <section style="padding-top:0;"><div class="wrap"><div class="cta-banner reveal-up"><h2>Not Sure What You Need?</h2><p>Tell us about your property and we'll recommend the right service — free.</p><a href="/contact/" class="btn btn-dark">Get a Free Quote →</a></div></div></section>
 <footer>
