@@ -103,6 +103,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 .quote-box .btn{width:100%;justify-content:center;margin-top:0.5rem;}
 .qb-note{font-size:0.8rem;color:var(--slate);text-align:center;margin-top:1rem;}
 .svc-checks{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+.svc-group-label{font-family:'Archivo',sans-serif;font-weight:700;font-size:0.85rem;color:var(--ocean);margin-bottom:0.6rem;letter-spacing:0.02em;}
 .svc-check{display:flex;align-items:center;gap:0.55rem;font-size:0.92rem;color:var(--ink);background:var(--mist);border:1.5px solid var(--line);border-radius:10px;padding:0.6rem 0.8rem;cursor:pointer;transition:border-color .15s, background .15s;font-weight:500;}
 .svc-check:hover{border-color:var(--spray);}
 .svc-check input{width:auto;accent-color:var(--spray);cursor:pointer;flex-shrink:0;}
@@ -154,6 +155,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
     <div class="qb-row"><div class="field"><label>Phone *</label><input type="tel" id="f-phone" placeholder="(609) 555-0000"></div><div class="field"><label>Email</label><input type="email" id="f-email" placeholder="you@email.com"></div></div>
     <div class="field"><label>Property Address</label><input type="text" id="f-address" placeholder="Street, City"></div>
     <div class="field"><label>Services Needed <span style="font-weight:400;color:var(--slate)">(check all that apply)</span></label>
+      <div class="svc-group-label">🏠 Residential</div>
       <div class="svc-checks">
         <label class="svc-check"><input type="checkbox" value="House / Exterior Wash"> House / Exterior Wash</label>
         <label class="svc-check"><input type="checkbox" value="Driveway / Concrete"> Driveway / Concrete</label>
@@ -161,8 +163,17 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
         <label class="svc-check"><input type="checkbox" value="Fence Washing"> Fence Washing</label>
         <label class="svc-check"><input type="checkbox" value="Gutter Cleaning"> Gutter Cleaning</label>
         <label class="svc-check"><input type="checkbox" value="Roof Soft Wash"> Roof Soft Wash</label>
-        <label class="svc-check"><input type="checkbox" value="Not sure / Other"> Not sure / Other</label>
+        <label class="svc-check"><input type="checkbox" value="Trash Bin Cleaning"> Trash Bin Cleaning</label>
       </div>
+      <div class="svc-group-label" style="margin-top:1rem;">🏢 Commercial</div>
+      <div class="svc-checks">
+        <label class="svc-check"><input type="checkbox" value="Storefront / Building Exterior"> Storefront / Building Exterior</label>
+        <label class="svc-check"><input type="checkbox" value="Sidewalks / Walkways"> Sidewalks / Walkways</label>
+        <label class="svc-check"><input type="checkbox" value="Dumpster Pad Cleaning"> Dumpster Pad Cleaning</label>
+        <label class="svc-check"><input type="checkbox" value="Drive-Thru Lanes"> Drive-Thru Lanes</label>
+        <label class="svc-check"><input type="checkbox" value="Awnings / Signage"> Awnings / Signage</label>
+      </div>
+      <div class="field" style="margin-top:1rem;margin-bottom:0;"><label style="font-size:0.8rem;">Other / Not listed</label><input type="text" id="f-other" placeholder="Type any other service you need..."></div>
     </div>
     <div class="field"><label>Message</label><textarea id="f-message" placeholder="Tell us a bit about what you need cleaned..."></textarea></div>
     <div class="field"><label>Photos <span style="font-weight:400;color:var(--slate)">(optional — helps us quote faster)</span></label>
@@ -242,6 +253,8 @@ document.getElementById('quoteSubmit').addEventListener('click',function(e){
   const email=document.getElementById('f-email').value.trim();
   const address=document.getElementById('f-address').value.trim();
   const services=Array.from(document.querySelectorAll('.svc-check input:checked')).map(c=>c.value);
+  const other=document.getElementById('f-other').value.trim();
+  if(other) services.push('Other: '+other);
   const message=document.getElementById('f-message').value.trim();
   if(!name||!phone){alert('Please add your name and phone so we can reach you.');return;}
   const svcText=services.length?services.join(', '):'Not specified';
