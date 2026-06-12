@@ -306,6 +306,12 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-action-second.revise{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35);color:#fbbf24;}
 .jd-action-second.revise:hover{background:rgba(245,158,11,0.22);border-color:#fbbf24;color:#fbbf24;}
 .clickable-row{cursor:pointer;transition:background .12s;}
+.row-new{background:rgba(25,197,219,0.05);}
+.req-photos{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.req-photos img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--border);transition:transform .15s;}
+.req-photos a:hover img{transform:scale(1.05);}
+.btn-mini{background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 10px;font-size:0.78rem;cursor:pointer;transition:all .15s;}
+.btn-mini:hover{border-color:var(--blue);color:var(--blue-glow);}
 .clickable-row:hover{background:rgba(37,99,235,0.06);}
 .clickable-row:hover{background:rgba(37,99,235,0.06);}
 .dash-list-left{display:flex;flex-direction:column;gap:0.2rem;min-width:0;flex:1;}
@@ -506,6 +512,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="nav-label" id="nav-cat-main" data-cat="main">Main</div>
       <div class="nav-group" data-cat="main" id="navgroup-main">
         <a class="nav-item active" data-page="dashboard" onclick="navItemClick(event,'dashboard')">▪ Overview</a>
+        <a class="nav-item" data-page="requests" onclick="navItemClick(event,'requests')">▪ Requests <span id="nav-requests-badge" class="nav-badge hidden">0</span></a>
         <a class="nav-item" data-page="activity" onclick="navItemClick(event,'activity')">▪ Activity <span id="nav-activity-badge" class="nav-badge hidden">0</span></a>
         <a class="nav-item" data-page="schedule" onclick="navItemClick(event,'schedule')">▪ Schedule</a>
         <a class="nav-item" data-page="customers" onclick="navItemClick(event,'customers')">▪ Customers</a>
@@ -565,6 +572,24 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
         <select class="filter-select" onchange="filterByStatus('invoices',this.value)"><option value="">All</option><option>Unpaid</option><option>Paid</option><option>Overdue</option></select>
       </div>
       <div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Address</th><th>Date</th><th>Due Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="invoices-body"><tr><td colspan="8" class="empty-state">No invoices yet.</td></tr></tbody></table></div></div>
+    </section>
+
+    <!-- WEBSITE REQUESTS -->
+    <section id="page-requests" class="page">
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+          <span id="requests-summary">Website Requests</span>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <select id="requests-filter" onchange="renderRequests()" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;">
+              <option value="new">New only</option>
+              <option value="all">All requests</option>
+              <option value="handled">Handled</option>
+            </select>
+            <button class="btn-mini" onclick="loadRequests(true)" title="Refresh">⟳ Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Received</th><th>Name</th><th>Phone</th><th>Type</th><th>Service(s)</th><th>Status</th></tr></thead><tbody id="requests-body"><tr><td colspan="6" class="empty-state">Loading requests…</td></tr></tbody></table></div>
+      </div>
     </section>
 
     <!-- MONEY OWED -->
@@ -942,7 +967,8 @@ async function loadAllData(){
   await markOverdueInvoices();
   await loadNavLabels();
   detectActivity();
-  updateOwedBadge();}
+  updateOwedBadge();
+  loadRequests();}
   catch(e){setSyncStatus('✕ Error');console.error(e);}
 }
 // Keep the Money Owed nav badge in sync (count of overdue jobs) regardless of current page
@@ -1286,7 +1312,7 @@ function navigate(page){
   addBtn.style.display=(page==='analytics'||page==='measure')?'none':'';
   renderPage(page);
 }
-function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage,owed:renderOwed}[page]||function(){})();}
+function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage,owed:renderOwed,requests:renderRequests}[page]||function(){})();}
 
 let upcomingSortAsc=true;
 function toggleUpcomingSort(){
@@ -1399,6 +1425,174 @@ function renderOwed(){
     return `<tr class="clickable-row" onclick="showScheduleDetail(${s._rowIndex})"><td>${fmtDate(s['Date'])}</td><td>${s['Customer']||'—'}</td><td>${s['Phone']?`<a href="tel:${s['Phone']}" style="color:var(--cyan);" onclick="event.stopPropagation()">${s['Phone']}</a>`:'—'}</td><td>${s['Service']||'—'}</td><td>$${o.total.toFixed(2)}</td><td style="color:#86efac">$${o.paid.toFixed(2)}</td><td style="color:#fbbf24;font-weight:600;">$${o.balance.toFixed(2)}</td><td>${pill}</td></tr>`;
   }).join(''):`<tr><td colspan="8" class="empty-state">Nothing owed — all caught up! 🎉</td></tr>`;
 }
+
+// ─────────────── WEBSITE REQUESTS ───────────────
+let _requestsCache=[];
+let _requestsLoaded=false;
+async function loadRequests(force){
+  try{
+    const url=CONFIG.ESTIMATE_PORTAL_URL+'?action=listrequests&_t='+Date.now();
+    const res=await fetch(url);
+    const data=await res.json();
+    _requestsCache=(data&&data.requests)?data.requests:[];
+    _requestsLoaded=true;
+    updateRequestsBadge();
+    if(currentPage==='requests') renderRequests();
+  }catch(e){
+    console.error('loadRequests',e);
+    if(force) showToast('Could not load requests. Check your connection.','error');
+    const body=document.getElementById('requests-body');
+    if(body&&currentPage==='requests') body.innerHTML=`<tr><td colspan="6" class="empty-state">Couldn't load requests. Tap Refresh to try again.</td></tr>`;
+  }
+}
+function updateRequestsBadge(){
+  const n=_requestsCache.filter(r=>(r.status||'New')==='New').length;
+  const badge=document.getElementById('nav-requests-badge');
+  if(badge){ if(n){ badge.textContent=n; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
+}
+function renderRequests(){
+  if(!_requestsLoaded){ loadRequests(); return; }
+  const filter=document.getElementById('requests-filter')?.value||'new';
+  let list=_requestsCache.slice();
+  if(filter==='new') list=list.filter(r=>(r.status||'New')==='New');
+  else if(filter==='handled') list=list.filter(r=>r.status==='Handled');
+  // newest first
+  list.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const newCount=_requestsCache.filter(r=>(r.status||'New')==='New').length;
+  const summary=document.getElementById('requests-summary');
+  if(summary) summary.innerHTML=`Website Requests${newCount?` · <span style="color:var(--cyan)">${newCount} new</span>`:''}`;
+  const body=document.getElementById('requests-body');
+  if(!body) return;
+  body.innerHTML=list.length?list.map(r=>{
+    const isNew=(r.status||'New')==='New';
+    const typePill=r.type==='Commercial'?'<span class="jpill pill-grey">🏢 Commercial</span>':'<span class="jpill" style="background:rgba(25,197,219,0.15);color:var(--cyan)">🏠 Residential</span>';
+    const statusPill=isNew?'<span class="jpill pill-amber">● New</span>':'<span class="jpill pill-green">✓ Handled</span>';
+    return `<tr class="clickable-row${isNew?' row-new':''}" onclick="openRequest('${r.token}')"><td>${fmtReqDate(r.date)}</td><td><strong>${esc(r.name)}</strong></td><td>${r.phone?`<a href="tel:${esc(r.phone)}" style="color:var(--cyan)" onclick="event.stopPropagation()">${esc(r.phone)}</a>`:'—'}</td><td>${typePill}</td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.services||'—')}</td><td>${statusPill}</td></tr>`;
+  }).join(''):`<tr><td colspan="6" class="empty-state">${filter==='new'?'No new requests right now. 🎉':'No requests to show.'}</td></tr>`;
+}
+function fmtReqDate(d){ if(!d)return '—'; const s=String(d); const m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); if(m){return `${m[2]}/${m[3]} ${m[4]}:${m[5]}`;} return s; }
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function openRequest(token){
+  const r=_requestsCache.find(x=>x.token===token);
+  if(!r){ showToast('Request not found.','error'); return; }
+  const photos=(r.photos||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const photoHtml=photos.length?`<div class="jd-card"><div class="jd-card-title">📷 Photos (${photos.length})</div><div class="req-photos">${photos.map(u=>`<a href="${u}" target="_blank"><img src="${u}" loading="lazy"></a>`).join('')}</div></div>`:'';
+  const msgHtml=(r.message||'').trim()?`<div class="jd-card"><div class="jd-card-title">💬 Message</div><div class="jd-msg-text">${esc(r.message)}</div></div>`:'';
+  const typePill=r.type==='Commercial'?'<span class="jpill pill-grey">🏢 Commercial</span>':'<span class="jpill" style="background:rgba(25,197,219,0.15);color:var(--cyan)">🏠 Residential</span>';
+  document.getElementById('modal-title').textContent='Website Request';
+  document.getElementById('modal').classList.add('modal-xl');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="jd-grid">
+      <div class="jd-col">
+        <div class="jd-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;">
+            <div style="font-size:1.3rem;font-weight:700;">${esc(r.name)}</div>${typePill}
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.8rem;">Received ${fmtReqDate(r.date)}</div>
+          <div class="jd-quickrow">
+            ${r.phone?`<a class="jd-bigbtn" href="tel:${esc(r.phone)}">📞 Call</a><a class="jd-bigbtn" href="sms:${esc(r.phone)}">💬 Text</a>`:''}
+            ${r.email?`<a class="jd-bigbtn" href="mailto:${esc(r.email)}">✉️ Email</a>`:''}
+          </div>
+        </div>
+        <div class="jd-card">
+          <div class="jd-card-title">Contact</div>
+          <div class="jd-row"><span class="jd-label">Phone</span><span class="jd-val">${esc(r.phone)||'—'}</span></div>
+          <div class="jd-row"><span class="jd-label">Email</span><span class="jd-val">${esc(r.email)||'—'}</span></div>
+          <div class="jd-row"><span class="jd-label">Address</span><span class="jd-val">${esc(r.address)||'—'}</span></div>
+        </div>
+        <div class="jd-card">
+          <div class="jd-card-title">Services Requested</div>
+          <div class="jd-msg-text">${esc(r.services)||'—'}</div>
+        </div>
+      </div>
+      <div class="jd-col">
+        <div class="jd-card">
+          <div class="jd-card-title">Turn Into…</div>
+          <div class="jd-actions">
+            <button class="jd-action-btn status-green" onclick="requestToQuote('${r.token}')">📄 Create Quote</button>
+            <button class="jd-action-btn" onclick="requestToJob('${r.token}')">📅 Schedule Job</button>
+            <button class="jd-action-btn" onclick="addRequestCustomer('${r.token}')">👤 Add as Customer</button>
+          </div>
+        </div>
+        ${msgHtml}
+        ${photoHtml}
+        <div class="jd-card">
+          <div class="jd-card-title">Status</div>
+          <div class="jd-actions">
+            ${(r.status||'New')==='New'
+              ? `<button class="jd-action-btn" onclick="markRequest('${r.token}','Handled')">✓ Mark as Handled</button>`
+              : `<button class="jd-action-btn" onclick="markRequest('${r.token}','New')">↺ Mark as New</button>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  resetModalFooter();
+  document.querySelector('.modal-footer').innerHTML=`<button class="action-btn" onclick="closeModal()">Close</button>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function markRequest(token,status){
+  try{
+    await fetch(CONFIG.ESTIMATE_PORTAL_URL+'?action=requeststatus&token='+encodeURIComponent(token)+'&status='+status,{mode:'no-cors'});
+    const r=_requestsCache.find(x=>x.token===token); if(r) r.status=status;
+    updateRequestsBadge(); renderRequests();
+    showToast(status==='Handled'?'Marked as handled.':'Marked as new.','success');
+    if(status==='Handled') closeModal();
+  }catch(e){ showToast('Could not update status.','error'); }
+}
+
+// Pre-fill a new Quote from a request, then mark it handled
+function requestToQuote(token){
+  const r=_requestsCache.find(x=>x.token===token); if(!r) return;
+  closeModal();
+  navigate('quotes');
+  setTimeout(()=>{
+    openAddModal('Quotes');
+    setTimeout(()=>{
+      setField('Customer',r.name); setField('Address',r.address);
+      setField('Phone',r.phone); setField('Email',r.email);
+      setField('Service',r.services);
+      const notesEl=document.querySelector('[name="Notes"]'); if(notesEl&&r.message) notesEl.value='From website: '+r.message;
+      markRequestQuiet(token);
+    },150);
+  },150);
+}
+// Pre-fill a new Schedule job from a request
+function requestToJob(token){
+  const r=_requestsCache.find(x=>x.token===token); if(!r) return;
+  closeModal();
+  navigate('schedule');
+  setTimeout(()=>{
+    openAddModal('Schedule');
+    setTimeout(()=>{
+      setField('Customer',r.name); setField('Address',r.address);
+      setField('Phone',r.phone); setField('Service',r.services);
+      const notesEl=document.querySelector('[name="Notes"]'); if(notesEl&&r.message) notesEl.value='From website: '+r.message;
+      markRequestQuiet(token);
+    },150);
+  },150);
+}
+function addRequestCustomer(token){
+  const r=_requestsCache.find(x=>x.token===token); if(!r) return;
+  closeModal();
+  navigate('customers');
+  setTimeout(()=>{
+    openAddModal('Customers');
+    setTimeout(()=>{
+      setField('Name',r.name); setField('Phone',r.phone); setField('Email',r.email); setField('Address',r.address);
+      markRequestQuiet(token);
+    },150);
+  },150);
+}
+function setField(name,val){ const el=document.querySelector(`[name="${name}"]`); if(el&&val!=null) el.value=val; }
+// mark handled without closing the (already closed) modal
+async function markRequestQuiet(token){
+  try{ await fetch(CONFIG.ESTIMATE_PORTAL_URL+'?action=requeststatus&token='+encodeURIComponent(token)+'&status=Handled',{mode:'no-cors'});
+    const r=_requestsCache.find(x=>x.token===token); if(r) r.status='Handled'; updateRequestsBadge();
+  }catch(e){}
+}
+
 
 // ── JOB TIMER ── (timestamp-based, so it survives closing the tab)
 let _jobTimerInterval=null;
