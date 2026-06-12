@@ -102,6 +102,19 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 .qb-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
 .quote-box .btn{width:100%;justify-content:center;margin-top:0.5rem;}
 .qb-note{font-size:0.8rem;color:var(--slate);text-align:center;margin-top:1rem;}
+.svc-checks{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+.svc-check{display:flex;align-items:center;gap:0.55rem;font-size:0.92rem;color:var(--ink);background:var(--mist);border:1.5px solid var(--line);border-radius:10px;padding:0.6rem 0.8rem;cursor:pointer;transition:border-color .15s, background .15s;font-weight:500;}
+.svc-check:hover{border-color:var(--spray);}
+.svc-check input{width:auto;accent-color:var(--spray);cursor:pointer;flex-shrink:0;}
+.svc-check:has(input:checked){border-color:var(--spray);background:rgba(25,197,219,0.08);}
+.photo-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;border:2px dashed var(--line);border-radius:14px;padding:1.6rem 1rem;cursor:pointer;text-align:center;transition:border-color .15s, background .15s;background:var(--mist);}
+.photo-drop:hover{border-color:var(--spray);background:rgba(25,197,219,0.05);}
+.photo-icon{font-size:1.8rem;}
+.photo-text{font-size:0.88rem;color:var(--slate);font-weight:500;}
+.photo-list{display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:0.8rem;}
+.photo-thumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line);}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-thumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(7,54,64,0.85);color:#fff;border:none;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
 @media(max-width:860px){.contact-inner{grid-template-columns:1fr;gap:2.5rem;}}
 @media(max-width:560px){.qb-row{grid-template-columns:1fr;}}
 
@@ -119,7 +132,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
       <a href="/about/">About</a>
       <a href="/work/">Our Work</a>
       <a href="/contact/" class="active">Contact</a>
-      <a href="/estimate" class="navquote">Free Quote</a>
+      <a href="/contact/" class="navquote">Free Quote</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
@@ -140,8 +153,26 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
     <div class="field"><label>Your Name *</label><input type="text" id="f-name" placeholder="Jane Smith"></div>
     <div class="qb-row"><div class="field"><label>Phone *</label><input type="tel" id="f-phone" placeholder="(609) 555-0000"></div><div class="field"><label>Email</label><input type="email" id="f-email" placeholder="you@email.com"></div></div>
     <div class="field"><label>Property Address</label><input type="text" id="f-address" placeholder="Street, City"></div>
-    <div class="field"><label>Service Needed</label><select id="f-service"><option>House / Exterior Wash</option><option>Driveway / Concrete</option><option>Deck / Patio</option><option>Fence Washing</option><option>Gutter Cleaning</option><option>Roof Soft Wash</option><option>Multiple / Not sure</option></select></div>
+    <div class="field"><label>Services Needed <span style="font-weight:400;color:var(--slate)">(check all that apply)</span></label>
+      <div class="svc-checks">
+        <label class="svc-check"><input type="checkbox" value="House / Exterior Wash"> House / Exterior Wash</label>
+        <label class="svc-check"><input type="checkbox" value="Driveway / Concrete"> Driveway / Concrete</label>
+        <label class="svc-check"><input type="checkbox" value="Deck / Patio"> Deck / Patio</label>
+        <label class="svc-check"><input type="checkbox" value="Fence Washing"> Fence Washing</label>
+        <label class="svc-check"><input type="checkbox" value="Gutter Cleaning"> Gutter Cleaning</label>
+        <label class="svc-check"><input type="checkbox" value="Roof Soft Wash"> Roof Soft Wash</label>
+        <label class="svc-check"><input type="checkbox" value="Not sure / Other"> Not sure / Other</label>
+      </div>
+    </div>
     <div class="field"><label>Message</label><textarea id="f-message" placeholder="Tell us a bit about what you need cleaned..."></textarea></div>
+    <div class="field"><label>Photos <span style="font-weight:400;color:var(--slate)">(optional — helps us quote faster)</span></label>
+      <label class="photo-drop" id="photoDrop">
+        <input type="file" id="f-photos" accept="image/*" multiple capture="environment" style="display:none;">
+        <span class="photo-icon">📷</span>
+        <span class="photo-text">Tap to add photos from your camera or library</span>
+      </label>
+      <div id="photoList" class="photo-list"></div>
+    </div>
     <a href="#" class="btn btn-primary" id="quoteSubmit">Send My Request →</a>
     <p class="qb-note">Prefer to talk? Call or text <a href="tel:6095451018" style="color:var(--ocean);font-weight:700;">(609) 545-1018</a></p>
   </div>
@@ -171,7 +202,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 const header=document.getElementById('header');
 const isInner=document.body.classList.contains('inner');
 function onScroll(){header.classList.toggle('scrolled',window.scrollY>40);}
-if(!isInner) window.addEventListener('scroll',onScroll);
+window.addEventListener("scroll",onScroll);onScroll();
 const navToggle=document.getElementById('navToggle'),navLinks=document.getElementById('navLinks');
 navToggle.addEventListener('click',()=>navLinks.classList.toggle('open'));
 navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
@@ -179,16 +210,43 @@ const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullY
 const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
 document.querySelectorAll('.reveal-up').forEach((el,i)=>{el.style.transitionDelay=(i%3*0.08)+'s';io.observe(el);});
 
+// Photo previews (visual confirmation for the customer)
+let selectedPhotos=[];
+const photoInput=document.getElementById('f-photos');
+const photoList=document.getElementById('photoList');
+if(photoInput){
+  photoInput.addEventListener('change',function(){
+    for(const file of this.files){
+      if(!file.type.startsWith('image/'))continue;
+      selectedPhotos.push(file);
+    }
+    renderPhotos();
+  });
+}
+function renderPhotos(){
+  photoList.innerHTML='';
+  selectedPhotos.forEach((file,idx)=>{
+    const url=URL.createObjectURL(file);
+    const div=document.createElement('div');
+    div.className='photo-thumb';
+    div.innerHTML=`<img src="${url}" alt="photo"><button class="rm" title="Remove">×</button>`;
+    div.querySelector('.rm').addEventListener('click',(e)=>{e.preventDefault();selectedPhotos.splice(idx,1);renderPhotos();});
+    photoList.appendChild(div);
+  });
+}
+
 document.getElementById('quoteSubmit').addEventListener('click',function(e){
   e.preventDefault();
   const name=document.getElementById('f-name').value.trim();
   const phone=document.getElementById('f-phone').value.trim();
   const email=document.getElementById('f-email').value.trim();
   const address=document.getElementById('f-address').value.trim();
-  const service=document.getElementById('f-service').value;
+  const services=Array.from(document.querySelectorAll('.svc-check input:checked')).map(c=>c.value);
   const message=document.getElementById('f-message').value.trim();
   if(!name||!phone){alert('Please add your name and phone so we can reach you.');return;}
-  const body=`New quote request from the website:%0D%0A%0D%0AName: ${encodeURIComponent(name)}%0D%0APhone: ${encodeURIComponent(phone)}%0D%0AEmail: ${encodeURIComponent(email)}%0D%0AAddress: ${encodeURIComponent(address)}%0D%0AService: ${encodeURIComponent(service)}%0D%0A%0D%0A${encodeURIComponent(message)}`;
+  const svcText=services.length?services.join(', '):'Not specified';
+  const photoNote=selectedPhotos.length?`%0D%0A%0D%0A(${selectedPhotos.length} photo${selectedPhotos.length>1?'s':''} selected — please attach them to this email before sending, or text them to 609-545-1018.)`:'';
+  const body=`New quote request from the website:%0D%0A%0D%0AName: ${encodeURIComponent(name)}%0D%0APhone: ${encodeURIComponent(phone)}%0D%0AEmail: ${encodeURIComponent(email)}%0D%0AAddress: ${encodeURIComponent(address)}%0D%0AServices: ${encodeURIComponent(svcText)}%0D%0A%0D%0A${encodeURIComponent(message)}${photoNote}`;
   window.location.href=`mailto:jamesfreeman8000@gmail.com?subject=${encodeURIComponent('Free Quote Request — '+name)}&body=${body}`;
 });
 
