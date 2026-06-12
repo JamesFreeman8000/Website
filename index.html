@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hydro Pressure Washing — Exterior Cleaning in South Jersey</title>
+<meta name="description" content="Professional pressure washing and soft wash in South Jersey. House washing, driveways, decks, fences, gutters, and roof soft wash. Licensed, insured, free estimates.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ocean:#0B4F5C;--ocean-deep:#073640;--spray:#19C5DB;--spray-soft:#7FE3EF;
+  --sand:#F5B841;--sand-deep:#e0a52d;--ink:#0c2126;--slate:#5a7077;--mist:#f3f8f9;--white:#ffffff;--line:rgba(11,79,92,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--white);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+h1,h2,h3,.display{font-family:'Archivo',sans-serif;line-height:1.05;letter-spacing:-0.02em;}
+a{color:inherit;text-decoration:none;}
+.wrap{max-width:1180px;margin:0 auto;padding:0 1.5rem;}
+.btn{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Archivo',sans-serif;font-weight:700;font-size:1rem;padding:0.95rem 1.7rem;border-radius:100px;cursor:pointer;border:none;transition:transform .15s ease, box-shadow .15s ease;white-space:nowrap;}
+.btn-primary{background:var(--sand);color:var(--ocean-deep);box-shadow:0 8px 24px -8px rgba(245,184,65,0.7);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -8px rgba(245,184,65,0.8);}
+.btn-ghost{background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.4);backdrop-filter:blur(4px);}
+.btn-ghost:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px);}
+.btn-dark{background:var(--ocean);color:#fff;box-shadow:0 8px 24px -10px rgba(11,79,92,0.6);}
+.btn-dark:hover{transform:translateY(-2px);box-shadow:0 14px 30px -10px rgba(11,79,92,0.7);}
+header{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .3s ease;padding:1.1rem 0;}
+header.scrolled,header.solid{background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);box-shadow:0 4px 20px -8px rgba(11,79,92,0.15);padding:0.7rem 0;}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;}
+.logo{display:flex;align-items:center;gap:0.6rem;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.35rem;color:#fff;letter-spacing:-0.03em;transition:color .3s;}
+header.scrolled .logo,header.solid .logo{color:var(--ocean);}
+.logo-drop{width:34px;height:34px;flex-shrink:0;}
+.nav-links{display:flex;align-items:center;gap:1.8rem;margin-left:auto;}
+.nav-links a{font-weight:600;font-size:0.95rem;color:rgba(255,255,255,0.9);transition:color .2s;}
+.nav-links a:hover,.nav-links a.active{color:#fff;}
+header.scrolled .nav-links a,header.solid .nav-links a{color:var(--slate);}
+header.scrolled .nav-links a:hover,header.scrolled .nav-links a.active,header.solid .nav-links a:hover,header.solid .nav-links a.active{color:var(--ocean);}
+.nav-links a.navquote{color:var(--ocean-deep)!important;background:var(--sand);padding:0.55rem 1.2rem;border-radius:100px;font-family:'Archivo',sans-serif;font-weight:700;box-shadow:0 6px 18px -6px rgba(245,184,65,0.7);}
+.nav-links a.navquote:hover{transform:translateY(-2px);}
+.nav-toggle{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:6px;}
+.nav-toggle span{width:26px;height:2.5px;background:#fff;border-radius:2px;transition:all .3s;}
+header.scrolled .nav-toggle span,header.solid .nav-toggle span{background:var(--ocean);}
+section{padding:6rem 0;}
+.sec-head{text-align:center;max-width:42rem;margin:0 auto 3.5rem;}
+.sec-eyebrow{display:inline-block;color:var(--spray);font-family:'Archivo',sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.9rem;}
+.sec-head h2{font-size:clamp(2rem,4vw,2.9rem);font-weight:800;color:var(--ocean);margin-bottom:1rem;}
+.sec-head p{font-size:1.12rem;color:var(--slate);}
+.reveal-up{opacity:0;transform:translateY(30px);transition:opacity .6s ease, transform .6s ease;}
+.reveal-up.in{opacity:1;transform:translateY(0);}
+/* page hero (inner pages) */
+.page-hero{position:relative;background:linear-gradient(135deg,var(--ocean-deep) 0%,var(--ocean) 60%,#0a6577 100%);color:#fff;padding:9rem 0 4.5rem;overflow:hidden;text-align:center;}
+.page-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 75% 25%, rgba(25,197,219,0.22), transparent 45%);}
+.page-hero .eyebrow2{display:inline-block;color:var(--spray-soft);font-family:'Archivo',sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:1rem;position:relative;}
+.page-hero h1{font-size:clamp(2.4rem,5vw,3.8rem);font-weight:900;position:relative;margin-bottom:1rem;}
+.page-hero p{font-size:1.18rem;color:rgba(255,255,255,0.82);max-width:36rem;margin:0 auto;position:relative;}
+/* footer */
+footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
+.foot-inner{display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap;}
+.foot-logo{display:flex;align-items:center;gap:0.6rem;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.3rem;color:#fff;}
+.foot-links{display:flex;gap:1.8rem;flex-wrap:wrap;}
+.foot-links a{font-size:0.92rem;transition:color .2s;}
+.foot-links a:hover{color:var(--spray);}
+.foot-bottom{text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.1);font-size:0.85rem;color:rgba(255,255,255,0.5);}
+.admin-link{color:rgba(255,255,255,0.4);font-size:0.82rem;}
+.admin-link:hover{color:var(--spray);}
+.cta-banner{background:linear-gradient(120deg,var(--sand),var(--sand-deep));color:var(--ocean-deep);border-radius:28px;padding:3.5rem 3rem;text-align:center;position:relative;overflow:hidden;}
+.cta-banner::before{content:"💧";position:absolute;font-size:13rem;opacity:0.12;right:-1rem;top:-2rem;transform:rotate(15deg);}
+.cta-banner h2{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;margin-bottom:0.8rem;position:relative;}
+.cta-banner p{font-size:1.15rem;margin-bottom:1.8rem;font-weight:500;position:relative;}
+.cta-banner .btn-dark{position:relative;}
+@media(max-width:860px){
+  .nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;flex-direction:column;padding:1.5rem;gap:1.2rem;box-shadow:0 10px 30px -10px rgba(0,0,0,0.2);margin-left:0;}
+  .nav-links.open{display:flex;}
+  .nav-links a{color:var(--slate)!important;}
+  .nav-links a.navquote{color:var(--ocean-deep)!important;text-align:center;}
+  .nav-toggle{display:flex;}
+}
+@media(max-width:560px){section{padding:4rem 0;}.cta-banner{padding:2.5rem 1.5rem;}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.reveal-up{opacity:1;transform:none;}}
+
+
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;background:linear-gradient(135deg,var(--ocean-deep) 0%,var(--ocean) 55%,#0a6577 100%);color:#fff;overflow:hidden;padding:7rem 0 4rem;}
+.hero-bg{position:absolute;inset:0;overflow:hidden;}
+.hero-bg::before{content:"";position:absolute;width:140%;height:140%;top:-20%;left:-20%;background:radial-gradient(circle at 70% 30%, rgba(25,197,219,0.25), transparent 45%),radial-gradient(circle at 20% 80%, rgba(127,227,239,0.12), transparent 40%);}
+.drop{position:absolute;border-radius:50% 50% 50% 0;background:linear-gradient(135deg,rgba(127,227,239,0.18),rgba(25,197,219,0.06));transform:rotate(45deg);animation:float 7s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:rotate(45deg) translateY(0);}50%{transform:rotate(45deg) translateY(-22px);}}
+.hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1.15fr 0.85fr;gap:3rem;align-items:center;width:100%;}
+.eyebrow{display:inline-flex;align-items:center;gap:0.6rem;background:rgba(25,197,219,0.18);border:1px solid rgba(25,197,219,0.35);color:var(--spray-soft);font-weight:600;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.5rem 1rem;border-radius:100px;margin-bottom:1.6rem;}
+.hero h1{font-size:clamp(2.6rem,5.5vw,4.4rem);font-weight:900;margin-bottom:1.3rem;}
+.hero h1 .accent{color:var(--spray);display:block;}
+.hero-sub{font-size:1.2rem;color:rgba(255,255,255,0.82);max-width:32rem;margin-bottom:2.2rem;}
+.hero-cta{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2.4rem;}
+.hero-trust{display:flex;gap:1.8rem;flex-wrap:wrap;}
+.trust-item{display:flex;align-items:center;gap:0.55rem;font-size:0.92rem;color:rgba(255,255,255,0.85);font-weight:500;}
+.trust-item svg{flex-shrink:0;color:var(--spray);}
+.reveal-card{position:relative;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(0,0,0,0.5);aspect-ratio:4/5;background:#0a3d47;border:1px solid rgba(255,255,255,0.12);}
+.reveal-side{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:1.5rem;}
+.reveal-dirty{background:linear-gradient(160deg,#6b6e5f,#4a4d42 60%,#3a3d34);}
+.reveal-dirty::after,.reveal-clean::after{content:"";position:absolute;inset:0;opacity:0.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");}
+.reveal-clean{background:linear-gradient(160deg,#2aa7c4,#1789a8 55%,#0a6577);clip-path:polygon(0 0,58% 0,48% 100%,0 100%);transition:clip-path .1s;}
+.reveal-clean::after{opacity:0.15;}
+.reveal-label{position:absolute;bottom:1.3rem;z-index:5;font-family:'Archivo',sans-serif;font-weight:800;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.9rem;border-radius:100px;color:#fff;backdrop-filter:blur(4px);}
+.reveal-label.bef{left:1.3rem;}
+.reveal-label.aft{right:1.3rem;}
+.reveal-divider{position:absolute;top:0;bottom:0;left:58%;width:3px;background:#fff;z-index:3;cursor:ew-resize;box-shadow:0 0 12px rgba(255,255,255,0.6);}
+.reveal-handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:#fff;z-index:4;display:flex;align-items:center;justify-content:center;color:var(--ocean);box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:ew-resize;font-size:1.1rem;}
+.reveal-hint{position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);z-index:4;font-size:0.72rem;color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.3);padding:0.3rem 0.8rem;border-radius:100px;backdrop-filter:blur(4px);white-space:nowrap;}
+.services{background:var(--mist);}
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;}
+.svc-card{background:#fff;border-radius:20px;padding:2rem 1.8rem;border:1px solid var(--line);transition:transform .2s ease, box-shadow .2s ease;position:relative;overflow:hidden;}
+.svc-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:4px;background:linear-gradient(90deg,var(--spray),var(--spray-soft));transform:scaleX(0);transform-origin:left;transition:transform .3s ease;}
+.svc-card:hover{transform:translateY(-6px);box-shadow:0 20px 45px -18px rgba(11,79,92,0.3);}
+.svc-card:hover::before{transform:scaleX(1);}
+.svc-card.link-card{cursor:pointer;}
+.svc-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--ocean),#0a6577);display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin-bottom:1.2rem;}
+.svc-card h3{font-size:1.3rem;font-weight:700;color:var(--ocean);margin-bottom:0.6rem;}
+.svc-card p{font-size:0.97rem;color:var(--slate);}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4rem;}
+.why-card{text-align:center;padding:1.5rem 1rem;}
+.why-icon{width:70px;height:70px;margin:0 auto 1.1rem;border-radius:18px;background:var(--mist);display:flex;align-items:center;justify-content:center;font-size:2rem;border:1px solid var(--line);}
+.why-card h3{font-size:1.12rem;color:var(--ocean);margin-bottom:0.4rem;font-weight:700;}
+.why-card p{font-size:0.92rem;color:var(--slate);}
+.process{background:var(--mist);}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;}
+.step-num{font-family:'Archivo',sans-serif;font-weight:900;font-size:3.2rem;color:var(--spray);opacity:0.35;line-height:1;margin-bottom:0.5rem;}
+.step h3{font-size:1.25rem;color:var(--ocean);margin-bottom:0.5rem;font-weight:700;}
+.step p{color:var(--slate);font-size:0.98rem;}
+@media(max-width:900px){.hero-inner{grid-template-columns:1fr;gap:2.5rem;}.reveal-card{max-width:380px;margin:0 auto;width:100%;}.svc-grid{grid-template-columns:repeat(2,1fr);}.why-grid{grid-template-columns:repeat(2,1fr);}.steps{grid-template-columns:1fr;gap:1.5rem;}}
+@media(max-width:560px){.svc-grid,.why-grid{grid-template-columns:1fr;}.hero-trust{gap:1rem;}}
+
+</style>
+</head>
+<body><header id="header">
+  <div class="wrap nav">
+    <a href="/" class="logo">
+      <svg class="logo-drop" viewBox="0 0 40 40" fill="none"><path d="M20 3C20 3 7 18 7 27a13 13 0 0 0 26 0C33 18 20 3 20 3Z" fill="url(#lg)"/><defs><linearGradient id="lg" x1="7" y1="3" x2="33" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#7FE3EF"/><stop offset="1" stop-color="#19C5DB"/></linearGradient></defs></svg>
+      Hydro
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="/" class="active">Home</a>
+      <a href="/services/">Services</a>
+      <a href="/about/">About</a>
+      <a href="/work/">Our Work</a>
+      <a href="/contact/">Contact</a>
+      <a href="/estimate" class="navquote">Free Quote</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+<section class="hero">
+  <div class="hero-bg"><div class="drop" style="width:120px;height:120px;top:15%;left:8%;"></div><div class="drop" style="width:70px;height:70px;top:60%;left:14%;animation-delay:1.5s;"></div><div class="drop" style="width:90px;height:90px;top:30%;right:38%;animation-delay:3s;"></div></div>
+  <div class="wrap hero-inner">
+    <div>
+      <span class="eyebrow">💧 South Jersey's Exterior Cleaning Pros</span>
+      <h1>Bring Your Home <span class="accent">Back to New.</span></h1>
+      <p class="hero-sub">Professional pressure washing and gentle soft wash that strips away years of dirt, mold, and grime — safely. Driveways, siding, decks, roofs, and more.</p>
+      <div class="hero-cta">
+        <a href="/estimate" class="btn btn-primary">Get a Free Quote →</a>
+        <a href="tel:6095451018" class="btn btn-ghost">📞 Call or Text</a>
+      </div>
+      <div class="hero-trust">
+        <div class="trust-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Licensed &amp; Insured</div>
+        <div class="trust-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Free Estimates</div>
+        <div class="trust-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Satisfaction Guaranteed</div>
+      </div>
+    </div>
+    <div>
+      <div class="reveal-card" id="revealCard">
+        <div class="reveal-side reveal-dirty"></div>
+        <div class="reveal-side reveal-clean" id="revealClean"></div>
+        <span class="reveal-label bef" style="background:rgba(10,101,119,0.8)">After</span>
+        <span class="reveal-label aft" style="background:rgba(60,55,40,0.7)">Before</span>
+        <div class="reveal-hint">⟵ Drag to reveal ⟶</div>
+        <div class="reveal-divider" id="revealDivider"><div class="reveal-handle">⇄</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="sec-head reveal-up"><span class="sec-eyebrow">What We Clean</span><h2>Every Surface, Done Right</h2><p>From a full house wash to a stubborn driveway, we use the right method for each surface — never one-size-fits-all.</p></div>
+    <div class="svc-grid"><a href="/services/" class="svc-card link-card reveal-up"><div class="svc-icon">🏠</div><h3>House &amp; Exterior Wash</h3><p>Soft wash siding, brick, stucco, and vinyl that lifts mold and mildew without damaging your home.</p></a><a href="/services/" class="svc-card link-card reveal-up"><div class="svc-icon">🚗</div><h3>Driveway &amp; Concrete</h3><p>Blast away oil stains, dirt, and algae from driveways, walkways, and patios for a like-new finish.</p></a><a href="/services/" class="svc-card link-card reveal-up"><div class="svc-icon">🪵</div><h3>Deck &amp; Patio</h3><p>Restore wood and composite decks and patios — gentle cleaning that protects the surface.</p></a><a href="/services/" class="svc-card link-card reveal-up"><div class="svc-icon">🧱</div><h3>Fence Washing</h3><p>Wood and vinyl fences cleaned to remove green algae, grime, and weathering buildup.</p></a><a href="/services/" class="svc-card link-card reveal-up"><div class="svc-icon">🍂</div><h3>Gutter Cleaning</h3><p>Clear clogged gutters and brighten the exterior face so water flows and your home looks sharp.</p></a><a href="/services/" class="svc-card link-card reveal-up"><div class="svc-icon">🏡</div><h3>Roof Soft Wash</h3><p>Safely remove black streaks and moss with a low-pressure soft wash that won't harm shingles.</p></a></div>
+    <div style="text-align:center;margin-top:2.5rem;"><a href="/services/" class="btn btn-dark">See All Services →</a></div>
+  </div>
+</section>
+<section class="why" id="why">
+  <div class="wrap">
+    <div class="sec-head reveal-up"><span class="sec-eyebrow">Why Hydro</span><h2>Local, Reliable, Done Right</h2><p>You'll know what it's going to cost before we start — no surprises, no pressure.</p></div>
+    <div class="why-grid">
+      <div class="why-card reveal-up"><div class="why-icon">🛡️</div><h3>Licensed &amp; Insured</h3><p>Fully covered, so your property is protected on every job.</p></div>
+      <div class="why-card reveal-up"><div class="why-icon">💬</div><h3>Upfront Pricing</h3><p>Free, clear estimates before any work begins.</p></div>
+      <div class="why-card reveal-up"><div class="why-icon">📍</div><h3>South Jersey Local</h3><p>Proudly serving homeowners across South Jersey.</p></div>
+      <div class="why-card reveal-up"><div class="why-icon">⭐</div><h3>Satisfaction First</h3><p>We're not done until your property looks its best.</p></div>
+    </div>
+  </div>
+</section>
+<section class="process">
+  <div class="wrap">
+    <div class="sec-head reveal-up"><span class="sec-eyebrow">How It Works</span><h2>Three Simple Steps</h2></div>
+    <div class="steps">
+      <div class="step reveal-up"><div class="step-num">01</div><h3>Get Your Free Quote</h3><p>Tell us what you need cleaned. We'll give you a clear price before we start — no obligation.</p></div>
+      <div class="step reveal-up"><div class="step-num">02</div><h3>We Get to Work</h3><p>We show up on time with the right method for each surface and treat your property with care.</p></div>
+      <div class="step reveal-up"><div class="step-num">03</div><h3>Enjoy the Results</h3><p>Step back and see the difference. If you're not thrilled, we'll make it right.</p></div>
+    </div>
+  </div>
+</section>
+<section style="padding-top:0;"><div class="wrap"><div class="cta-banner reveal-up"><h2>Ready to See Your Home Transformed?</h2><p>Free estimates. Honest pricing. Serving all of South Jersey.</p><a href="/contact/" class="btn btn-dark">Get My Free Quote →</a></div></div></section>
+<footer>
+  <div class="wrap">
+    <div class="foot-inner">
+      <div class="foot-logo">
+        <svg class="logo-drop" viewBox="0 0 40 40" fill="none"><path d="M20 3C20 3 7 18 7 27a13 13 0 0 0 26 0C33 18 20 3 20 3Z" fill="url(#lg2)"/><defs><linearGradient id="lg2" x1="7" y1="3" x2="33" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#7FE3EF"/><stop offset="1" stop-color="#19C5DB"/></linearGradient></defs></svg>
+        Hydro Pressure Washing
+      </div>
+      <div class="foot-links">
+        <a href="/">Home</a>
+        <a href="/services/">Services</a>
+        <a href="/about/">About</a>
+        <a href="/work/">Our Work</a>
+        <a href="/contact/">Contact</a>
+        <a href="tel:6095451018">(609) 545-1018</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      © <span id="year"></span> Hydro Pressure Washing · South Jersey · Licensed &amp; Insured
+      &nbsp;·&nbsp; <a href="/admin" class="admin-link">Owner Login</a>
+    </div>
+  </div>
+</footer><script>
+const header=document.getElementById('header');
+const isInner=document.body.classList.contains('inner');
+function onScroll(){header.classList.toggle('scrolled',window.scrollY>40);}
+if(!isInner) window.addEventListener('scroll',onScroll);
+const navToggle=document.getElementById('navToggle'),navLinks=document.getElementById('navLinks');
+navToggle.addEventListener('click',()=>navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
+const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
+document.querySelectorAll('.reveal-up').forEach((el,i)=>{el.style.transitionDelay=(i%3*0.08)+'s';io.observe(el);});
+
+(function(){
+  const card=document.getElementById('revealCard'),clean=document.getElementById('revealClean'),divider=document.getElementById('revealDivider');
+  if(!card)return; let dragging=false;
+  function setPos(x){const rect=card.getBoundingClientRect();let pct=((x-rect.left)/rect.width)*100;pct=Math.max(4,Math.min(96,pct));clean.style.clipPath=`polygon(0 0,${pct}% 0,${pct-10}% 100%,0 100%)`;divider.style.left=pct+'%';}
+  const start=()=>dragging=true,end=()=>dragging=false;
+  const move=(e)=>{if(!dragging)return;const x=e.touches?e.touches[0].clientX:e.clientX;setPos(x);};
+  divider.addEventListener('mousedown',start);window.addEventListener('mouseup',end);window.addEventListener('mousemove',move);
+  divider.addEventListener('touchstart',start,{passive:true});window.addEventListener('touchend',end);window.addEventListener('touchmove',move,{passive:true});
+  card.addEventListener('click',(e)=>{if(e.target.closest('.reveal-divider'))return;setPos(e.clientX);});
+})();
+
+</script>
+</body>
+</html>
