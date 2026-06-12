@@ -100,7 +100,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 .reveal-side{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:1.5rem;}
 .reveal-dirty{background:linear-gradient(160deg,#6b6e5f,#4a4d42 60%,#3a3d34);}
 .reveal-dirty::after,.reveal-clean::after{content:"";position:absolute;inset:0;opacity:0.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");}
-.reveal-clean{background:linear-gradient(160deg,#2aa7c4,#1789a8 55%,#0a6577);clip-path:polygon(0 0,58% 0,48% 100%,0 100%);transition:clip-path .1s;}
+.reveal-clean{background:linear-gradient(160deg,#2aa7c4,#1789a8 55%,#0a6577);clip-path:polygon(0 0,58% 0,58% 100%,0 100%);transition:clip-path .1s;}
 .reveal-clean::after{opacity:0.15;}
 .reveal-label{position:absolute;bottom:1.3rem;z-index:5;font-family:'Archivo',sans-serif;font-weight:800;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.9rem;border-radius:100px;color:#fff;backdrop-filter:blur(4px);}
 .reveal-label.bef{left:1.3rem;}
@@ -159,7 +159,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
       <p class="hero-sub">Professional pressure washing and gentle soft wash that strips away years of dirt, mold, and grime — safely. Driveways, siding, decks, roofs, and more.</p>
       <div class="hero-cta">
         <a href="/contact/" class="btn btn-primary">Get a Free Quote →</a>
-        <a href="tel:6095451018" class="btn btn-ghost">📞 Call or Text</a>
+        <a href="sms:6095451018?&body=Hi%20Hydro%2C%20I%27d%20like%20a%20free%20quote%20for..." class="btn btn-ghost">💬 Text Us</a>
       </div>
       <div class="hero-trust">
         <div class="trust-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Licensed &amp; Insured</div>
@@ -233,7 +233,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 const header=document.getElementById('header');
 const isInner=document.body.classList.contains('inner');
 function onScroll(){header.classList.toggle('scrolled',window.scrollY>40);}
-if(!isInner) window.addEventListener('scroll',onScroll);
+window.addEventListener("scroll",onScroll);onScroll();
 const navToggle=document.getElementById('navToggle'),navLinks=document.getElementById('navLinks');
 navToggle.addEventListener('click',()=>navLinks.classList.toggle('open'));
 navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
@@ -244,7 +244,7 @@ document.querySelectorAll('.reveal-up').forEach((el,i)=>{el.style.transitionDela
 (function(){
   const card=document.getElementById('revealCard'),clean=document.getElementById('revealClean'),divider=document.getElementById('revealDivider');
   if(!card)return; let dragging=false;
-  function setPos(x){const rect=card.getBoundingClientRect();let pct=((x-rect.left)/rect.width)*100;pct=Math.max(4,Math.min(96,pct));clean.style.clipPath=`polygon(0 0,${pct}% 0,${pct-10}% 100%,0 100%)`;divider.style.left=pct+'%';}
+  function setPos(x){const rect=card.getBoundingClientRect();let pct=((x-rect.left)/rect.width)*100;pct=Math.max(4,Math.min(96,pct));clean.style.clipPath=`polygon(0 0,${pct}% 0,${pct}% 100%,0 100%)`;divider.style.left=pct+'%';}
   const start=()=>dragging=true,end=()=>dragging=false;
   const move=(e)=>{if(!dragging)return;const x=e.touches?e.touches[0].clientX:e.clientX;setPos(x);};
   divider.addEventListener('mousedown',start);window.addEventListener('mouseup',end);window.addEventListener('mousemove',move);
