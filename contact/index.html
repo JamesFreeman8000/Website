@@ -103,7 +103,10 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 .quote-box .btn{width:100%;justify-content:center;margin-top:0.5rem;}
 .qb-note{font-size:0.8rem;color:var(--slate);text-align:center;margin-top:1rem;}
 .svc-checks{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
-.svc-group-label{font-family:'Archivo',sans-serif;font-weight:700;font-size:0.85rem;color:var(--ocean);margin-bottom:0.6rem;letter-spacing:0.02em;}
+.svc-toggle{display:flex;gap:0.5rem;margin-bottom:0.9rem;background:var(--mist);padding:0.3rem;border-radius:12px;border:1px solid var(--line);}
+.svc-toggle-btn{flex:1;padding:0.6rem 1rem;border:none;background:none;border-radius:9px;font-family:'Archivo',sans-serif;font-weight:700;font-size:0.92rem;color:var(--slate);cursor:pointer;transition:all .18s;}
+.svc-toggle-btn.active{background:#fff;color:var(--ocean);box-shadow:0 2px 8px -3px rgba(11,79,92,0.25);}
+.svc-toggle-btn:hover:not(.active){color:var(--ocean);}
 .svc-check{display:flex;align-items:center;gap:0.55rem;font-size:0.92rem;color:var(--ink);background:var(--mist);border:1.5px solid var(--line);border-radius:10px;padding:0.6rem 0.8rem;cursor:pointer;transition:border-color .15s, background .15s;font-weight:500;}
 .svc-check:hover{border-color:var(--spray);}
 .svc-check input{width:auto;accent-color:var(--spray);cursor:pointer;flex-shrink:0;}
@@ -166,8 +169,11 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
     <div class="qb-row"><div class="field"><label>Phone *</label><input type="tel" id="f-phone" placeholder="(609) 555-0000"></div><div class="field"><label>Email</label><input type="email" id="f-email" placeholder="you@email.com"></div></div>
     <div class="field"><label>Property Address</label><input type="text" id="f-address" placeholder="Street, City"></div>
     <div class="field"><label>Services Needed <span style="font-weight:400;color:var(--slate)">(check all that apply)</span></label>
-      <div class="svc-group-label">🏠 Residential</div>
-      <div class="svc-checks">
+      <div class="svc-toggle">
+        <button type="button" class="svc-toggle-btn active" id="tgl-res" onclick="setSvcType('res')">🏠 Residential</button>
+        <button type="button" class="svc-toggle-btn" id="tgl-com" onclick="setSvcType('com')">🏢 Commercial</button>
+      </div>
+      <div class="svc-checks" id="svc-res">
         <label class="svc-check"><input type="checkbox" value="House / Exterior Wash"> House / Exterior Wash</label>
         <label class="svc-check"><input type="checkbox" value="Driveway / Concrete"> Driveway / Concrete</label>
         <label class="svc-check"><input type="checkbox" value="Deck / Patio"> Deck / Patio</label>
@@ -176,8 +182,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
         <label class="svc-check"><input type="checkbox" value="Roof Soft Wash"> Roof Soft Wash</label>
         <label class="svc-check"><input type="checkbox" value="Trash Bin Cleaning"> Trash Bin Cleaning</label>
       </div>
-      <div class="svc-group-label" style="margin-top:1rem;">🏢 Commercial</div>
-      <div class="svc-checks">
+      <div class="svc-checks" id="svc-com" style="display:none;">
         <label class="svc-check"><input type="checkbox" value="Storefront / Building Exterior"> Storefront / Building Exterior</label>
         <label class="svc-check"><input type="checkbox" value="Sidewalks / Walkways"> Sidewalks / Walkways</label>
         <label class="svc-check"><input type="checkbox" value="Dumpster Pad Cleaning"> Dumpster Pad Cleaning</label>
@@ -196,6 +201,8 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
       <div id="photoList" class="photo-list"></div>
     </div>
     <a href="#" class="btn btn-primary" id="quoteSubmit">Send My Request →</a>
+    <input type="text" id="f-company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;" aria-hidden="true">
+    <div id="formStatus" style="display:none;margin-top:1rem;padding:0.9rem 1rem;border-radius:12px;font-size:0.92rem;text-align:center;"></div>
     <p class="qb-note">Prefer to talk? Call or text <a href="tel:6095451018" style="color:var(--ocean);font-weight:700;">(609) 545-1018</a></p>
   </div>
 </div></section>
@@ -244,6 +251,22 @@ const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullY
 const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
 document.querySelectorAll('.reveal-up').forEach((el,i)=>{el.style.transitionDelay=(i%3*0.08)+'s';io.observe(el);});
 
+// Residential/Commercial toggle — residential is the default (95% of jobs)
+function setSvcType(type){
+  const res=document.getElementById('svc-res'), com=document.getElementById('svc-com');
+  const tRes=document.getElementById('tgl-res'), tCom=document.getElementById('tgl-com');
+  if(type==='com'){
+    com.style.display='grid'; res.style.display='none';
+    tCom.classList.add('active'); tRes.classList.remove('active');
+    // clear residential checks so hidden selections aren't submitted
+    res.querySelectorAll('input:checked').forEach(c=>c.checked=false);
+  } else {
+    res.style.display='grid'; com.style.display='none';
+    tRes.classList.add('active'); tCom.classList.remove('active');
+    com.querySelectorAll('input:checked').forEach(c=>c.checked=false);
+  }
+}
+
 // Photo previews (visual confirmation for the customer)
 let selectedPhotos=[];
 const photoInput=document.getElementById('f-photos');
@@ -269,8 +292,36 @@ function renderPhotos(){
   });
 }
 
-document.getElementById('quoteSubmit').addEventListener('click',function(e){
+// Where the form sends to (your Apps Script web app)
+const REQUEST_ENDPOINT="https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec";
+
+// Shrink a photo to a reasonable size before upload (phone photos are huge)
+function resizePhoto(file,maxDim){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      let{width:w,height:h}=img;
+      if(w>maxDim||h>maxDim){ if(w>h){h=Math.round(h*maxDim/w);w=maxDim;} else {w=Math.round(w*maxDim/h);h=maxDim;} }
+      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',0.75));
+    };
+    img.onerror=()=>resolve(null);
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+function showStatus(msg,ok){
+  const el=document.getElementById('formStatus');
+  el.style.display='block';
+  el.style.background=ok?'rgba(25,197,219,0.12)':'rgba(220,38,38,0.1)';
+  el.style.color=ok?'var(--ocean)':'#b91c1c';
+  el.innerHTML=msg;
+}
+
+document.getElementById('quoteSubmit').addEventListener('click',async function(e){
   e.preventDefault();
+  const btn=this;
   const name=document.getElementById('f-name').value.trim();
   const phone=document.getElementById('f-phone').value.trim();
   const email=document.getElementById('f-email').value.trim();
@@ -278,12 +329,40 @@ document.getElementById('quoteSubmit').addEventListener('click',function(e){
   const services=Array.from(document.querySelectorAll('.svc-check input:checked')).map(c=>c.value);
   const other=document.getElementById('f-other').value.trim();
   if(other) services.push('Other: '+other);
+  const svcType=document.getElementById('tgl-com').classList.contains('active')?'Commercial':'Residential';
   const message=document.getElementById('f-message').value.trim();
-  if(!name||!phone){alert('Please add your name and phone so we can reach you.');return;}
-  const svcText=services.length?services.join(', '):'Not specified';
-  const photoNote=selectedPhotos.length?`%0D%0A%0D%0A(${selectedPhotos.length} photo${selectedPhotos.length>1?'s':''} selected — please attach them to this email before sending, or text them to 609-545-1018.)`:'';
-  const body=`New quote request from the website:%0D%0A%0D%0AName: ${encodeURIComponent(name)}%0D%0APhone: ${encodeURIComponent(phone)}%0D%0AEmail: ${encodeURIComponent(email)}%0D%0AAddress: ${encodeURIComponent(address)}%0D%0AServices: ${encodeURIComponent(svcText)}%0D%0A%0D%0A${encodeURIComponent(message)}${photoNote}`;
-  window.location.href=`mailto:jamesfreeman8000@gmail.com?subject=${encodeURIComponent('Free Quote Request — '+name)}&body=${body}`;
+  const company=document.getElementById('f-company').value; // honeypot
+  if(!name||!phone){showStatus('Please add your name and phone so we can reach you.',false);return;}
+
+  btn.style.pointerEvents='none';btn.textContent='Sending...';
+  showStatus('📤 Sending your request'+(selectedPhotos.length?' and photos':'')+'...',true);
+
+  // Build a form body (form-encoded avoids CORS preflight)
+  const fd=new URLSearchParams();
+  fd.append('type','request');
+  fd.append('name',name);fd.append('phone',phone);fd.append('email',email);
+  fd.append('address',address);fd.append('reqType',svcType);
+  fd.append('services',services.length?services.join(', '):'Not specified');
+  fd.append('message',message);fd.append('company',company);
+  // resize + attach photos
+  for(let i=0;i<selectedPhotos.length && i<6;i++){
+    const dataUrl=await resizePhoto(selectedPhotos[i],1400);
+    if(dataUrl) fd.append('photo'+i,dataUrl);
+  }
+
+  try{
+    await fetch(REQUEST_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd.toString()});
+    // no-cors hides the response, so we optimistically confirm
+    showStatus('✅ Thanks, '+name+'! Your request is in — we\'ll get back to you soon. For anything urgent, call or text (609) 545-1018.',true);
+    btn.textContent='Request Sent ✓';
+    // reset the form fields
+    ['f-name','f-phone','f-email','f-address','f-other','f-message'].forEach(id=>document.getElementById(id).value='');
+    document.querySelectorAll('.svc-check input:checked').forEach(c=>c.checked=false);
+    selectedPhotos=[];renderPhotos();
+  }catch(err){
+    showStatus('Something went wrong sending your request. Please call or text us at (609) 545-1018 and we\'ll take care of you.',false);
+    btn.style.pointerEvents='auto';btn.textContent='Send My Request →';
+  }
 });
 
 </script>
