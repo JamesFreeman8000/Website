@@ -239,6 +239,9 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .jd-val{font-size:0.85rem;color:var(--text-main);}
 /* Wide Job Details popup */
 .jd-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.req-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:1.4rem;padding:0.25rem;}
+.req-grid .jd-card{padding:1.15rem 1.3rem;}
+@media(max-width:760px){.req-grid{grid-template-columns:1fr;}}
 .jd-col{display:flex;flex-direction:column;gap:1rem;}
 .jd-amount{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;color:#86efac;line-height:1;display:flex;align-items:baseline;gap:0.5rem;}
 .jd-amount-lbl{font-family:'Inter',sans-serif;font-size:0.7rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;}
@@ -1432,17 +1435,25 @@ let _requestsLoaded=false;
 async function loadRequests(force){
   try{
     const url=CONFIG.ESTIMATE_PORTAL_URL+'?action=listrequests&_t='+Date.now();
-    const res=await fetch(url);
-    const data=await res.json();
+    const res=await fetch(url,{redirect:'follow'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    let data;
+    try{ data=JSON.parse(text); }
+    catch(parseErr){
+      console.error('listrequests did not return JSON. First 200 chars:',text.slice(0,200));
+      throw new Error('Bad response (not JSON) — Apps Script may need redeploying.');
+    }
     _requestsCache=(data&&data.requests)?data.requests:[];
     _requestsLoaded=true;
     updateRequestsBadge();
     if(currentPage==='requests') renderRequests();
   }catch(e){
     console.error('loadRequests',e);
-    if(force) showToast('Could not load requests. Check your connection.','error');
+    _requestsLoaded=true; // so renderRequests shows the error state instead of re-looping
+    if(force) showToast('Could not load requests: '+e.message,'error');
     const body=document.getElementById('requests-body');
-    if(body&&currentPage==='requests') body.innerHTML=`<tr><td colspan="6" class="empty-state">Couldn't load requests. Tap Refresh to try again.</td></tr>`;
+    if(body&&currentPage==='requests') body.innerHTML=`<tr><td colspan="6" class="empty-state">Couldn't load requests.<br><span style="font-size:0.8rem">${e.message}</span><br>Tap ⟳ Refresh to retry.</td></tr>`;
   }
 }
 function updateRequestsBadge(){
@@ -1483,7 +1494,7 @@ function openRequest(token){
   document.getElementById('modal-title').textContent='Website Request';
   document.getElementById('modal').classList.add('modal-xl');
   document.getElementById('modal-body').innerHTML=`
-    <div class="jd-grid">
+    <div class="req-grid">
       <div class="jd-col">
         <div class="jd-card">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;">
@@ -1529,6 +1540,7 @@ function openRequest(token){
     </div>`;
   resetModalFooter();
   document.querySelector('.modal-footer').innerHTML=`<button class="action-btn" onclick="closeModal()">Close</button>`;
+  document.getElementById('modal').classList.add('modal-xl');
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
