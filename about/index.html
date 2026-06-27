@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About — Hydro Pressure Washing</title>
 <meta name="description" content="Hydro Pressure Washing is a locally owned exterior cleaning company serving South Jersey. Licensed, insured, and committed to honest pricing.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -96,14 +96,16 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 .val-card p{color:var(--slate);font-size:0.95rem;}
 @media(max-width:860px){.about-grid{grid-template-columns:1fr;gap:2.5rem;}.vals-grid{grid-template-columns:1fr;}}
 
+
+.logo-img{height:46px;width:auto;display:block;transition:height .3s ease;}
+header.scrolled .logo-img,header.solid .logo-img{height:40px;}
+.foot-logo-img{height:54px;width:auto;display:block;}
+@media(max-width:560px){.logo-img{height:38px;}}
 </style>
 </head>
 <body class="inner"><header id="header">
   <div class="wrap nav">
-    <a href="/" class="logo">
-      <svg class="logo-drop" viewBox="0 0 40 40" fill="none"><path d="M20 3C20 3 7 18 7 27a13 13 0 0 0 26 0C33 18 20 3 20 3Z" fill="url(#lg)"/><defs><linearGradient id="lg" x1="7" y1="3" x2="33" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#7FE3EF"/><stop offset="1" stop-color="#19C5DB"/></linearGradient></defs></svg>
-      Hydro
-    </a>
+    <a href="/" class="logo"><img src="/assets/logo.png" alt="Hydro Pressure Washing" class="logo-img"></a>
     <nav class="nav-links" id="navLinks">
       <a href="/">Home</a>
       <a href="/services/">Services</a>
@@ -137,10 +139,7 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 <footer>
   <div class="wrap">
     <div class="foot-inner">
-      <div class="foot-logo">
-        <svg class="logo-drop" viewBox="0 0 40 40" fill="none"><path d="M20 3C20 3 7 18 7 27a13 13 0 0 0 26 0C33 18 20 3 20 3Z" fill="url(#lg2)"/><defs><linearGradient id="lg2" x1="7" y1="3" x2="33" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#7FE3EF"/><stop offset="1" stop-color="#19C5DB"/></linearGradient></defs></svg>
-        Hydro Pressure Washing
-      </div>
+      <div class="foot-logo"><img src="/assets/logo.png" alt="Hydro Pressure Washing" class="foot-logo-img"></div>
       <div class="foot-links">
         <a href="/">Home</a>
         <a href="/services/">Services</a>
