@@ -315,6 +315,30 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .req-photos a:hover img{transform:scale(1.05);}
 .btn-mini{background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 10px;font-size:0.78rem;cursor:pointer;transition:all .15s;}
 .btn-mini:hover{border-color:var(--blue);color:var(--blue-glow);}
+.income-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:0.5rem 0.25rem 0.25rem;}
+.quick-add-row{display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.global-search-wrap{position:relative;flex:1;max-width:480px;margin:0 1rem;}
+.global-search-wrap input{width:100%;background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:10px;padding:0.55rem 1rem;font-size:0.88rem;transition:border-color .15s, box-shadow .15s;}
+.global-search-wrap input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.15);}
+.global-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--navy2);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);max-height:60vh;overflow-y:auto;z-index:200;padding:0.4rem;}
+.gs-item{display:flex;align-items:center;gap:0.7rem;padding:0.6rem 0.7rem;border-radius:8px;cursor:pointer;transition:background .12s;}
+.gs-item:hover{background:rgba(37,99,235,0.12);}
+.gs-icon{font-size:1.15rem;flex-shrink:0;}
+.gs-main{display:flex;flex-direction:column;flex:1;min-width:0;}
+.gs-label{font-size:0.9rem;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gs-sub{font-size:0.76rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gs-type{font-size:0.68rem;color:var(--text-muted);background:var(--navy);padding:2px 8px;border-radius:99px;flex-shrink:0;}
+.gs-empty{padding:1rem;text-align:center;color:var(--text-muted);font-size:0.85rem;}
+@media(max-width:760px){.global-search-wrap{display:none;}}
+.quick-add-btn{display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;border:none;border-radius:10px;padding:0.7rem 1.3rem;font-size:0.92rem;font-weight:600;cursor:pointer;transition:transform .15s, box-shadow .15s;box-shadow:0 6px 16px -8px rgba(37,99,235,0.6);}
+.quick-add-btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px -8px rgba(37,99,235,0.7);}
+.quick-add-btn .qa-icon{font-size:1.05rem;}
+@media(max-width:560px){.quick-add-row{flex-direction:column;}.quick-add-btn{justify-content:center;}}
+.income-card{background:var(--navy);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.2rem;}
+.income-label{font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:0.4rem;}
+.income-val{font-family:var(--font-display,'Space Grotesk',sans-serif);font-size:1.7rem;font-weight:700;line-height:1;}
+.income-sub{font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;}
+@media(max-width:760px){.income-grid{grid-template-columns:repeat(2,1fr);}}
 .clickable-row:hover{background:rgba(37,99,235,0.06);}
 .clickable-row:hover{background:rgba(37,99,235,0.06);}
 .dash-list-left{display:flex;flex-direction:column;gap:0.2rem;min-width:0;flex:1;}
@@ -524,11 +548,12 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="nav-group" data-cat="finance" id="navgroup-finance">
         <a class="nav-item" data-page="owed" onclick="navItemClick(event,'owed')">▪ Money Owed <span id="nav-owed-badge" class="nav-badge hidden">0</span></a>
         <a class="nav-item" data-page="invoices" onclick="navItemClick(event,'invoices')">▪ Invoices</a>
-        <a class="nav-item" data-page="quotes" onclick="navItemClick(event,'quotes')">▪ Quotes</a>
+        <a class="nav-item" data-page="quotes" onclick="navItemClick(event,'quotes')">▪ Quotes <span id="nav-quotes-badge" class="nav-badge hidden" style="background:#f59e0b">0</span></a>
         <a class="nav-item" data-page="expenses" onclick="navItemClick(event,'expenses')">▪ Expenses</a>
       </div>
       <div class="nav-label" id="nav-cat-tools" data-cat="tools" style="margin-top:0.5rem">Tools</div>
       <div class="nav-group" data-cat="tools" id="navgroup-tools">
+        <a class="nav-item" data-page="followups" onclick="navItemClick(event,'followups')">▪ Follow-Ups <span id="nav-followups-badge" class="nav-badge hidden">0</span></a>
         <a class="nav-item" data-page="analytics" onclick="navItemClick(event,'analytics')">▪ Analytics</a>
         <a class="nav-item" data-page="measure" onclick="navItemClick(event,'measure')">▪ Measure</a>
       </div>
@@ -542,14 +567,23 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
   <main class="main-content">
     <div class="top-bar">
       <h1 class="page-title" id="page-title">Overview</h1>
+      <div class="global-search-wrap">
+        <input id="global-search" type="text" placeholder="🔍 Search everything — customers, jobs, quotes, invoices..." oninput="globalSearch(this.value)" onfocus="globalSearch(this.value)" autocomplete="off">
+        <div id="global-search-results" class="global-search-results hidden"></div>
+      </div>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v6.0</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v6.1</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
 
     <!-- DASHBOARD -->
     <section id="page-dashboard" class="page active">
+      <div class="quick-add-row">
+        <button class="quick-add-btn" onclick="quickAdd('Schedule')"><span class="qa-icon">📅</span> New Job</button>
+        <button class="quick-add-btn" onclick="quickAdd('Quotes')"><span class="qa-icon">📄</span> New Quote</button>
+        <button class="quick-add-btn" onclick="quickAdd('Customers')"><span class="qa-icon">👤</span> New Customer</button>
+      </div>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">Revenue This Month</div><div class="stat-value" id="stat-revenue">$0</div><div class="stat-sub">Paid invoices</div></div>
         <div class="stat-card"><div class="stat-label">Active Jobs</div><div class="stat-value" id="stat-jobs">0</div><div class="stat-sub">Scheduled + In Progress</div></div>
@@ -592,6 +626,22 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
           </div>
         </div>
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Received</th><th>Name</th><th>Phone</th><th>Type</th><th>Service(s)</th><th>Status</th></tr></thead><tbody id="requests-body"><tr><td colspan="6" class="empty-state">Loading requests…</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- FOLLOW-UPS -->
+    <section id="page-followups" class="page">
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+          <span id="followups-summary">Follow-Up Reminders</span>
+          <select id="followups-window" onchange="renderFollowups()" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;">
+            <option value="11">Due (11+ months)</option>
+            <option value="10">Coming up (10+ months)</option>
+            <option value="12">Overdue (12+ months)</option>
+          </select>
+        </div>
+        <div style="padding:0 0.25rem 0.75rem;font-size:0.82rem;color:var(--text-muted);">Customers whose last completed job was a while ago — reach out to rebook before they go elsewhere.</div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Customer</th><th>Phone</th><th>Last Job</th><th>Last Service</th><th>Time Since</th><th>Reach Out</th></tr></thead><tbody id="followups-body"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody></table></div>
       </div>
     </section>
 
@@ -641,6 +691,17 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 
     <!-- ANALYTICS -->
     <section id="page-analytics" class="page">
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+          <span>💰 Income Summary</span>
+          <select id="income-period" onchange="renderIncomeSummary()" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;">
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        <div class="income-grid" id="income-summary"></div>
+      </div>
       <div class="kpi-row" id="analytics-kpis"></div>
       <div class="analytics-grid" style="margin-bottom:1rem;">
         <div class="chart-card span-2">
@@ -971,8 +1032,15 @@ async function loadAllData(){
   await loadNavLabels();
   detectActivity();
   updateOwedBadge();
+  updateFollowupsBadge();
+  updateStaleQuoteBadge();
   loadRequests();}
   catch(e){setSyncStatus('✕ Error');console.error(e);}
+}
+function updateStaleQuoteBadge(){
+  const n=staleQuoteCount();
+  const badge=document.getElementById('nav-quotes-badge');
+  if(badge){ if(n){ badge.textContent=n; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
 }
 // Keep the Money Owed nav badge in sync (count of overdue jobs) regardless of current page
 function updateOwedBadge(){
@@ -1289,6 +1357,51 @@ async function markOverdueInvoices(){
   }catch(e){ console.error('Overdue update failed:',e); setSyncStatus('● Live'); }
 }
 function setSyncStatus(m){document.getElementById('sync-status').textContent=m;}
+
+// ── GLOBAL SEARCH ── searches across customers, jobs, quotes, invoices
+function globalSearch(q){
+  const box=document.getElementById('global-search-results');
+  if(!box) return;
+  q=(q||'').trim().toLowerCase();
+  if(q.length<2){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  const results=[];
+  const match=(obj,keys)=>keys.some(k=>String(obj[k]||'').toLowerCase().includes(q));
+  // Customers
+  (cache.Customers||[]).forEach(c=>{
+    if(match(c,['Name','Phone','Email','Address'])) results.push({type:'Customer',icon:'👤',label:c['Name'],sub:c['Phone']||c['Email']||c['Address']||'',action:`showCustomerDetail('${(c['Name']||'').replace(/'/g,"\\'")}')`});
+  });
+  // Jobs
+  (cache.Schedule||[]).forEach(s=>{
+    if(match(s,['Customer','Phone','Address','Service','Notes','Status']))
+      results.push({type:'Job',icon:'📅',label:s['Customer']+' — '+(s['Service']||'job'),sub:fmtDate(s['Date'])+(s['Address']?' · '+s['Address']:''),action:`showScheduleDetail(${s._rowIndex})`});
+  });
+  // Quotes
+  (cache.Quotes||[]).forEach(qt=>{
+    if(match(qt,['Quote #','Customer','Address','Service','Phone','Email','Status']))
+      results.push({type:'Quote',icon:'📄',label:(qt['Quote #']||'Quote')+' — '+qt['Customer'],sub:'$'+parseFloat(qt['Amount']||0).toFixed(2)+' · '+(qt['Status']||''),action:`navigate('quotes')`});
+  });
+  // Invoices
+  (cache.Invoices||[]).forEach(inv=>{
+    if(match(inv,['Invoice #','Customer','Address','Status']))
+      results.push({type:'Invoice',icon:'🧾',label:(inv['Invoice #']||'Invoice')+' — '+inv['Customer'],sub:'$'+parseFloat(inv['Amount']||0).toFixed(2)+' · '+(inv['Status']||''),action:`navigate('invoices')`});
+  });
+  const top=results.slice(0,12);
+  box.innerHTML=top.length?top.map(r=>
+    `<div class="gs-item" onclick="closeGlobalSearch();${r.action}"><span class="gs-icon">${r.icon}</span><span class="gs-main"><span class="gs-label">${esc(r.label)}</span><span class="gs-sub">${esc(r.sub)}</span></span><span class="gs-type">${r.type}</span></div>`
+  ).join(''):`<div class="gs-empty">No matches for "${esc(q)}"</div>`;
+  box.classList.remove('hidden');
+}
+function closeGlobalSearch(){
+  const box=document.getElementById('global-search-results');
+  const inp=document.getElementById('global-search');
+  if(box){box.classList.add('hidden');}
+  if(inp){inp.value='';}
+}
+// close search when clicking outside
+document.addEventListener('click',function(e){
+  const wrap=document.querySelector('.global-search-wrap');
+  if(wrap && !wrap.contains(e.target)){ const box=document.getElementById('global-search-results'); if(box) box.classList.add('hidden'); }
+});
 // Manual re-sync — click the status indicator to force a token refresh + data reload
 async function manualResync(){
   if(!tokenClient||!accessToken){ return; }
@@ -1315,7 +1428,7 @@ function navigate(page){
   addBtn.style.display=(page==='analytics'||page==='measure')?'none':'';
   renderPage(page);
 }
-function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage,owed:renderOwed,requests:renderRequests}[page]||function(){})();}
+function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage,owed:renderOwed,requests:renderRequests,followups:renderFollowups}[page]||function(){})();}
 
 let upcomingSortAsc=true;
 function toggleUpcomingSort(){
@@ -1604,6 +1717,58 @@ async function markRequestQuiet(token){
     const r=_requestsCache.find(x=>x.token===token); if(r) r.status='Handled'; updateRequestsBadge();
   }catch(e){}
 }
+
+// ─────────────── FOLLOW-UP REMINDERS ───────────────
+// Find each customer's most recent COMPLETED job; flag those whose last job is N+ months old.
+function followupData(monthsThreshold){
+  const today=new Date();
+  const byCustomer={};
+  (cache.Schedule||[]).forEach(s=>{
+    const name=(s['Customer']||'').trim();
+    if(!name) return;
+    if(s['Status']==='Cancelled') return;
+    const dStr=s['Date']; if(!dStr) return;
+    const d=new Date(dStr+'T00:00:00');
+    if(isNaN(d)) return;
+    if(d>today) return; // ignore future jobs
+    if(!byCustomer[name] || d>byCustomer[name].date){
+      byCustomer[name]={date:d, dateStr:dStr, service:s['Service']||'', phone:s['Phone']||'', row:s._rowIndex};
+    }
+  });
+  const out=[];
+  Object.keys(byCustomer).forEach(name=>{
+    const c=byCustomer[name];
+    const months=(today-c.date)/(1000*60*60*24*30.44);
+    if(months>=monthsThreshold){
+      // get phone/email from Customers sheet if missing
+      const cust=cache.Customers.find(x=>x['Name']===name)||{};
+      out.push({name, months, dateStr:c.dateStr, service:c.service, phone:c.phone||cust['Phone']||'', email:cust['Email']||'', row:c.row});
+    }
+  });
+  out.sort((a,b)=>b.months-a.months); // most overdue first
+  return out;
+}
+function renderFollowups(){
+  const threshold=parseInt(document.getElementById('followups-window')?.value||'11',10);
+  const list=followupData(threshold);
+  const summary=document.getElementById('followups-summary');
+  if(summary) summary.innerHTML=`Follow-Up Reminders${list.length?` · <span style="color:#fbbf24">${list.length} customer${list.length===1?'':'s'}</span>`:''}`;
+  const body=document.getElementById('followups-body');
+  if(!body) return;
+  body.innerHTML=list.length?list.map(f=>{
+    const mo=Math.floor(f.months);
+    const msg=`Hi ${f.name}, it's James with Hydro Pressure Washing. It's been about ${mo} months since we last cleaned for you — want to get back on the schedule? Happy to give you a fresh quote!`;
+    const textBtn=f.phone?`<a class="btn-mini" href="sms:${f.phone}?&body=${encodeURIComponent(msg)}" onclick="event.stopPropagation()" style="text-decoration:none;">💬 Text</a>`:'';
+    const callBtn=f.phone?`<a class="btn-mini" href="tel:${f.phone}" onclick="event.stopPropagation()" style="text-decoration:none;">📞 Call</a>`:'';
+    return `<tr class="clickable-row" onclick="showCustomerDetail('${(f.name||'').replace(/'/g,"\\'")}')"><td><strong>${esc(f.name)}</strong></td><td>${f.phone?esc(f.phone):'—'}</td><td>${fmtDate(f.dateStr)}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(f.service)||'—'}</td><td><span class="jpill ${f.months>=12?'pill-red':'pill-amber'}">${mo} mo ago</span></td><td onclick="event.stopPropagation()" style="display:flex;gap:0.4rem;">${textBtn}${callBtn}</td></tr>`;
+  }).join(''):`<tr><td colspan="6" class="empty-state">No customers due for follow-up right now. 👍</td></tr>`;
+}
+function updateFollowupsBadge(){
+  const n=followupData(11).length;
+  const badge=document.getElementById('nav-followups-badge');
+  if(badge){ if(n){ badge.textContent=n; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
+}
+
 
 
 // ── JOB TIMER ── (timestamp-based, so it survives closing the tab)
@@ -1898,8 +2063,38 @@ function renderTable(page,filterText='',filterStatus=''){
 function filterTable(page,val){renderTable(page,val);}
 function filterByStatus(page,val){renderTable(page,'',val);}
 
+// Income summary with period filter (uses actual payments received = real income)
+function renderIncomeSummary(){
+  const period=document.getElementById('income-period')?.value||'month';
+  const now=new Date();
+  const y=now.getFullYear(), mo=String(now.getMonth()+1).padStart(2,'0');
+  function inPeriod(dateStr){
+    if(!dateStr) return false;
+    if(period==='all') return true;
+    if(period==='year') return String(dateStr).startsWith(String(y));
+    return String(dateStr).startsWith(`${y}-${mo}`); // this month
+  }
+  // Income = payments received in the period
+  const income=(cache.Payments||[]).filter(p=>inPeriod(p['Date'])).reduce((s,p)=>s+parseFloat(p['Amount']||0),0);
+  // Expenses in the period
+  const expenses=(cache.Expenses||[]).filter(e=>inPeriod(e['Date'])).reduce((s,e)=>s+parseFloat(e['Amount']||0),0);
+  const profit=income-expenses;
+  // Jobs completed in period
+  const jobsDone=(cache.Schedule||[]).filter(s=>s['Status']==='Completed'&&inPeriod(s['Date'])).length;
+  const label=period==='all'?'All time':period==='year'?`${y}`:`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]} ${y}`;
+  const wrap=document.getElementById('income-summary');
+  if(!wrap) return;
+  wrap.innerHTML=`
+    <div class="income-card"><div class="income-label">Income</div><div class="income-val" style="color:#86efac">$${income.toFixed(2)}</div><div class="income-sub">${label}</div></div>
+    <div class="income-card"><div class="income-label">Expenses</div><div class="income-val" style="color:#fca5a5">$${expenses.toFixed(2)}</div><div class="income-sub">${label}</div></div>
+    <div class="income-card"><div class="income-label">Net Profit</div><div class="income-val" style="color:${profit>=0?'#7dd3fc':'#fca5a5'}">$${profit.toFixed(2)}</div><div class="income-sub">${label}</div></div>
+    <div class="income-card"><div class="income-label">Jobs Completed</div><div class="income-val">${jobsDone}</div><div class="income-sub">${label}</div></div>
+  `;
+}
+
 // ── ANALYTICS ──
 function renderAnalytics(){
+  renderIncomeSummary();
   const now=new Date();
   const allRevenue=cache.Invoices.filter(i=>i['Status']==='Paid').reduce((s,i)=>s+parseFloat(i['Amount']||0),0);
   const allExpenses=cache.Expenses.reduce((s,e)=>s+parseFloat(e['Amount']||0),0);
@@ -2205,6 +2400,18 @@ function resetModalFooter(){
   const mdl=document.getElementById('modal'); if(mdl) mdl.classList.remove('modal-xl');
 }
 function openAddModal(){const sheet=PAGE_TO_SHEET[currentPage]||'Schedule';editingRow=null;resetModalFooter();document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');if(sheet==='Quotes'){addEstimateLine();}}
+// Quick-add from the Overview page: jump to the right page and open its add form
+function quickAdd(sheet){
+  const pageFor={Schedule:'schedule',Quotes:'quotes',Customers:'customers'}[sheet]||'schedule';
+  navigate(pageFor);
+  setTimeout(()=>{
+    editingRow=null;resetModalFooter();
+    document.getElementById('modal-title').textContent=`Add ${SHEET_SINGULAR[sheet]||sheet}`;
+    document.getElementById('modal-body').innerHTML=FORMS[sheet]();
+    document.getElementById('modal-overlay').classList.remove('hidden');
+    if(sheet==='Quotes'){addEstimateLine();}
+  },120);
+}
 function openEditModal(sheet,rowIndex){const rec=cache[sheet].find(r=>r._rowIndex===rowIndex);if(!rec)return;editingRow={sheet,rowIndex};resetModalFooter();document.getElementById('modal-title').textContent=`Edit ${SHEET_SINGULAR[sheet]||sheet}`;document.getElementById('modal-body').innerHTML=FORMS[sheet]();document.getElementById('modal-overlay').classList.remove('hidden');SHEETS[sheet].forEach(col=>{const el=document.querySelector(`[name="${col}"]`);if(el)el.value=rec[col]||'';});if(sheet==='Schedule'){const svcs=(rec['Service']||'').split(',').map(s=>s.trim());document.querySelectorAll('.schedule-svc').forEach(cb=>{cb.checked=svcs.includes(cb.value);});}if(sheet==='Quotes'){const lines=parseEstimateLines(rec['Service'],rec['Amount']);if(lines.length){lines.forEach(l=>addEstimateLine(l.service,l.amount));}else{addEstimateLine();}updateEstimateTotal();}
   // Preserve the existing Token when editing Quotes/Invoices so the customer link keeps working
   if((sheet==='Quotes'||sheet==='Invoices') && rec['Token']){
@@ -2698,7 +2905,24 @@ function quoteStatusBadge(r){
   if((r['Status']||'')==='Draft'){
     return `<span class="badge badge-draft draft-clickable" onclick="sendDraftQuote(${r._rowIndex})" title="Click to send this quote">Draft 📤</span>`;
   }
-  return badge(r['Status']);
+  let b=badge(r['Status']);
+  // Stale flag: a quote that's been "Sent" for 7+ days with no accept/decline
+  if((r['Status']||'')==='Sent' && r['Date']){
+    const sent=new Date(r['Date']+'T00:00:00');
+    const days=Math.floor((Date.now()-sent)/86400000);
+    if(days>=7){
+      b+=` <span class="badge" style="background:rgba(245,158,11,0.18);color:#fbbf24;" title="Sent ${days} days ago with no reply — consider following up">⏰ ${days}d</span>`;
+    }
+  }
+  return b;
+}
+// Count of stale quotes (Sent, 7+ days, no response) — for the nav badge
+function staleQuoteCount(){
+  return (cache.Quotes||[]).filter(q=>{
+    if((q['Status']||'')!=='Sent'||!q['Date']) return false;
+    const days=Math.floor((Date.now()-new Date(q['Date']+'T00:00:00'))/86400000);
+    return days>=7;
+  }).length;
 }
 
 // Send a Draft quote: confirm, email it, and open a pre-filled text — then mark it Sent
