@@ -317,6 +317,33 @@ a.jd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
 .btn-mini:hover{border-color:var(--blue);color:var(--blue-glow);}
 .income-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:0.5rem 0.25rem 0.25rem;}
 .quick-add-row{display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.photo-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.photo-up-label{display:block;font-size:0.82rem;font-weight:600;color:var(--text-main);margin-bottom:0.5rem;}
+.frame-box{position:relative;width:100%;aspect-ratio:4/3;border:2px solid var(--border);border-radius:12px;overflow:hidden;background:var(--navy);cursor:grab;}
+.frame-box:active{cursor:grabbing;}
+.frame-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.4rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;}
+.frame-img{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform-origin:center;user-select:none;-webkit-user-drag:none;}
+.photo-up-icon{font-size:1.8rem;}
+.frame-controls{display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;}
+.frame-ctl-label{font-size:0.78rem;color:var(--text-muted);font-weight:600;}
+.frame-controls input[type=range]{flex:1;accent-color:var(--blue);cursor:pointer;}
+.photo-up-fields{display:grid;grid-template-columns:1fr 1.5fr;gap:1rem;margin-bottom:0.5rem;}
+.field-inline label{display:block;font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;}
+.field-inline select,.field-inline input{width:100%;background:var(--navy);border:1px solid var(--border);color:var(--text-main);border-radius:8px;padding:0.55rem 0.7rem;font-size:0.9rem;}
+.gallery-mgr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;padding:0.25rem;}
+.gmgr-card{background:var(--navy);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.gmgr-pair{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.gmgr-img{position:relative;aspect-ratio:4/3;overflow:hidden;}
+.gmgr-img img{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform-origin:center;}
+.gmgr-tag{position:absolute;bottom:6px;left:6px;font-size:0.66rem;font-weight:700;padding:2px 8px;border-radius:99px;color:#fff;z-index:2;}
+.tag-before{background:rgba(60,55,40,0.85);}
+.tag-after{background:rgba(10,101,119,0.9);}
+.gmgr-meta{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.7rem 0.85rem;}
+.gmgr-cat{font-weight:600;font-size:0.85rem;color:var(--text-main);}
+.gmgr-cap{display:block;font-size:0.76rem;color:var(--text-muted);margin-top:2px;}
+.gmgr-del{background:none;border:none;cursor:pointer;font-size:1rem;opacity:0.7;transition:opacity .15s;}
+.gmgr-del:hover{opacity:1;}
+@media(max-width:760px){.gallery-mgr-grid{grid-template-columns:1fr;}.photo-up-fields{grid-template-columns:1fr;}}
 .global-search-wrap{position:relative;flex:1;max-width:480px;margin:0 1rem;}
 .global-search-wrap input{width:100%;background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:10px;padding:0.55rem 1rem;font-size:0.88rem;transition:border-color .15s, box-shadow .15s;}
 .global-search-wrap input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.15);}
@@ -554,6 +581,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
       <div class="nav-label" id="nav-cat-tools" data-cat="tools" style="margin-top:0.5rem">Tools</div>
       <div class="nav-group" data-cat="tools" id="navgroup-tools">
         <a class="nav-item" data-page="followups" onclick="navItemClick(event,'followups')">▪ Follow-Ups <span id="nav-followups-badge" class="nav-badge hidden">0</span></a>
+        <a class="nav-item" data-page="photos" onclick="navItemClick(event,'photos')">▪ Website Photos</a>
         <a class="nav-item" data-page="analytics" onclick="navItemClick(event,'analytics')">▪ Analytics</a>
         <a class="nav-item" data-page="measure" onclick="navItemClick(event,'measure')">▪ Measure</a>
       </div>
@@ -572,7 +600,7 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
         <div id="global-search-results" class="global-search-results hidden"></div>
       </div>
       <div class="top-actions">
-        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v6.1</span>
+        <span class="sync-status" id="sync-status" onclick="manualResync()" style="cursor:pointer;" title="Click to refresh">● Live</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#475569;margin-left:0.5rem;">v6.2</span>
         <button class="action-btn primary" id="top-add-btn" onclick="openAddModal()">+ Add New</button>
       </div>
     </div>
@@ -626,6 +654,74 @@ a.cd-contact-item:hover{border-color:var(--blue);color:var(--blue-glow);}
           </div>
         </div>
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Received</th><th>Name</th><th>Phone</th><th>Type</th><th>Service(s)</th><th>Status</th></tr></thead><tbody id="requests-body"><tr><td colspan="6" class="empty-state">Loading requests…</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- WEBSITE PHOTOS (gallery manager) -->
+    <section id="page-photos" class="page">
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+          <span>📸 Add a Before / After</span>
+        </div>
+        <div style="padding:0.25rem;">
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">Upload a before and after photo of a job. These show on your website's Our Work gallery for customers to see.</div>
+          <div class="photo-upload-grid">
+            <div class="photo-up-col">
+              <label class="photo-up-label">Before Photo</label>
+              <div class="frame-box" id="before-frame-box">
+                <input type="file" id="before-input" accept="image/*" style="display:none;" onchange="handleGalleryPick('before',this)">
+                <div class="frame-empty" id="before-empty" onclick="document.getElementById('before-input').click()"><span class="photo-up-icon">📷</span><span>Tap to choose</span></div>
+                <img id="before-img" class="frame-img" style="display:none;" draggable="false">
+              </div>
+              <div class="frame-controls" id="before-controls" style="display:none;">
+                <span class="frame-ctl-label">Zoom</span>
+                <input type="range" id="before-zoom" min="1" max="3" step="0.02" value="1" oninput="onZoom('before',this.value)">
+                <button class="btn-mini" onclick="document.getElementById('before-input').click()">Change</button>
+              </div>
+            </div>
+            <div class="photo-up-col">
+              <label class="photo-up-label">After Photo</label>
+              <div class="frame-box" id="after-frame-box">
+                <input type="file" id="after-input" accept="image/*" style="display:none;" onchange="handleGalleryPick('after',this)">
+                <div class="frame-empty" id="after-empty" onclick="document.getElementById('after-input').click()"><span class="photo-up-icon">✨</span><span>Tap to choose</span></div>
+                <img id="after-img" class="frame-img" style="display:none;" draggable="false">
+              </div>
+              <div class="frame-controls" id="after-controls" style="display:none;">
+                <span class="frame-ctl-label">Zoom</span>
+                <input type="range" id="after-zoom" min="1" max="3" step="0.02" value="1" oninput="onZoom('after',this.value)">
+                <button class="btn-mini" onclick="document.getElementById('after-input').click()">Change</button>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:0.76rem;color:var(--text-muted);margin-bottom:1rem;">💡 Drag each photo to move it, use the zoom slider to frame it. All gallery photos show as a clean 4:3 size.</div>
+          <div class="photo-up-fields">
+            <div class="field-inline">
+              <label>Category</label>
+              <select id="gallery-category">
+                <option>House Wash</option><option>Driveway / Concrete</option><option>Roof Soft Wash</option><option>Deck / Patio</option><option>Fence Washing</option><option>Gutter Cleaning</option><option>Trash Bin Cleaning</option><option>Commercial</option>
+              </select>
+            </div>
+            <div class="field-inline">
+              <label>Caption (optional)</label>
+              <input type="text" id="gallery-caption" placeholder="e.g. Vinyl siding in Vineland">
+            </div>
+          </div>
+          <button class="action-btn primary" id="gallery-save-btn" onclick="saveGalleryPair()" style="margin-top:0.5rem;">Upload to Gallery</button>
+          <div id="gallery-status" style="display:none;margin-top:0.8rem;padding:0.7rem 1rem;border-radius:8px;font-size:0.88rem;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+          <span id="gallery-count">Your Gallery</span>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <select id="gallery-filter" onchange="renderGalleryManager()" style="background:var(--navy2);border:1px solid var(--border);color:var(--text-main);border-radius:6px;padding:4px 8px;font-size:0.78rem;">
+              <option value="all">All categories</option>
+              <option>House Wash</option><option>Driveway / Concrete</option><option>Roof Soft Wash</option><option>Deck / Patio</option><option>Fence Washing</option><option>Gutter Cleaning</option><option>Trash Bin Cleaning</option><option>Commercial</option>
+            </select>
+            <button class="btn-mini" onclick="loadGallery(true)">⟳ Refresh</button>
+          </div>
+        </div>
+        <div id="gallery-manager" class="gallery-mgr-grid"><div class="empty-state" style="grid-column:1/-1;">Loading…</div></div>
       </div>
     </section>
 
@@ -1428,7 +1524,7 @@ function navigate(page){
   addBtn.style.display=(page==='analytics'||page==='measure')?'none':'';
   renderPage(page);
 }
-function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage,owed:renderOwed,requests:renderRequests,followups:renderFollowups}[page]||function(){})();}
+function renderPage(page){({dashboard:renderDashboard,activity:renderActivity,customers:()=>renderTable('customers'),invoices:()=>renderTable('invoices'),quotes:()=>renderTable('quotes'),schedule:renderSchedule,expenses:()=>renderTable('expenses'),analytics:renderAnalytics,measure:initMeasurePage,owed:renderOwed,requests:renderRequests,followups:renderFollowups,photos:renderGalleryManager}[page]||function(){})();}
 
 let upcomingSortAsc=true;
 function toggleUpcomingSort(){
@@ -1768,6 +1864,152 @@ function updateFollowupsBadge(){
   const badge=document.getElementById('nav-followups-badge');
   if(badge){ if(n){ badge.textContent=n; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
 }
+
+// ─────────────── WEBSITE PHOTOS (gallery manager) ───────────────
+let _galleryPick={before:null,after:null}; // dataURLs
+let _frame={before:{scale:1,x:0,y:0},after:{scale:1,x:0,y:0}};
+let _galleryCache=[];
+let _galleryLoaded=false;
+
+function resizeGalleryImg(file,maxDim){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      let{width:w,height:h}=img;
+      if(w>maxDim||h>maxDim){ if(w>h){h=Math.round(h*maxDim/w);w=maxDim;} else {w=Math.round(w*maxDim/h);h=maxDim;} }
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(cv.toDataURL('image/jpeg',0.8));
+    };
+    img.onerror=()=>resolve(null);
+    img.src=URL.createObjectURL(file);
+  });
+}
+async function handleGalleryPick(which,input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  const dataUrl=await resizeGalleryImg(file,1400);
+  if(!dataUrl) return;
+  _galleryPick[which]=dataUrl;
+  _frame[which]={scale:1,x:0,y:0};
+  const imgEl=document.getElementById(which+'-img');
+  const emptyEl=document.getElementById(which+'-empty');
+  const ctrls=document.getElementById(which+'-controls');
+  imgEl.src=dataUrl; imgEl.style.display='block';
+  emptyEl.style.display='none'; ctrls.style.display='flex';
+  document.getElementById(which+'-zoom').value=1;
+  applyFrame(which);
+  setupFrameDrag(which);
+}
+function applyFrame(which){
+  const f=_frame[which];
+  const img=document.getElementById(which+'-img');
+  if(img) img.style.transform=`translate(-50%,-50%) translate(${f.x}px,${f.y}px) scale(${f.scale})`;
+}
+function onZoom(which,val){
+  _frame[which].scale=parseFloat(val);
+  applyFrame(which);
+}
+function setupFrameDrag(which){
+  const box=document.getElementById(which+'-frame-box');
+  const img=document.getElementById(which+'-img');
+  if(!box||!img||box._dragSet) return;
+  box._dragSet=true;
+  let dragging=false,sx=0,sy=0,ox=0,oy=0;
+  const start=(e)=>{dragging=true;const pt=e.touches?e.touches[0]:e;sx=pt.clientX;sy=pt.clientY;ox=_frame[which].x;oy=_frame[which].y;e.preventDefault();};
+  const move=(e)=>{if(!dragging)return;const pt=e.touches?e.touches[0]:e;_frame[which].x=ox+(pt.clientX-sx);_frame[which].y=oy+(pt.clientY-sy);applyFrame(which);};
+  const end=()=>{dragging=false;};
+  img.addEventListener('mousedown',start);window.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  img.addEventListener('touchstart',start,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',end);
+}
+function frameStr(which){const f=_frame[which];return `${f.scale.toFixed(3)},${Math.round(f.x)},${Math.round(f.y)}`;}
+
+function showGalleryStatus(msg,ok){
+  const el=document.getElementById('gallery-status');
+  el.style.display='block';
+  el.style.background=ok?'rgba(34,197,94,0.12)':'rgba(239,68,68,0.1)';
+  el.style.color=ok?'#86efac':'#fca5a5';
+  el.textContent=msg;
+}
+async function saveGalleryPair(){
+  if(!_galleryPick.before||!_galleryPick.after){ showGalleryStatus('Please choose both a before and an after photo.',false); return; }
+  const category=document.getElementById('gallery-category').value;
+  const caption=document.getElementById('gallery-caption').value.trim();
+  const btn=document.getElementById('gallery-save-btn');
+  btn.disabled=true; btn.textContent='Uploading…';
+  showGalleryStatus('📤 Uploading photos to your gallery…',true);
+  const fd=new URLSearchParams();
+  fd.append('type','gallery'); fd.append('category',category); fd.append('caption',caption);
+  fd.append('before',_galleryPick.before); fd.append('after',_galleryPick.after);
+  fd.append('beforeFrame',frameStr('before')); fd.append('afterFrame',frameStr('after'));
+  try{
+    await fetch(CONFIG.ESTIMATE_PORTAL_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd.toString()});
+    showGalleryStatus('✅ Uploaded! It may take a few seconds to appear below.',true);
+    _galleryPick={before:null,after:null};
+    _frame={before:{scale:1,x:0,y:0},after:{scale:1,x:0,y:0}};
+    ['before','after'].forEach(w=>{
+      document.getElementById(w+'-img').style.display='none';
+      document.getElementById(w+'-empty').style.display='flex';
+      document.getElementById(w+'-controls').style.display='none';
+      document.getElementById(w+'-input').value='';
+    });
+    document.getElementById('gallery-caption').value='';
+    setTimeout(()=>loadGallery(true),2500);
+  }catch(e){
+    showGalleryStatus('Upload failed. Check your connection and try again.',false);
+  }
+  btn.disabled=false; btn.textContent='Upload to Gallery';
+}
+async function loadGallery(force){
+  try{
+    const res=await fetch(CONFIG.ESTIMATE_PORTAL_URL+'?action=listphotos&_t='+Date.now());
+    const data=await res.json();
+    _galleryCache=(data&&data.photos)?data.photos:[];
+    _galleryLoaded=true;
+    if(currentPage==='photos') renderGalleryManager();
+  }catch(e){
+    _galleryLoaded=true;
+    if(force) showToast('Could not load gallery: '+e.message,'error');
+    const wrap=document.getElementById('gallery-manager');
+    if(wrap&&currentPage==='photos') wrap.innerHTML=`<div class="empty-state" style="grid-column:1/-1;">Couldn't load gallery. Tap Refresh.</div>`;
+  }
+}
+function frameCss(frameVal){
+  const parts=String(frameVal||'1,0,0').split(',');
+  const s=parseFloat(parts[0])||1, x=parseFloat(parts[1])||0, y=parseFloat(parts[2])||0;
+  return `translate(-50%,-50%) translate(${x}px,${y}px) scale(${s})`;
+}
+function renderGalleryManager(){
+  if(!_galleryLoaded){ loadGallery(); return; }
+  const filter=document.getElementById('gallery-filter')?.value||'all';
+  let list=_galleryCache.slice();
+  if(filter!=='all') list=list.filter(p=>p.category===filter);
+  list.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const count=document.getElementById('gallery-count');
+  if(count) count.textContent=`Your Gallery (${_galleryCache.length} photo${_galleryCache.length===1?'':'s'})`;
+  const wrap=document.getElementById('gallery-manager');
+  if(!wrap) return;
+  wrap.innerHTML=list.length?list.map(p=>`
+    <div class="gmgr-card">
+      <div class="gmgr-pair">
+        <div class="gmgr-img"><img src="${p.before}" loading="lazy" style="transform:${frameCss(p.beforeFrame)}"><span class="gmgr-tag tag-before">Before</span></div>
+        <div class="gmgr-img"><img src="${p.after}" loading="lazy" style="transform:${frameCss(p.afterFrame)}"><span class="gmgr-tag tag-after">After</span></div>
+      </div>
+      <div class="gmgr-meta">
+        <div><span class="gmgr-cat">${esc(p.category)}</span>${p.caption?`<span class="gmgr-cap">${esc(p.caption)}</span>`:''}</div>
+        <button class="gmgr-del" onclick="deleteGalleryPhoto('${p.token}')" title="Remove">🗑️</button>
+      </div>
+    </div>`).join(''):`<div class="empty-state" style="grid-column:1/-1;">${filter==='all'?'No photos yet. Add your first before/after above! 📸':'No photos in this category.'}</div>`;
+}
+async function deleteGalleryPhoto(token){
+  if(!confirm('Remove this before/after from your website gallery?')) return;
+  try{
+    await fetch(CONFIG.ESTIMATE_PORTAL_URL+'?action=deletephoto&token='+encodeURIComponent(token),{mode:'no-cors'});
+    _galleryCache=_galleryCache.filter(p=>p.token!==token);
+    renderGalleryManager();
+    showToast('Photo removed.','success');
+  }catch(e){ showToast('Could not remove photo.','error'); }
+}
+
 
 
 
