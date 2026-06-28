@@ -82,20 +82,35 @@ footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.reveal-up{opacity:1;transform:none;}}
 
 
-.work-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;}
-.work-item{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:4/3;background:linear-gradient(160deg,#2aa7c4,#0a6577);border:1px solid var(--line);display:flex;align-items:flex-end;box-shadow:0 14px 35px -18px rgba(11,79,92,0.35);}
-.work-item .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3rem;opacity:0.85;}
-.work-item .cap{position:relative;z-index:2;width:100%;padding:1rem 1.2rem;background:linear-gradient(transparent,rgba(7,54,64,0.85));color:#fff;font-family:'Archivo',sans-serif;font-weight:700;font-size:1rem;}
-.work-note{background:var(--mist);border:1px dashed var(--line);border-radius:18px;padding:2.5rem;text-align:center;color:var(--slate);max-width:46rem;margin:0 auto;}
-.work-note h3{color:var(--ocean);font-size:1.4rem;margin-bottom:0.6rem;font-weight:800;}
-@media(max-width:860px){.work-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:560px){.work-grid{grid-template-columns:1fr;}}
+.cat-filters{display:flex;flex-wrap:wrap;gap:0.6rem;justify-content:center;margin-bottom:2.5rem;}
+.cat-chip{background:#fff;border:1.5px solid var(--line);color:var(--slate);font-family:'Archivo',sans-serif;font-weight:600;font-size:0.9rem;padding:0.55rem 1.1rem;border-radius:100px;cursor:pointer;transition:all .15s;}
+.cat-chip:hover{border-color:var(--spray);color:var(--ocean);}
+.cat-chip.active{background:var(--ocean);border-color:var(--ocean);color:#fff;}
+.ba-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:1.6rem;}
+.ba-item{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 14px 35px -20px rgba(11,79,92,0.3);transition:transform .2s;}
+.ba-item:hover{transform:translateY(-4px);}
+.ba-pair{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.ba-side{position:relative;aspect-ratio:4/3;overflow:hidden;cursor:pointer;background:var(--mist);}
+.ba-side img{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform-origin:center;}
+.ba-label{position:absolute;bottom:8px;left:8px;font-family:'Archivo',sans-serif;font-weight:800;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;padding:0.25rem 0.7rem;border-radius:100px;color:#fff;}
+.ba-label.bef{background:rgba(60,55,40,0.8);}
+.ba-label.aft{background:rgba(10,101,119,0.88);}
+.ba-meta{padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:0.6rem;}
+.ba-cat{font-family:'Archivo',sans-serif;font-weight:700;color:var(--ocean);font-size:1rem;}
+.ba-cap{font-size:0.85rem;color:var(--slate);}
+.gallery-loading,.gallery-empty{grid-column:1/-1;text-align:center;padding:3rem;color:var(--slate);}
+.gallery-empty h3{color:var(--ocean);font-size:1.3rem;margin-bottom:0.5rem;font-weight:800;font-family:'Archivo',sans-serif;}
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(6,41,47,0.93);z-index:1000;display:none;align-items:center;justify-content:center;padding:2rem;cursor:zoom-out;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:95%;max-height:90%;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.6);}
+@media(max-width:780px){.ba-gallery{grid-template-columns:1fr;}}
 
 
-.logo-img{height:70px;width:auto;display:block;transition:height .3s ease;}
-header.scrolled .logo-img,header.solid .logo-img{height:58px;}
+.logo-img{height:82px;width:auto;display:block;transition:height .3s ease;}
+header.scrolled .logo-img,header.solid .logo-img{height:68px;}
 .foot-logo-img{height:54px;width:auto;display:block;}
-@media(max-width:560px){.logo-img{height:52px;}}
+@media(max-width:560px){.logo-img{height:60px;}}
 </style>
 </head>
 <body class="inner"><header id="header">
@@ -114,8 +129,18 @@ header.scrolled .logo-img,header.solid .logo-img{height:58px;}
 </header>
 <section class="page-hero"><div class="wrap"><span class="eyebrow2">Before &amp; After</span><h1>Our Work</h1><p>Real results from real jobs across South Jersey. See the difference a proper clean makes.</p></div></section>
 <section><div class="wrap">
-  <div class="work-grid"><div class="work-item reveal-up"><div class="ph">🏠</div><div class="cap">House Wash</div></div><div class="work-item reveal-up"><div class="ph">🚗</div><div class="cap">Driveway Cleaning</div></div><div class="work-item reveal-up"><div class="ph">🏡</div><div class="cap">Roof Soft Wash</div></div><div class="work-item reveal-up"><div class="ph">🪵</div><div class="cap">Deck Restoration</div></div><div class="work-item reveal-up"><div class="ph">🧱</div><div class="cap">Fence Cleaning</div></div><div class="work-item reveal-up"><div class="ph">🍂</div><div class="cap">Gutter Brightening</div></div></div>
-  <div class="work-note reveal-up" style="margin-top:2.5rem;"><h3>📸 More photos coming soon</h3><p>We're always adding fresh before-and-after shots from recent jobs. Want to see examples of a specific service? Just ask when you reach out.</p></div>
+  <div class="cat-filters reveal-up" id="cat-filters">
+    <button class="cat-chip active" data-cat="all" onclick="filterGallery('all',this)">All Work</button>
+    <button class="cat-chip" data-cat="House Wash" onclick="filterGallery('House Wash',this)">🏠 House Wash</button>
+    <button class="cat-chip" data-cat="Driveway / Concrete" onclick="filterGallery('Driveway / Concrete',this)">🚗 Driveway</button>
+    <button class="cat-chip" data-cat="Roof Soft Wash" onclick="filterGallery('Roof Soft Wash',this)">🏡 Roof</button>
+    <button class="cat-chip" data-cat="Deck / Patio" onclick="filterGallery('Deck / Patio',this)">🪵 Deck / Patio</button>
+    <button class="cat-chip" data-cat="Fence Washing" onclick="filterGallery('Fence Washing',this)">🧱 Fence</button>
+    <button class="cat-chip" data-cat="Gutter Cleaning" onclick="filterGallery('Gutter Cleaning',this)">🍂 Gutters</button>
+    <button class="cat-chip" data-cat="Trash Bin Cleaning" onclick="filterGallery('Trash Bin Cleaning',this)">🗑️ Trash Bins</button>
+    <button class="cat-chip" data-cat="Commercial" onclick="filterGallery('Commercial',this)">🏢 Commercial</button>
+  </div>
+  <div id="gallery" class="ba-gallery"><div class="gallery-loading">Loading our work…</div></div>
 </div></section>
 <section style="padding-top:0;"><div class="wrap"><div class="cta-banner reveal-up"><h2>Your Home Could Be Next</h2><p>Get a free quote and see what we can do for your property.</p><a href="/contact/" class="btn btn-dark">Get a Free Quote →</a></div></div></section>
 <footer>
@@ -147,6 +172,63 @@ navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLink
 const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
 const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
 document.querySelectorAll('.reveal-up').forEach((el,i)=>{el.style.transitionDelay=(i%3*0.08)+'s';io.observe(el);});
+
+// ── BEFORE/AFTER GALLERY ──
+const GALLERY_ENDPOINT="https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec";
+let _photos=[], _activeCat='all';
+function escHtml(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+async function loadGalleryPhotos(){
+  const wrap=document.getElementById('gallery');
+  try{
+    const res=await fetch(GALLERY_ENDPOINT+'?action=listphotos&_t='+Date.now());
+    const data=await res.json();
+    _photos=(data&&data.photos)?data.photos:[];
+    renderGallery();
+  }catch(e){
+    wrap.innerHTML='<div class="gallery-empty"><h3>Our work gallery is coming soon</h3><p>We\'re adding before-and-after photos from recent jobs. Check back soon, or <a href="/contact/" style="color:var(--spray);font-weight:600;">request a free quote</a>.</p></div>';
+  }
+}
+function filterGallery(cat,btn){
+  _activeCat=cat;
+  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderGallery();
+}
+function renderGallery(){
+  const wrap=document.getElementById('gallery');
+  let list=_photos.slice();
+  if(_activeCat!=='all') list=list.filter(p=>p.category===_activeCat);
+  list.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  if(!list.length){
+    wrap.innerHTML=_photos.length
+      ? '<div class="gallery-empty"><h3>No photos in this category yet</h3><p>Check another category or <a href="/contact/" style="color:var(--spray);font-weight:600;">get a free quote</a>.</p></div>'
+      : '<div class="gallery-empty"><h3>Our work gallery is coming soon</h3><p>We\'re adding before-and-after photos from recent jobs. Check back soon!</p></div>';
+    // hide filters if totally empty
+    document.getElementById('cat-filters').style.display=_photos.length?'flex':'none';
+    return;
+  }
+  document.getElementById('cat-filters').style.display='flex';
+  wrap.innerHTML=list.map(p=>`
+    <div class="ba-item">
+      <div class="ba-pair">
+        <div class="ba-side" onclick="openLightbox('${p.before}')"><img src="${p.before}" loading="lazy" alt="Before" style="transform:${frameCss(p.beforeFrame)}"><span class="ba-label bef">Before</span></div>
+        <div class="ba-side" onclick="openLightbox('${p.after}')"><img src="${p.after}" loading="lazy" alt="After" style="transform:${frameCss(p.afterFrame)}"><span class="ba-label aft">After</span></div>
+      </div>
+      <div class="ba-meta"><span class="ba-cat">${escHtml(p.category)}</span>${p.caption?`<span class="ba-cap">${escHtml(p.caption)}</span>`:''}</div>
+    </div>`).join('');
+}
+function frameCss(frameVal){
+  const parts=String(frameVal||'1,0,0').split(',');
+  const s=parseFloat(parts[0])||1, x=parseFloat(parts[1])||0, y=parseFloat(parts[2])||0;
+  return `translate(-50%,-50%) translate(${x}px,${y}px) scale(${s})`;
+}
+function openLightbox(url){
+  let lb=document.getElementById('lightbox');
+  if(!lb){ lb=document.createElement('div'); lb.id='lightbox'; lb.className='lightbox'; lb.onclick=()=>lb.classList.remove('open'); document.body.appendChild(lb); }
+  lb.innerHTML=`<img src="${url}" alt="Photo">`;
+  lb.classList.add('open');
+}
+loadGalleryPhotos();
 
 </script>
 </body>
