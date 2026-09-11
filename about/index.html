@@ -1,171 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZFVGB2BL7"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JZFVGB2BL7');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About — Hydro Pressure Washing</title>
-<meta name="description" content="Hydro Pressure Washing is a locally owned exterior cleaning company serving South Jersey. Licensed, insured, and committed to honest pricing.">
-<link rel="icon" type="image/png" href="/assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>About Us | Hydro Pressure Washing — South Jersey</title>
+<meta name="description" content="Hydro Pressure Washing is a local, fully-insured South Jersey pressure washing company built on honest work, fair prices and spotless results.">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/favicon.png">
+<link rel="stylesheet" href="../assets/site.css">
 <style>
-:root{
-  --ocean:#0B4F5C;--ocean-deep:#073640;--spray:#19C5DB;--spray-soft:#7FE3EF;
-  --sand:#F5B841;--sand-deep:#e0a52d;--ink:#0c2126;--slate:#5a7077;--mist:#f3f8f9;--white:#ffffff;--line:rgba(11,79,92,0.12);
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--white);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
-h1,h2,h3,.display{font-family:'Archivo',sans-serif;line-height:1.05;letter-spacing:-0.02em;}
-a{color:inherit;text-decoration:none;}
-.wrap{max-width:1180px;margin:0 auto;padding:0 1.5rem;}
-.btn{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Archivo',sans-serif;font-weight:700;font-size:1rem;padding:0.95rem 1.7rem;border-radius:100px;cursor:pointer;border:none;transition:transform .15s ease, box-shadow .15s ease;white-space:nowrap;}
-.btn-primary{background:var(--sand);color:var(--ocean-deep);box-shadow:0 8px 24px -8px rgba(245,184,65,0.7);}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -8px rgba(245,184,65,0.8);}
-.btn-ghost{background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.4);backdrop-filter:blur(4px);}
-.btn-ghost:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px);}
-.btn-dark{background:var(--ocean);color:#fff;box-shadow:0 8px 24px -10px rgba(11,79,92,0.6);}
-.btn-dark:hover{transform:translateY(-2px);box-shadow:0 14px 30px -10px rgba(11,79,92,0.7);}
-header{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .3s ease;padding:1.1rem 0;}
-header.scrolled,header.solid{background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);box-shadow:0 4px 20px -8px rgba(11,79,92,0.15);padding:0.7rem 0;}
-.nav{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;}
-.logo{display:flex;align-items:center;gap:0.6rem;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.35rem;color:#fff;letter-spacing:-0.03em;transition:color .3s;}
-header.scrolled .logo,header.solid .logo{color:var(--ocean);}
-.logo-drop{width:34px;height:34px;flex-shrink:0;}
-.nav-links{display:flex;align-items:center;gap:1.8rem;margin-left:auto;}
-.nav-links a{font-weight:600;font-size:0.95rem;color:rgba(255,255,255,0.9);transition:color .2s;}
-.nav-links a:hover,.nav-links a.active{color:#fff;}
-header.scrolled .nav-links a,header.solid .nav-links a{color:var(--slate);}
-header.scrolled .nav-links a:hover,header.scrolled .nav-links a.active,header.solid .nav-links a:hover,header.solid .nav-links a.active{color:var(--ocean);}
-.nav-links a.navquote{color:var(--ocean-deep)!important;background:var(--sand);padding:0.55rem 1.2rem;border-radius:100px;font-family:'Archivo',sans-serif;font-weight:700;box-shadow:0 6px 18px -6px rgba(245,184,65,0.7);}
-.nav-links a.navquote:hover{transform:translateY(-2px);}
-.nav-toggle{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:6px;}
-.nav-toggle span{width:26px;height:2.5px;background:#fff;border-radius:2px;transition:all .3s;}
-header.scrolled .nav-toggle span,header.solid .nav-toggle span{background:var(--ocean);}
-section{padding:6rem 0;}
-.sec-head{text-align:center;max-width:42rem;margin:0 auto 3.5rem;}
-.sec-eyebrow{display:inline-block;color:var(--spray);font-family:'Archivo',sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.9rem;}
-.sec-head h2{font-size:clamp(2rem,4vw,2.9rem);font-weight:800;color:var(--ocean);margin-bottom:1rem;}
-.sec-head p{font-size:1.12rem;color:var(--slate);}
-.reveal-up{opacity:0;transform:translateY(30px);transition:opacity .6s ease, transform .6s ease;}
-.reveal-up.in{opacity:1;transform:translateY(0);}
-/* page hero (inner pages) */
-.page-hero{position:relative;background:linear-gradient(135deg,var(--ocean-deep) 0%,var(--ocean) 60%,#0a6577 100%);color:#fff;padding:9rem 0 4.5rem;overflow:hidden;text-align:center;}
-.page-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 75% 25%, rgba(25,197,219,0.22), transparent 45%);}
-.page-hero .eyebrow2{display:inline-block;color:var(--spray-soft);font-family:'Archivo',sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:1rem;position:relative;}
-.page-hero h1{font-size:clamp(2.4rem,5vw,3.8rem);font-weight:900;position:relative;margin-bottom:1rem;}
-.page-hero p{font-size:1.18rem;color:rgba(255,255,255,0.82);max-width:36rem;margin:0 auto;position:relative;}
-/* footer */
-footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
-.foot-inner{display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap;}
-.foot-logo{display:flex;align-items:center;gap:0.6rem;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.3rem;color:#fff;}
-.foot-links{display:flex;gap:1.8rem;flex-wrap:wrap;}
-.foot-links a{font-size:0.92rem;transition:color .2s;}
-.foot-links a:hover{color:var(--spray);}
-.foot-bottom{text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.1);font-size:0.85rem;color:rgba(255,255,255,0.5);}
-.admin-link{color:rgba(255,255,255,0.4);font-size:0.82rem;}
-.admin-link:hover{color:var(--spray);}
-.cta-banner{background:linear-gradient(120deg,var(--sand),var(--sand-deep));color:var(--ocean-deep);border-radius:28px;padding:3.5rem 3rem;text-align:center;position:relative;overflow:hidden;}
-.cta-banner::before{content:"💧";position:absolute;font-size:13rem;opacity:0.12;right:-1rem;top:-2rem;transform:rotate(15deg);}
-.cta-banner h2{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;margin-bottom:0.8rem;position:relative;}
-.cta-banner p{font-size:1.15rem;margin-bottom:1.8rem;font-weight:500;position:relative;}
-.cta-banner .btn-dark{position:relative;}
-@media(max-width:860px){
-  .nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;flex-direction:column;padding:1.5rem;gap:1.2rem;box-shadow:0 10px 30px -10px rgba(0,0,0,0.2);margin-left:0;}
-  .nav-links.open{display:flex;}
-  .nav-links a{color:var(--slate)!important;}
-  .nav-links a.navquote{color:var(--ocean-deep)!important;text-align:center;}
-  .nav-toggle{display:flex;}
-}
-@media(max-width:560px){section{padding:4rem 0;}.cta-banner{padding:2.5rem 1.5rem;}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.reveal-up{opacity:1;transform:none;}}
-
-
-.about-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:3.5rem;align-items:center;}
-.about-text h2{font-size:clamp(1.8rem,3.5vw,2.5rem);color:var(--ocean);margin-bottom:1.2rem;font-weight:800;}
-.about-text p{color:var(--slate);font-size:1.08rem;margin-bottom:1.1rem;}
-.about-visual{aspect-ratio:1;border-radius:24px;background:linear-gradient(160deg,var(--ocean),var(--ocean-deep));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 30px 60px -20px rgba(0,0,0,0.3);}
-.about-visual .bigdrop{font-size:8rem;filter:drop-shadow(0 10px 30px rgba(25,197,219,0.5));animation:bob 4s ease-in-out infinite;}
-@keyframes bob{0%,100%{transform:translateY(0) rotate(0);}50%{transform:translateY(-14px) rotate(-4deg);}}
-.vals{background:var(--mist);}
-.vals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
-.val-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:1.8rem;text-align:center;}
-.val-card .ic{font-size:2.2rem;margin-bottom:0.8rem;}
-.val-card h3{color:var(--ocean);font-size:1.15rem;margin-bottom:0.4rem;font-weight:700;}
-.val-card p{color:var(--slate);font-size:0.95rem;}
-@media(max-width:860px){.about-grid{grid-template-columns:1fr;gap:2.5rem;}.vals-grid{grid-template-columns:1fr;}}
-
-
-.logo-img{height:82px;width:auto;display:block;transition:height .3s ease;}
-header.scrolled .logo-img,header.solid .logo-img{height:68px;}
-.foot-logo-img{height:54px;width:auto;display:block;}
-@media(max-width:560px){.logo-img{height:60px;}}
+.page-hero{background:linear-gradient(135deg,#0e1116,#16233b);color:#fff;padding:64px 0 60px;text-align:center}
+.page-hero h1{font-size:clamp(30px,5vw,48px);font-weight:900;letter-spacing:-1.2px}
+.page-hero p{color:#c3ccda;font-size:18px;margin-top:14px;max-width:620px;margin-left:auto;margin-right:auto}
+.story{max-width:760px;margin:0 auto}
+.story p{font-size:16.5px;color:var(--text);margin-bottom:18px;line-height:1.75}
+.story h3{font-size:22px;font-weight:800;margin:34px 0 10px;letter-spacing:-.4px}
+.values{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;margin-top:44px}
+.value{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:26px;text-align:center}
+.value .vi{width:56px;height:56px;border-radius:14px;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:27px;margin:0 auto 14px}
+.value h4{font-size:17px;font-weight:800}
+.value p{color:var(--text-2);font-size:14px;margin-top:6px}
 </style>
 </head>
-<body class="inner"><header id="header">
-  <div class="wrap nav">
-    <a href="/" class="logo"><img src="/assets/logo.png" alt="Hydro Pressure Washing" class="logo-img"></a>
-    <nav class="nav-links" id="navLinks">
-      <a href="/">Home</a>
-      <a href="/services/">Services</a>
-      <a href="/about/" class="active">About</a>
-      <a href="/work/">Our Work</a>
-      <a href="/contact/">Contact</a>
-      <a href="/contact/" class="navquote">Free Quote</a>
-    </nav>
-    <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+<body>
+<div id="site-nav"></div>
+
+<header class="page-hero">
+  <div class="wrap">
+    <h1>About Hydro Pressure Washing</h1>
+    <p>A local South Jersey company built on honest work, fair prices, and results you can see.</p>
   </div>
 </header>
-<section class="page-hero"><div class="wrap"><span class="eyebrow2">Who We Are</span><h1>About Hydro</h1><p>Locally owned, fully insured, and focused on one thing: making your property look its best.</p></div></section>
-<section><div class="wrap about-grid">
-  <div class="about-text reveal-up">
-    <h2>Pressure Washing Done the Honest Way</h2>
-    <p>Hydro Pressure Washing is a locally owned and operated business serving homeowners across South Jersey. We started with a simple idea: treat every property like it's our own, and never surprise a customer with a bill they didn't expect.</p>
-    <p>Whether it's a full house soft wash, a stained driveway, or black streaks on your roof, we use the right approach for each surface — never blasting away at things that need a gentle touch. The result is a deeper clean that lasts longer and protects your property.</p>
-    <p>We're licensed, fully insured, and we stand behind our work. You'll always get a free, upfront estimate before we start.</p>
+
+<section class="section">
+  <div class="wrap story">
+    <p>Hydro Pressure Washing started with a simple belief: your home or business deserves to look its best, and getting it cleaned should be easy, honest and affordable. We're a locally owned and operated company serving homeowners and businesses all across South Jersey — and we treat every property like it's our own.</p>
+
+    <p>Whether it's a house covered in green algae, a driveway stained from years of use, or a storefront that needs to make a great first impression, we bring the right equipment, the right cleaning solutions, and the care to do it right the first time. No shortcuts, no damage, no surprises on the bill.</p>
+
+    <h3>Soft Wash vs. Pressure — We Know the Difference</h3>
+    <p>Not every surface should be hit with high pressure. Blast a roof or delicate siding and you can cause real damage. That's why we're trained in <b>soft washing</b> — using low pressure and professional cleaning agents to safely dissolve dirt and kill algae at the source — as well as traditional <b>pressure washing</b> for tough surfaces like concrete. Knowing which method to use, and when, is what separates a pro from a guy with a rented machine.</p>
+
+    <h3>Fully Insured, Fully Committed</h3>
+    <p>We're fully insured, so you have complete peace of mind the moment we pull up. And we don't consider a job finished until you're genuinely happy with how it looks. That commitment to spotless results and honest service is how we earn repeat customers and referrals across the area.</p>
+
+    <div class="values">
+      <div class="value reveal"><div class="vi">🤝</div><h4>Honest & Upfront</h4><p>Fair, transparent pricing with no hidden fees — ever.</p></div>
+      <div class="value reveal"><div class="vi">🛡️</div><h4>Fully Insured</h4><p>Licensed and covered for your total peace of mind.</p></div>
+      <div class="value reveal"><div class="vi">💧</div><h4>Right Method</h4><p>Soft wash or pressure — always the safe choice for your surface.</p></div>
+      <div class="value reveal"><div class="vi">📍</div><h4>Local & Reliable</h4><p>Proudly serving all of South Jersey, 7 days a week.</p></div>
+    </div>
   </div>
-  <div class="about-visual reveal-up"><div class="bigdrop">💧</div></div>
-</div></section>
-<section class="vals"><div class="wrap">
-  <div class="sec-head reveal-up"><span class="sec-eyebrow">What We Stand For</span><h2>Our Promise to You</h2></div>
-  <div class="vals-grid">
-    <div class="val-card reveal-up"><div class="ic">🤝</div><h3>Honest Pricing</h3><p>A clear, free quote before any work begins. No hidden fees, no upsells.</p></div>
-    <div class="val-card reveal-up"><div class="ic">🛡️</div><h3>Licensed &amp; Insured</h3><p>Fully covered for your peace of mind on every single job.</p></div>
-    <div class="val-card reveal-up"><div class="ic">✨</div><h3>Quality That Lasts</h3><p>The right method for each surface means a better clean that holds up.</p></div>
-  </div>
-</div></section>
-<section style="padding-top:0;"><div class="wrap"><div class="cta-banner reveal-up"><h2>Let's Make Your Home Shine</h2><p>Serving all of South Jersey — get your free estimate today.</p><a href="/contact/" class="btn btn-dark">Get a Free Quote →</a></div></div></section>
-<footer>
+</section>
+
+<section class="section gray">
   <div class="wrap">
-    <div class="foot-inner">
-      <div class="foot-logo"><img src="/assets/logo.png" alt="Hydro Pressure Washing" class="foot-logo-img"></div>
-      <div class="foot-links">
-        <a href="/">Home</a>
-        <a href="/services/">Services</a>
-        <a href="/about/">About</a>
-        <a href="/work/">Our Work</a>
-        <a href="/contact/">Contact</a>
-        <a href="tel:6095451018">(609) 545-1018</a>
+    <div class="cta-band">
+      <h2>Let's Make It Shine</h2>
+      <p>Ready to see what a professional clean can do? Get your free quote today.</p>
+      <div class="btns">
+        <a href="../contact/#quote" class="btn btn-primary btn-lg">Get My Free Quote →</a>
+        <a href="tel:+16095451018" class="btn btn-ghost btn-lg">📞 Call or Text Us</a>
       </div>
     </div>
-    <div class="foot-bottom">
-      © <span id="year"></span> Hydro Pressure Washing · South Jersey · Licensed &amp; Insured
-      &nbsp;·&nbsp; <a href="/admin" class="admin-link">Owner Login</a>
-    </div>
   </div>
-</footer><script>
-const header=document.getElementById('header');
-const isInner=document.body.classList.contains('inner');
-function onScroll(){header.classList.toggle('scrolled',window.scrollY>40);}
-window.addEventListener("scroll",onScroll);onScroll();
-const navToggle=document.getElementById('navToggle'),navLinks=document.getElementById('navLinks');
-navToggle.addEventListener('click',()=>navLinks.classList.toggle('open'));
-navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
-const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
-const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
-document.querySelectorAll('.reveal-up').forEach((el,i)=>{el.style.transitionDelay=(i%3*0.08)+'s';io.observe(el);});
+</section>
 
-</script>
+<div id="site-footer"></div>
+<script src="../assets/site.js"></script>
+<script>HydroSite.render({base:'../', active:'about'});</script>
 </body>
 </html>
