@@ -218,9 +218,18 @@ async function submitQuote(e){
 
   try{
     if(!window.HYDRO_API_URL) throw new Error('not configured');
-    await fetch(window.HYDRO_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-    // Apps Script + no-cors can be opaque; we optimistically show success
-    gtag && gtag('event','generate_lead',{value:1});
+    // Apps Script doesn't return CORS headers, so we send with mode:'no-cors'.
+    // The response is opaque (we can't read it), but the request DOES reach the
+    // server and runs (email + save). We add a timeout so it can never hang.
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(), 15000);
+    await fetch(window.HYDRO_API_URL,{
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload), signal:ctrl.signal
+    });
+    clearTimeout(timer);
+    if(window.gtag) gtag('event','generate_lead',{value:1});
     showSuccess();
   }catch(err){
     // Fallback: open a prefilled email so the lead is never lost
