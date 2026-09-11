@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZFVGB2BL7"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JZFVGB2BL7');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Quote | Hydro Pressure Washing</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.q-hero{background:linear-gradient(135deg,#0e1116,#16233b);color:#fff;padding:40px 0 34px;text-align:center}
+.q-hero img{height:52px;margin:0 auto 6px}
+.q-wrap{max-width:680px;margin:-24px auto 60px;padding:0 20px}
+.q-card{background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
+.q-top{padding:26px 30px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.q-top .lbl{font-size:12px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.q-top .num{font-size:24px;font-weight:900;letter-spacing:-.6px;color:var(--blue)}
+.q-body{padding:26px 30px}
+.q-meta{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:22px}
+.q-meta .m .l{font-size:11.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.q-meta .m .v{font-size:15px;font-weight:700;margin-top:2px}
+table.q-items{width:100%;border-collapse:collapse;margin:6px 0 4px}
+table.q-items th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);padding:9px 8px;border-bottom:2px solid var(--border)}
+table.q-items td{padding:12px 8px;border-bottom:1px solid var(--border);font-size:14.5px}
+table.q-items td.r,table.q-items th.r{text-align:right}
+.q-tot{margin-left:auto;width:260px;margin-top:16px}
+.q-tot .row{display:flex;justify-content:space-between;padding:6px 0;font-size:14.5px}
+.q-tot .row.grand{border-top:2px solid var(--ink);margin-top:8px;padding-top:12px;font-size:20px;font-weight:900}
+.q-notes{margin-top:22px;padding:16px 18px;background:var(--bg-2);border-radius:12px;font-size:14px;color:var(--text-2)}
+.q-actions{padding:24px 30px;border-top:1px solid var(--border);background:var(--bg-2);text-align:center}
+.q-actions .ttl{font-weight:800;font-size:17px;margin-bottom:4px}
+.q-actions .sub{color:var(--text-3);font-size:13.5px;margin-bottom:18px}
+.q-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-accept{background:var(--green,#12a150);color:#fff;padding:15px 34px;border-radius:12px;font-weight:800;font-size:16px;border:none;cursor:pointer;transition:.15s}
+.btn-accept:hover{background:#0d8a43;transform:translateY(-1px)}
+.btn-decline{background:#fff;color:var(--text-2);padding:15px 28px;border-radius:12px;font-weight:700;font-size:15px;border:1.5px solid var(--border-strong,#d4dae4);cursor:pointer}
+.btn-decline:hover{background:#f5f7fa}
+.state{text-align:center;padding:48px 24px}
+.state .ic{font-size:56px;margin-bottom:10px}
+.state h2{font-size:24px;font-weight:900;color:var(--text)}
+.state p{color:var(--text-2);font-size:15.5px;margin-top:6px}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 16px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.q-foot{text-align:center;color:var(--text-3);font-size:13px;margin-top:22px}
+.q-foot a{color:var(--blue);font-weight:600}
+.chip-status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800}
+.cs-accepted{background:#e6f6ec;color:#0d7a3c}.cs-declined{background:#fdecea;color:#c0362d}.cs-open{background:#fdf3e0;color:#a86800}
+</style>
+</head>
+<body style="background:var(--bg-2)">
+
+<header class="q-hero">
+  <img src="../assets/logo.png" alt="Hydro Pressure Washing">
+  <div style="color:#c3ccda;font-size:14px">Your Free Quote</div>
+</header>
+
+<div class="q-wrap">
+  <div class="q-card" id="card">
+    <div class="state"><div class="spinner"></div><p>Loading your quote…</p></div>
+  </div>
+  <div class="q-foot">Questions? Call or text <a href="tel:+16095451018">(609) 545-1018</a></div>
+</div>
+
+<script src="../assets/config.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const token=params.get('token');
+const card=document.getElementById('card');
+
+function money(n){return '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtDate(d){if(!d)return '';const x=new Date(d+'T00:00:00');return x.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}
+
+function stateHtml(ic,title,msg){
+  return `<div class="state"><div class="ic">${ic}</div><h2>${title}</h2><p>${msg}</p>
+    <a href="../index.html" class="btn btn-primary btn-lg" style="margin-top:22px">Visit Our Website</a></div>`;
+}
+
+async function api(action,extra){
+  const res=await fetch(window.HYDRO_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,token},extra||{}))});
+  return res.json();
+}
+
+async function load(){
+  if(!token){ card.innerHTML=stateHtml('🔍','Quote Not Found','This link is missing its quote code.'); return; }
+  let data;
+  try{ data=await api('getQuote'); }
+  catch(e){ card.innerHTML=stateHtml('⚠️','Could Not Load','Please try again, or call us at (609) 545-1018.'); return; }
+  if(!data || data.error || !data.quote){ card.innerHTML=stateHtml('🔍','Quote Not Found','This link is invalid or has expired.'); return; }
+  render(data.quote);
+}
+
+function render(q){
+  const itemRows=(q.items||[]).map(i=>`<tr><td>${esc(i.desc)}</td><td class="r">${i.qty}</td><td class="r">${money(i.price)}</td><td class="r">${money((i.qty||0)*(i.price||0))}</td></tr>`).join('');
+  const isFinal = q.status==='accepted'||q.status==='declined';
+  const statusChip = q.status==='accepted'?`<span class="chip-status cs-accepted">✓ Accepted</span>`
+    : q.status==='declined'?`<span class="chip-status cs-declined">Declined</span>`
+    : `<span class="chip-status cs-open">Awaiting your response</span>`;
+
+  let actions='';
+  if(q.status==='accepted'){
+    actions=`<div class="q-actions"><div class="ic" style="font-size:44px">✅</div><div class="ttl">Thank you — quote accepted!</div><div class="sub">We'll reach out shortly to schedule your service.</div></div>`;
+  }else if(q.status==='declined'){
+    actions=`<div class="q-actions"><div class="ttl">This quote was declined</div><div class="sub">Changed your mind? Call or text us at (609) 545-1018.</div></div>`;
+  }else{
+    actions=`<div class="q-actions">
+      <div class="ttl">Ready to get started?</div>
+      <div class="sub">Accept below and we'll be in touch to schedule. No obligation.</div>
+      <div class="q-btns">
+        <button class="btn-accept" onclick="respond('accepted')">✓ Accept Quote</button>
+        <button class="btn-decline" onclick="respond('declined')">Decline</button>
+      </div>
+    </div>`;
+  }
+
+  card.innerHTML=`
+    <div class="q-top">
+      <div><div class="lbl">Quote</div><div class="num">${esc(q.number)}</div></div>
+      <div style="text-align:right">${statusChip}<div class="lbl" style="margin-top:8px">Prepared for</div><div style="font-weight:700">${esc(q.customerName||'You')}</div></div>
+    </div>
+    <div class="q-body">
+      <div class="q-meta">
+        <div class="m"><div class="l">Date</div><div class="v">${fmtDate(q.date)}</div></div>
+        ${q.validUntil?`<div class="m"><div class="l">Valid Until</div><div class="v">${fmtDate(q.validUntil)}</div></div>`:''}
+        <div class="m"><div class="l">From</div><div class="v">${esc(q.bizName||'Hydro Pressure Washing')}</div></div>
+      </div>
+      <table class="q-items">
+        <thead><tr><th>Service</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+      <div class="q-tot">
+        <div class="row"><span>Subtotal</span><span>${money(q.subtotal)}</span></div>
+        ${q.tax?`<div class="row"><span>Tax (${q.taxRate}%)</span><span>${money(q.tax)}</span></div>`:''}
+        <div class="row grand"><span>Total</span><span>${money(q.total)}</span></div>
+      </div>
+      ${q.notes?`<div class="q-notes"><b>Notes:</b> ${esc(q.notes)}</div>`:''}
+    </div>
+    ${actions}`;
+}
+
+let busy=false;
+async function respond(choice){
+  if(busy) return; busy=true;
+  const btns=document.querySelector('.q-btns');
+  if(btns) btns.innerHTML='<div class="spinner"></div>';
+  try{
+    const r=await api('respondQuote',{response:choice});
+    if(r && (r.ok||r.status)){
+      if(window.gtag) gtag('event', choice==='accepted'?'quote_accepted':'quote_declined');
+      // reload to show the final state
+      const data=await api('getQuote'); render(data.quote);
+    }else{
+      card.innerHTML=stateHtml('⚠️','Something went wrong','Please call us at (609) 545-1018 to confirm.');
+    }
+  }catch(e){
+    card.innerHTML=stateHtml('⚠️','Connection Error','Please try again or call (609) 545-1018.');
+  }
+  busy=false;
+}
+load();
+</script>
+</body>
+</html>
