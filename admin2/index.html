@@ -320,6 +320,9 @@ const CFG_KEY = 'ewash_cfg_v1';
    re-upload index.html to GitHub. */
 const FORCE_API_URL    = 'https://script.google.com/macros/s/AKfycbzucf989nLaeORCEzYVNIp6k8jY3tR7n3pX46XolMkmxljQ85-jlE2kIrQUCs54obi9/exec';
 const FORCE_API_SECRET = 'hydro963811337331236';   // must match SECRET in Code.gs
+/* Your public website — used to build clean quote links for customers.
+   Quote links become:  <SITE_URL>/quote/?token=xxxxx  (no trailing slash) */
+const SITE_URL = 'https://hydropressurewashing.co';
 
 const DEFAULT_CFG = {
   bizName: 'Hydro Pressure Washing',
@@ -386,6 +389,8 @@ function fmtDate(d){ if(!d) return '—'; const x=new Date(d+'T00:00:00'); retur
 function fmtDateShort(d){ if(!d) return '—'; const x=new Date(d+'T00:00:00'); return x.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
 function daysUntil(d){ if(!d) return null; const a=new Date(d+'T00:00:00'), b=new Date(todayISO()+'T00:00:00'); return Math.round((a-b)/864e5); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* Clean customer-facing quote link on your own domain */
+function quoteLink(token){ return token ? (SITE_URL.replace(/\/$/,'')+'/quote/?token='+token) : null; }
 
 /* ---------------------------------------------------------------------
    2. SEED DATA (demo, so the dashboard looks alive on first open)
@@ -1387,7 +1392,7 @@ function docPreviewHTML(d, kind){
 
 function openQuote(id){
   const q=DB.quotes.find(x=>x.id===id); if(!q) return;
-  const acceptUrl = CFG.apiUrl ? `${CFG.apiUrl}?page=quote&token=${q.token}` : null;
+  const acceptUrl = quoteLink(q.token);
   openModal(`
     <div class="modal-head"><div style="flex:1"><h2>Quote ${q.number}</h2><div class="sub">${esc(custName(q.customerId))}</div></div>${statusChip(q.status)}<button class="btn-icon" onclick="closeModal()" style="margin-left:10px;font-size:18px">✕</button></div>
     <div class="modal-body">
@@ -1455,7 +1460,7 @@ async function sendDoc(kind, id){
   const btn=event&&event.target; if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span> Sending…'; }
   try{
     const t=docTotal(d);
-    const acceptUrl = kind==='quote' ? `${CFG.apiUrl}?page=quote&token=${d.token}` : '';
+    const acceptUrl = kind==='quote' ? quoteLink(d.token) : '';
     await apiCall('sendDoc', { kind, doc:d, customer:c, biz:CFG, acceptUrl, total:t.total });
     if(d.status==='draft'){ d.status='sent'; }
     saveDB();
