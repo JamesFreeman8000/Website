@@ -830,11 +830,15 @@ function reqChip(s){ const m={new:['chip-amber','New'],contacted:['chip-blue','C
 function openRequest(id){
   const r=(DB.requests||[]).find(x=>x.id===id); if(!r) return;
   const photos=(r.photos||[]);
-  const photoHtml = photos.length ? `<div class="field"><label>Photos (${photos.length})</label><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px">${photos.map(p=>{
+  let photoHtml = photos.length ? `<div class="field"><label>Photos (${photos.length})</label><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px">${photos.map(p=>{
     const isUrl=/^https?:/.test(p);
     // Drive thumbnail URLs render inline; if one fails to load, show a clickable placeholder
     return `<a href="${isUrl?p:'#'}" ${isUrl?'target="_blank"':''} style="aspect-ratio:1;border-radius:9px;overflow:hidden;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;background:var(--surface-2);font-size:11px;color:var(--text-3);text-align:center;text-decoration:none" title="Open photo"><img src="${p}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='📷<br>View'"></a>`;
   }).join('')}</div></div>` : '';
+  // If the customer attached photos but none saved, show why
+  if(!photos.length && r.photoCount){
+    photoHtml=`<div class="field"><label>Photos</label><div style="background:var(--amber-soft);border:1px solid #f5d98a;border-radius:9px;padding:11px 13px;font-size:12.5px;color:#a86800">⚠ Customer attached ${r.photoCount} photo(s), but they didn't save${r.photoError?': '+esc(r.photoError):' (the backend needs Google Drive permission — re-authorize the Apps Script)'}.</div></div>`;
+  }
   openModal(`
     <div class="modal-head"><div style="flex:1"><h2>${esc(r.name||'Quote Request')}</h2><div class="sub">${reqWhen(r.date)} · ${esc(r.propertyType||'')}</div></div>${reqChip(r.status)}<button class="btn-icon" onclick="closeModal()" style="margin-left:10px;font-size:18px">✕</button></div>
     <div class="modal-body">
