@@ -1,235 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZFVGB2BL7"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JZFVGB2BL7');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Our Work — Hydro Pressure Washing</title>
-<meta name="description" content="See the difference. Before-and-after results from pressure washing and soft wash jobs across South Jersey.">
-<link rel="icon" type="image/png" href="/assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Our Work | Hydro Pressure Washing — Before & After</title>
+<meta name="description" content="See real before & after results from Hydro Pressure Washing across South Jersey — house washing, roofs, driveways, gutters, decks and commercial.">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/favicon.png">
+<link rel="stylesheet" href="../assets/site.css">
 <style>
-:root{
-  --ocean:#0B4F5C;--ocean-deep:#073640;--spray:#19C5DB;--spray-soft:#7FE3EF;
-  --sand:#F5B841;--sand-deep:#e0a52d;--ink:#0c2126;--slate:#5a7077;--mist:#f3f8f9;--white:#ffffff;--line:rgba(11,79,92,0.12);
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--white);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
-h1,h2,h3,.display{font-family:'Archivo',sans-serif;line-height:1.05;letter-spacing:-0.02em;}
-a{color:inherit;text-decoration:none;}
-.wrap{max-width:1180px;margin:0 auto;padding:0 1.5rem;}
-.btn{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Archivo',sans-serif;font-weight:700;font-size:1rem;padding:0.95rem 1.7rem;border-radius:100px;cursor:pointer;border:none;transition:transform .15s ease, box-shadow .15s ease;white-space:nowrap;}
-.btn-primary{background:var(--sand);color:var(--ocean-deep);box-shadow:0 8px 24px -8px rgba(245,184,65,0.7);}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -8px rgba(245,184,65,0.8);}
-.btn-ghost{background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.4);backdrop-filter:blur(4px);}
-.btn-ghost:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px);}
-.btn-dark{background:var(--ocean);color:#fff;box-shadow:0 8px 24px -10px rgba(11,79,92,0.6);}
-.btn-dark:hover{transform:translateY(-2px);box-shadow:0 14px 30px -10px rgba(11,79,92,0.7);}
-header{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .3s ease;padding:1.1rem 0;}
-header.scrolled,header.solid{background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);box-shadow:0 4px 20px -8px rgba(11,79,92,0.15);padding:0.7rem 0;}
-.nav{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;}
-.logo{display:flex;align-items:center;gap:0.6rem;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.35rem;color:#fff;letter-spacing:-0.03em;transition:color .3s;}
-header.scrolled .logo,header.solid .logo{color:var(--ocean);}
-.logo-drop{width:34px;height:34px;flex-shrink:0;}
-.nav-links{display:flex;align-items:center;gap:1.8rem;margin-left:auto;}
-.nav-links a{font-weight:600;font-size:0.95rem;color:rgba(255,255,255,0.9);transition:color .2s;}
-.nav-links a:hover,.nav-links a.active{color:#fff;}
-header.scrolled .nav-links a,header.solid .nav-links a{color:var(--slate);}
-header.scrolled .nav-links a:hover,header.scrolled .nav-links a.active,header.solid .nav-links a:hover,header.solid .nav-links a.active{color:var(--ocean);}
-.nav-links a.navquote{color:var(--ocean-deep)!important;background:var(--sand);padding:0.55rem 1.2rem;border-radius:100px;font-family:'Archivo',sans-serif;font-weight:700;box-shadow:0 6px 18px -6px rgba(245,184,65,0.7);}
-.nav-links a.navquote:hover{transform:translateY(-2px);}
-.nav-toggle{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:6px;}
-.nav-toggle span{width:26px;height:2.5px;background:#fff;border-radius:2px;transition:all .3s;}
-header.scrolled .nav-toggle span,header.solid .nav-toggle span{background:var(--ocean);}
-section{padding:6rem 0;}
-.sec-head{text-align:center;max-width:42rem;margin:0 auto 3.5rem;}
-.sec-eyebrow{display:inline-block;color:var(--spray);font-family:'Archivo',sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.9rem;}
-.sec-head h2{font-size:clamp(2rem,4vw,2.9rem);font-weight:800;color:var(--ocean);margin-bottom:1rem;}
-.sec-head p{font-size:1.12rem;color:var(--slate);}
-.reveal-up{opacity:0;transform:translateY(30px);transition:opacity .6s ease, transform .6s ease;}
-.reveal-up.in{opacity:1;transform:translateY(0);}
-/* page hero (inner pages) */
-.page-hero{position:relative;background:linear-gradient(135deg,var(--ocean-deep) 0%,var(--ocean) 60%,#0a6577 100%);color:#fff;padding:9rem 0 4.5rem;overflow:hidden;text-align:center;}
-.page-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 75% 25%, rgba(25,197,219,0.22), transparent 45%);}
-.page-hero .eyebrow2{display:inline-block;color:var(--spray-soft);font-family:'Archivo',sans-serif;font-weight:700;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:1rem;position:relative;}
-.page-hero h1{font-size:clamp(2.4rem,5vw,3.8rem);font-weight:900;position:relative;margin-bottom:1rem;}
-.page-hero p{font-size:1.18rem;color:rgba(255,255,255,0.82);max-width:36rem;margin:0 auto;position:relative;}
-/* footer */
-footer{background:#06292f;color:rgba(255,255,255,0.7);padding:3rem 0 2rem;}
-.foot-inner{display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap;}
-.foot-logo{display:flex;align-items:center;gap:0.6rem;font-family:'Archivo',sans-serif;font-weight:900;font-size:1.3rem;color:#fff;}
-.foot-links{display:flex;gap:1.8rem;flex-wrap:wrap;}
-.foot-links a{font-size:0.92rem;transition:color .2s;}
-.foot-links a:hover{color:var(--spray);}
-.foot-bottom{text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.1);font-size:0.85rem;color:rgba(255,255,255,0.5);}
-.admin-link{color:rgba(255,255,255,0.4);font-size:0.82rem;}
-.admin-link:hover{color:var(--spray);}
-.cta-banner{background:linear-gradient(120deg,var(--sand),var(--sand-deep));color:var(--ocean-deep);border-radius:28px;padding:3.5rem 3rem;text-align:center;position:relative;overflow:hidden;}
-.cta-banner::before{content:"💧";position:absolute;font-size:13rem;opacity:0.12;right:-1rem;top:-2rem;transform:rotate(15deg);}
-.cta-banner h2{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;margin-bottom:0.8rem;position:relative;}
-.cta-banner p{font-size:1.15rem;margin-bottom:1.8rem;font-weight:500;position:relative;}
-.cta-banner .btn-dark{position:relative;}
-@media(max-width:860px){
-  .nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;flex-direction:column;padding:1.5rem;gap:1.2rem;box-shadow:0 10px 30px -10px rgba(0,0,0,0.2);margin-left:0;}
-  .nav-links.open{display:flex;}
-  .nav-links a{color:var(--slate)!important;}
-  .nav-links a.navquote{color:var(--ocean-deep)!important;text-align:center;}
-  .nav-toggle{display:flex;}
-}
-@media(max-width:560px){section{padding:4rem 0;}.cta-banner{padding:2.5rem 1.5rem;}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.reveal-up{opacity:1;transform:none;}}
-
-
-.cat-filters{display:flex;flex-wrap:wrap;gap:0.6rem;justify-content:center;margin-bottom:2.5rem;}
-.cat-chip{background:#fff;border:1.5px solid var(--line);color:var(--slate);font-family:'Archivo',sans-serif;font-weight:600;font-size:0.9rem;padding:0.55rem 1.1rem;border-radius:100px;cursor:pointer;transition:all .15s;}
-.cat-chip:hover{border-color:var(--spray);color:var(--ocean);}
-.cat-chip.active{background:var(--ocean);border-color:var(--ocean);color:#fff;}
-.ba-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:1.6rem;}
-.ba-item{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 14px 35px -20px rgba(11,79,92,0.3);transition:transform .2s;}
-.ba-item:hover{transform:translateY(-4px);}
-.ba-pair{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
-.ba-side{position:relative;aspect-ratio:4/3;overflow:hidden;cursor:pointer;background:var(--mist);}
-.ba-side img{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform-origin:center;}
-.ba-label{position:absolute;bottom:8px;left:8px;font-family:'Archivo',sans-serif;font-weight:800;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;padding:0.25rem 0.7rem;border-radius:100px;color:#fff;}
-.ba-label.bef{background:rgba(60,55,40,0.8);}
-.ba-label.aft{background:rgba(10,101,119,0.88);}
-.ba-meta{padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:0.6rem;}
-.ba-cat{font-family:'Archivo',sans-serif;font-weight:700;color:var(--ocean);font-size:1rem;}
-.ba-cap{font-size:0.85rem;color:var(--slate);}
-.gallery-loading,.gallery-empty{grid-column:1/-1;text-align:center;padding:3rem;color:var(--slate);}
-.gallery-empty h3{color:var(--ocean);font-size:1.3rem;margin-bottom:0.5rem;font-weight:800;font-family:'Archivo',sans-serif;}
-/* lightbox */
-.lightbox{position:fixed;inset:0;background:rgba(6,41,47,0.93);z-index:1000;display:none;align-items:center;justify-content:center;padding:2rem;cursor:zoom-out;}
-.lightbox.open{display:flex;}
-.lightbox img{max-width:95%;max-height:90%;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.6);}
-@media(max-width:780px){.ba-gallery{grid-template-columns:1fr;}}
-
-
-.logo-img{height:82px;width:auto;display:block;transition:height .3s ease;}
-header.scrolled .logo-img,header.solid .logo-img{height:68px;}
-.foot-logo-img{height:54px;width:auto;display:block;}
-@media(max-width:560px){.logo-img{height:60px;}}
+.page-hero{background:linear-gradient(135deg,#0e1116,#16233b);color:#fff;padding:64px 0 60px;text-align:center}
+.page-hero h1{font-size:clamp(30px,5vw,48px);font-weight:900;letter-spacing:-1.2px}
+.page-hero p{color:#c3ccda;font-size:18px;margin-top:14px;max-width:620px;margin-left:auto;margin-right:auto}
+/* Overview: two category sections per row (1 on mobile) */
+.cat-columns{display:grid;grid-template-columns:1fr 1fr;gap:36px 40px}
+@media(max-width:920px){.cat-columns{grid-template-columns:1fr;gap:28px}}
+.cat-block{margin-bottom:8px}
+.cat-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.cat-head .ci{width:50px;height:50px;border-radius:13px;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
+.cat-head h2{font-size:24px;font-weight:900;letter-spacing:-.5px}
+.cat-head .cnt{color:var(--text-3);font-size:13.5px;font-weight:600}
+.cat-head .see-more{margin-left:auto}
+.work-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+/* On the filtered (See More) single-category page, cards can be a bit larger */
+.single-cat .work-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+.work-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.work-card .cap{padding:13px 17px;font-weight:800;font-size:14.5px;display:flex;justify-content:space-between;align-items:center}
+.work-card .cap .dt{color:var(--text-3);font-weight:600;font-size:12px}
+.compare{position:relative;aspect-ratio:4/3;overflow:hidden;user-select:none;background:#eef1f5;cursor:ew-resize}
+.compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.compare .after{overflow:hidden;width:50%}
+.compare .after img{width:auto}
+.compare .line{position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);box-shadow:0 0 6px rgba(0,0,0,.3);z-index:3}
+.compare .handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:var(--blue);z-index:4;font-size:14px}
+.compare .tag{position:absolute;bottom:10px;padding:3px 10px;border-radius:20px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-weight:800;z-index:2}
+.compare .tag.b{left:10px}.compare .tag.a{right:10px}
+.cat-note{background:var(--bg-2);border:1px dashed var(--border-strong,#d4dae4);border-radius:12px;padding:14px 18px;color:var(--text-3);font-size:13.5px;font-weight:600;text-align:center}
+.loading{text-align:center;padding:60px 20px;color:var(--text-3)}
+.spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.back-link{display:inline-flex;align-items:center;gap:7px;color:var(--blue);font-weight:700;font-size:14.5px;margin-bottom:8px}
+.filter-hero h1 span{color:#4b93ff}
 </style>
 </head>
-<body class="inner"><header id="header">
-  <div class="wrap nav">
-    <a href="/" class="logo"><img src="/assets/logo.png" alt="Hydro Pressure Washing" class="logo-img"></a>
-    <nav class="nav-links" id="navLinks">
-      <a href="/">Home</a>
-      <a href="/services/">Services</a>
-      <a href="/about/">About</a>
-      <a href="/work/" class="active">Our Work</a>
-      <a href="/contact/">Contact</a>
-      <a href="/contact/" class="navquote">Free Quote</a>
-    </nav>
-    <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+<body>
+<div id="site-nav"></div>
+
+<header class="page-hero filter-hero">
+  <div class="wrap">
+    <h1 id="pageTitle">Our Work</h1>
+    <p id="pageSub">Real results from real jobs across South Jersey. Drag the slider on any photo to reveal the before &amp; after.</p>
   </div>
 </header>
-<section class="page-hero"><div class="wrap"><span class="eyebrow2">Before &amp; After</span><h1>Our Work</h1><p>Real results from real jobs across South Jersey. See the difference a proper clean makes.</p></div></section>
-<section><div class="wrap">
-  <div class="cat-filters reveal-up" id="cat-filters">
-    <button class="cat-chip active" data-cat="all" onclick="filterGallery('all',this)">All Work</button>
-    <button class="cat-chip" data-cat="House Wash" onclick="filterGallery('House Wash',this)">🏠 House Wash</button>
-    <button class="cat-chip" data-cat="Driveway / Concrete" onclick="filterGallery('Driveway / Concrete',this)">🚗 Driveway</button>
-    <button class="cat-chip" data-cat="Roof Soft Wash" onclick="filterGallery('Roof Soft Wash',this)">🏡 Roof</button>
-    <button class="cat-chip" data-cat="Deck / Patio" onclick="filterGallery('Deck / Patio',this)">🪵 Deck / Patio</button>
-    <button class="cat-chip" data-cat="Fence Washing" onclick="filterGallery('Fence Washing',this)">🧱 Fence</button>
-    <button class="cat-chip" data-cat="Gutter Cleaning" onclick="filterGallery('Gutter Cleaning',this)">🍂 Gutters</button>
-    <button class="cat-chip" data-cat="Trash Bin Cleaning" onclick="filterGallery('Trash Bin Cleaning',this)">🗑️ Trash Bins</button>
-    <button class="cat-chip" data-cat="Commercial" onclick="filterGallery('Commercial',this)">🏢 Commercial</button>
-  </div>
-  <div id="gallery" class="ba-gallery"><div class="gallery-loading">Loading our work…</div></div>
-</div></section>
-<section style="padding-top:0;"><div class="wrap"><div class="cta-banner reveal-up"><h2>Your Home Could Be Next</h2><p>Get a free quote and see what we can do for your property.</p><a href="/contact/" class="btn btn-dark">Get a Free Quote →</a></div></div></section>
-<footer>
+
+<section class="section">
   <div class="wrap">
-    <div class="foot-inner">
-      <div class="foot-logo"><img src="/assets/logo.png" alt="Hydro Pressure Washing" class="foot-logo-img"></div>
-      <div class="foot-links">
-        <a href="/">Home</a>
-        <a href="/services/">Services</a>
-        <a href="/about/">About</a>
-        <a href="/work/">Our Work</a>
-        <a href="/contact/">Contact</a>
-        <a href="tel:6095451018">(609) 545-1018</a>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      © <span id="year"></span> Hydro Pressure Washing · South Jersey · Licensed &amp; Insured
-      &nbsp;·&nbsp; <a href="/admin" class="admin-link">Owner Login</a>
+    <div id="workArea">
+      <div class="loading"><div class="spinner"></div>Loading our latest work…</div>
     </div>
   </div>
-</footer><script>
-const header=document.getElementById('header');
-const isInner=document.body.classList.contains('inner');
-function onScroll(){header.classList.toggle('scrolled',window.scrollY>40);}
-window.addEventListener("scroll",onScroll);onScroll();
-const navToggle=document.getElementById('navToggle'),navLinks=document.getElementById('navLinks');
-navToggle.addEventListener('click',()=>navLinks.classList.toggle('open'));
-navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
-const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
-const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
-document.querySelectorAll('.reveal-up').forEach((el,i)=>{el.style.transitionDelay=(i%3*0.08)+'s';io.observe(el);});
+</section>
 
-// ── BEFORE/AFTER GALLERY ──
-const GALLERY_ENDPOINT="https://script.google.com/macros/s/AKfycbx5aBEdOkyQicpCW7sP_JaHIOEtcHwfG7cxNIQxsWtZXnN_ICGSgNv7UuOnE5yixmkjJg/exec";
-let _photos=[], _activeCat='all';
-function escHtml(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-async function loadGalleryPhotos(){
-  const wrap=document.getElementById('gallery');
-  try{
-    const res=await fetch(GALLERY_ENDPOINT+'?action=listphotos&_t='+Date.now());
-    const data=await res.json();
-    _photos=(data&&data.photos)?data.photos:[];
-    renderGallery();
-  }catch(e){
-    wrap.innerHTML='<div class="gallery-empty"><h3>Our work gallery is coming soon</h3><p>We\'re adding before-and-after photos from recent jobs. Check back soon, or <a href="/contact/" style="color:var(--spray);font-weight:600;">request a free quote</a>.</p></div>';
-  }
-}
-function filterGallery(cat,btn){
-  _activeCat=cat;
-  document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  renderGallery();
-}
-function renderGallery(){
-  const wrap=document.getElementById('gallery');
-  let list=_photos.slice();
-  if(_activeCat!=='all') list=list.filter(p=>p.category===_activeCat);
-  list.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  if(!list.length){
-    wrap.innerHTML=_photos.length
-      ? '<div class="gallery-empty"><h3>No photos in this category yet</h3><p>Check another category or <a href="/contact/" style="color:var(--spray);font-weight:600;">get a free quote</a>.</p></div>'
-      : '<div class="gallery-empty"><h3>Our work gallery is coming soon</h3><p>We\'re adding before-and-after photos from recent jobs. Check back soon!</p></div>';
-    // hide filters if totally empty
-    document.getElementById('cat-filters').style.display=_photos.length?'flex':'none';
-    return;
-  }
-  document.getElementById('cat-filters').style.display='flex';
-  wrap.innerHTML=list.map(p=>`
-    <div class="ba-item">
-      <div class="ba-pair">
-        <div class="ba-side" onclick="openLightbox('${p.before}')"><img src="${p.before}" loading="lazy" alt="Before" style="transform:${frameCss(p.beforeFrame)}"><span class="ba-label bef">Before</span></div>
-        <div class="ba-side" onclick="openLightbox('${p.after}')"><img src="${p.after}" loading="lazy" alt="After" style="transform:${frameCss(p.afterFrame)}"><span class="ba-label aft">After</span></div>
+<section class="section gray">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2>Want Results Like These?</h2>
+      <p>Get your free quote today and let's make your property the next transformation.</p>
+      <div class="btns">
+        <a href="../contact/#quote" class="btn btn-primary btn-lg">Get My Free Quote →</a>
+        <a href="tel:+16095451018" class="btn btn-ghost btn-lg">📞 Call or Text Us</a>
       </div>
-      <div class="ba-meta"><span class="ba-cat">${escHtml(p.category)}</span>${p.caption?`<span class="ba-cap">${escHtml(p.caption)}</span>`:''}</div>
-    </div>`).join('');
-}
-function frameCss(frameVal){
-  const parts=String(frameVal||'1,0,0').split(',');
-  const s=parseFloat(parts[0])||1, x=parseFloat(parts[1])||0, y=parseFloat(parts[2])||0;
-  return `translate(-50%,-50%) translate(${x}px,${y}px) scale(${s})`;
-}
-function openLightbox(url){
-  let lb=document.getElementById('lightbox');
-  if(!lb){ lb=document.createElement('div'); lb.id='lightbox'; lb.className='lightbox'; lb.onclick=()=>lb.classList.remove('open'); document.body.appendChild(lb); }
-  lb.innerHTML=`<img src="${url}" alt="Photo">`;
-  lb.classList.add('open');
-}
-loadGalleryPhotos();
+    </div>
+  </div>
+</section>
 
+<div id="site-footer"></div>
+<script src="../assets/site.js"></script>
+<script src="../assets/config.js"></script>
+<script>
+HydroSite.render({base:'../', active:'work'});
+
+/* ---- Categories: each has keywords that match a job's service names ---- */
+// Order matters: more specific categories are matched FIRST so a job like
+// "Roof Soft Wash" lands in Roof, not House. House is the catch-all last.
+const CATEGORIES=[
+  {key:'roof',       name:'Roof Cleaning',        icon:'🧼', keywords:['roof']},
+  {key:'gutter',     name:'Gutter Cleaning',      icon:'🪣', keywords:['gutter']},
+  {key:'concrete',   name:'Driveways & Concrete', icon:'🛣️', keywords:['driveway','concrete','sidewalk','patio']},
+  {key:'deck',       name:'Decks & Fences',       icon:'🪵', keywords:['deck','fence','wood']},
+  {key:'commercial', name:'Commercial',           icon:'🏢', keywords:['commercial','storefront','window']},
+  {key:'house',      name:'House Washing',        icon:'🏠', keywords:['house','soft wash','siding','vinyl','stucco','exterior','pressure wash']}
+];
+// Display order for the overview (nice logical order, independent of match order)
+const DISPLAY_ORDER=['house','roof','concrete','gutter','deck','commercial'];
+const PREVIEW_COUNT=2;   // previews shown per category on the overview (2-per-row layout)
+
+/* branded SVG placeholder tiles (no external images needed) */
+function xmlEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function placeholderTile(label,variant){
+  const bg = variant==='after' ? '#1f6fef' : '#3a4759';
+  const l=xmlEsc(label);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg}"/><stop offset="1" stop-color="${variant==='after'?'#1558c9':'#2a3441'}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><text x="50%" y="46%" font-family="Arial,sans-serif" font-size="19" font-weight="bold" fill="#fff" text-anchor="middle">${l}</text><text x="50%" y="58%" font-family="Arial,sans-serif" font-size="13" fill="#ffffffcc" text-anchor="middle">${variant.toUpperCase()}</text></svg>`;
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
+}
+function catPlaceholderPair(cat){
+  return { title:cat.name, services:[cat.name], placeholder:true,
+           before:placeholderTile(cat.name,'before'), after:placeholderTile(cat.name,'after'), date:'' };
+}
+
+function categorize(item){
+  const svc=(item.services||[]).join(' ').toLowerCase()+' '+(item.title||'').toLowerCase();
+  for(const c of CATEGORIES){ if(c.keywords.some(k=>svc.includes(k))) return c.key; }
+  return 'house'; // sensible default bucket
+}
+
+let ALL_WORK=[];
+async function loadWork(){
+  try{
+    const res=await fetch(window.HYDRO_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'publicWork'})});
+    const json=await res.json();
+    ALL_WORK=(json&&json.work)||[];
+  }catch(e){ ALL_WORK=[]; }
+  // group real work by category
+  const byCat={}; CATEGORIES.forEach(c=>byCat[c.key]=[]);
+  ALL_WORK.forEach(w=>{ byCat[categorize(w)].push(w); });
+  window._byCat=byCat;
+
+  // If URL has ?cat=key -> show the single-category (See More) view
+  const params=new URLSearchParams(location.search);
+  const catKey=params.get('cat');
+  if(catKey && CATEGORIES.find(c=>c.key===catKey)) renderCategoryPage(catKey, byCat);
+  else renderOverview(byCat);
+}
+
+function cardHtml(w,i){
+  const cap=(w.title||'Pressure Washing').replace(/</g,'&lt;');
+  return `<div class="work-card">
+    <div class="compare" id="cmp${i}" onmousedown="startCmp(event,${i})" ontouchstart="startCmp(event,${i})">
+      <img src="${w.before}">
+      <div class="after" id="aft${i}"><img src="${w.after}"></div>
+      <span class="tag b">BEFORE</span><span class="tag a">AFTER</span>
+      <div class="line" id="ln${i}"><div class="handle">⟺</div></div>
+    </div>
+    <div class="cap"><span>${cap}</span>${w.date?`<span class="dt">${w.date}</span>`:''}</div>
+  </div>`;
+}
+
+let cmpItems=[];
+function renderOverview(byCat){
+  document.getElementById('pageTitle').textContent='Our Work';
+  document.getElementById('pageSub').textContent='Real results from real jobs across South Jersey. Drag the slider on any photo to reveal the before & after.';
+  cmpItems=[]; let idx=0; let html='<div class="cat-columns">';
+  DISPLAY_ORDER.map(k=>CATEGORIES.find(c=>c.key===k)).forEach(cat=>{
+    let items=byCat[cat.key]||[];
+    const realCount=items.length;
+    let preview = items.slice(0,PREVIEW_COUNT);
+    let usingPlaceholder=false;
+    if(!preview.length){ preview=[catPlaceholderPair(cat)]; usingPlaceholder=true; }
+    html+=`<div class="cat-block">
+      <div class="cat-head">
+        <div class="ci">${cat.icon}</div>
+        <div><h2>${cat.name}</h2><div class="cnt">${realCount?realCount+' project'+(realCount>1?'s':''):'Gallery being built'}</div></div>
+        ${realCount>PREVIEW_COUNT?`<a href="?cat=${cat.key}" class="btn btn-soft see-more" style="background:var(--blue-l);color:var(--blue-d)">See More (${realCount}) →</a>`:''}
+      </div>
+      <div class="work-grid">${preview.map(w=>cardHtml(w,idx++)).join('')}</div>
+      ${usingPlaceholder?`<div class="cat-note" style="margin-top:14px">📸 ${cat.name} gallery coming soon — photos will appear here as jobs are completed.</div>`:''}
+    </div>`;
+    preview.forEach(w=>cmpItems.push(w));
+  });
+  html+='</div>';
+  document.getElementById('workArea').innerHTML=html;
+  cmpItems.forEach((w,i)=>setCmp(i,50));
+}
+
+function renderCategoryPage(catKey, byCat){
+  const cat=CATEGORIES.find(c=>c.key===catKey);
+  const items=byCat[catKey]||[];
+  document.getElementById('pageTitle').innerHTML=`${cat.icon} <span>${cat.name}</span>`;
+  document.getElementById('pageSub').textContent=`Every ${cat.name.toLowerCase()} transformation we've completed. Drag any slider to see the difference.`;
+  cmpItems=[]; let idx=0;
+  let body=`<div class="single-cat"><a href="?" class="back-link">← Back to all work</a>`;
+  if(items.length){
+    body+=`<div class="work-grid" style="margin-top:8px">${items.map(w=>cardHtml(w,idx++)).join('')}</div>`;
+    items.forEach(w=>cmpItems.push(w));
+  }else{
+    const pair=catPlaceholderPair(cat);
+    body+=`<div class="work-grid" style="margin-top:8px">${cardHtml(pair,idx++)}</div>
+      <div class="cat-note" style="margin-top:16px">📸 We're building out our ${cat.name.toLowerCase()} gallery. Check back soon — or <a href="../contact/#quote">get a free quote</a> to be our next transformation!</div>`;
+    cmpItems.push(pair);
+  }
+  body+=`</div>`;
+  document.getElementById('workArea').innerHTML=body;
+  cmpItems.forEach((w,i)=>setCmp(i,50));
+  window.scrollTo(0,0);
+}
+
+/* ---- slider mechanics ---- */
+let drag=null;
+function startCmp(e,i){drag=i;moveCmp(e);}
+function moveCmp(e){
+  if(drag===null)return;
+  const el=document.getElementById('cmp'+drag);if(!el)return;
+  const r=el.getBoundingClientRect();
+  const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  setCmp(drag,Math.max(2,Math.min(98,x/r.width*100)));
+}
+function setCmp(i,pct){
+  const el=document.getElementById('cmp'+i);if(!el)return;
+  const aft=document.getElementById('aft'+i), ln=document.getElementById('ln'+i);
+  if(!aft||!ln)return;
+  aft.style.width=pct+'%'; ln.style.left=pct+'%';
+  const img=aft.querySelector('img'); if(img) img.style.width=el.getBoundingClientRect().width+'px';
+}
+document.addEventListener('mousemove',moveCmp);
+document.addEventListener('touchmove',moveCmp);
+document.addEventListener('mouseup',()=>drag=null);
+document.addEventListener('touchend',()=>drag=null);
+window.addEventListener('resize',()=>cmpItems.forEach((w,i)=>{const aft=document.getElementById('aft'+i);const pct=aft?parseFloat(aft.style.width)||50:50;setCmp(i,pct);}));
+loadWork();
 </script>
 </body>
 </html>
