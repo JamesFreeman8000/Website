@@ -352,7 +352,7 @@ function saveCfg(){ try{ localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); }ca
 
 function blankDB(){
   return {
-    jobs:[], customers:[], quotes:[], invoices:[], services:[], expenses:[],
+    jobs:[], customers:[], quotes:[], invoices:[], services:[], expenses:[], requests:[],
     meta:{ createdAt:new Date().toISOString(), lastSync:null }
   };
 }
@@ -561,6 +561,7 @@ async function testConnection(){
 const NAV = [
   {section:'Overview'},
   {id:'dashboard', label:'Dashboard', icon:'📊'},
+  {id:'requests',  label:'Requests',  icon:'📨'},
   {id:'schedule',  label:'Schedule',  icon:'📅'},
   {id:'jobs',      label:'Jobs',      icon:'🧽'},
   {section:'Sales'},
@@ -580,6 +581,7 @@ function buildNav(){
   nav.innerHTML = NAV.map(n=>{
     if(n.section) return `<div class="nav-section">${n.section}</div>`;
     let badge='';
+    if(n.id==='requests'){ const r=(DB.requests||[]).filter(x=>x.status==='new').length; if(r)badge=`<span class="badge">${r}</span>`; }
     if(n.id==='schedule'){ const t=DB.jobs.filter(j=>j.status==='scheduled'&&daysUntil(j.date)!=null&&daysUntil(j.date)>=0&&daysUntil(j.date)<=2).length; if(t)badge=`<span class="badge">${t}</span>`; }
     if(n.id==='invoices'){ const o=DB.invoices.filter(i=>i.status==='sent'||i.status==='overdue').length; if(o)badge=`<span class="badge">${o}</span>`; }
     if(n.id==='quotes'){ const q=DB.quotes.filter(x=>x.status==='sent').length; if(q)badge=`<span class="badge">${q}</span>`; }
@@ -590,6 +592,7 @@ function go(route){ ROUTE=route; toggleNav(false); render(); window.scrollTo(0,0
 
 const TITLES={
   dashboard:['Dashboard','Your business at a glance'],
+  requests:['Requests','New quote requests from your website'],
   schedule:['Schedule','Upcoming and past jobs'],
   jobs:['Jobs','Every job, tracked start to finish'],
   quotes:['Quotes','Estimates sent to customers'],
@@ -608,7 +611,7 @@ function render(){
   document.getElementById('bizName').textContent=(CFG.bizName||'Exterior Wash').replace(/ LLC$/,'');
   buildNav();
   const v=document.getElementById('view');
-  const fn=({dashboard:viewDashboard,schedule:viewSchedule,jobs:viewJobs,quotes:viewQuotes,invoices:viewInvoices,revenue:viewRevenue,customers:viewCustomers,pricing:viewPricing,gallery:viewGallery,settings:viewSettings})[ROUTE];
+  const fn=({dashboard:viewDashboard,requests:viewRequests,schedule:viewSchedule,jobs:viewJobs,quotes:viewQuotes,invoices:viewInvoices,revenue:viewRevenue,customers:viewCustomers,pricing:viewPricing,gallery:viewGallery,settings:viewSettings})[ROUTE];
   v.innerHTML = fn ? fn() : '<div class="empty">Not found</div>';
   if(afterRender) { const f=afterRender; afterRender=null; f(); }
 }
@@ -678,6 +681,7 @@ function viewDashboard(){
 
   return `
   ${banner}
+  ${(DB.requests||[]).filter(r=>r.status==='new').length?`<div class="setup-banner" style="background:var(--amber-soft);border-color:#f5d98a;cursor:pointer" onclick="go('requests')"><span class="sb-ico">📨</span><div style="flex:1"><b>${(DB.requests||[]).filter(r=>r.status==='new').length} new quote request(s) from your website</b><div style="font-size:12.5px;color:var(--text-2)">Click to review and respond.</div></div><button class="btn btn-primary btn-sm">View Requests →</button></div>`:''}
   <div class="grid kpi-grid" style="margin-bottom:22px">
     ${kpi('💰','var(--green)','var(--green-soft)','Revenue this month',fmtMoney0(thisMonth.rev), momPct>=0?`<span class="kd up">▲ ${momPct}% vs last mo</span>`:`<span class="kd down">▼ ${Math.abs(momPct)}% vs last mo</span>`)}
     ${kpi('🧾','var(--amber)','var(--amber-soft)','Outstanding',fmtMoney0(st.totalOut),`<span class="kd flat">${DB.invoices.filter(i=>i.status==='sent'||i.status==='overdue').length} unpaid invoices</span>`)}
@@ -761,6 +765,99 @@ function drawRevChart(){
   ]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12,usePointStyle:true,padding:16,font:{size:12}}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>CFG.currency+v},grid:{color:'#eef1f5'}}}}});
 }
 function destroyChart(el){ if(el && el._chart){ try{ el._chart.destroy(); }catch(e){} el._chart=null; } }
+
+/* ---------------------------------------------------------------------
+   7b. VIEW: REQUESTS (incoming website quote form leads)
+   ------------------------------------------------------------------- */
+let reqFilter='all';
+function viewRequests(){
+  let list=(DB.requests||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(reqFilter!=='all') list=list.filter(r=>r.status===reqFilter);
+  const nNew=(DB.requests||[]).filter(r=>r.status==='new').length;
+  const banner = !CFG.apiUrl ? `<div class="setup-banner"><span class="sb-ico">🔗</span><div style="flex:1;font-size:12.5px">Connect Google Sheets in Settings so website requests sync here.</div></div>` : `
+    <div class="setup-banner" style="background:var(--brand-soft);border-color:#cfe0fa">
+      <span class="sb-ico">📨</span>
+      <div style="flex:1;font-size:12.5px;color:var(--text-2)"><b>Quote requests from your website land here.</b> When someone submits your Free Quote form, it appears below (and emails you). Pull to refresh, then turn a request into a customer or quote in one click.</div>
+      <button class="btn btn-primary btn-sm" onclick="pullSync()">↻ Refresh</button>
+    </div>`;
+  return `
+  ${banner}
+  <div class="toolbar">
+    <div class="pill-tabs">
+      ${['all','new','contacted','quoted','closed'].map(k=>{
+        const c=k==='all'?(DB.requests||[]).length:(DB.requests||[]).filter(r=>r.status===k).length;
+        return `<button class="${reqFilter===k?'active':''}" onclick="reqFilter='${k}';render()">${k[0].toUpperCase()+k.slice(1)} <span style="opacity:.6">${c}</span></button>`;
+      }).join('')}
+    </div>
+  </div>
+  <div class="card"><div class="table-wrap">
+  ${list.length?`<table>
+    <thead><tr><th>When</th><th>Name</th><th>Contact</th><th>Type</th><th>Services</th><th>Photos</th><th>Status</th></tr></thead>
+    <tbody>${list.map(r=>`
+      <tr class="row-click" onclick="openRequest('${r.id}')">
+        <td class="mono" style="white-space:nowrap">${reqWhen(r.date)}</td>
+        <td><b>${esc(r.name||'—')}</b><div style="font-size:12px;color:var(--text-3)">${esc((r.address||'').slice(0,30))}</div></td>
+        <td style="font-size:13px">${r.phone?esc(r.phone):''}${r.email?'<div style="color:var(--text-3);font-size:12px">'+esc(r.email)+'</div>':''}</td>
+        <td><span class="chip ${r.propertyType==='Commercial'?'chip-purple':'chip-blue'}">${esc(r.propertyType||'—')}</span></td>
+        <td style="font-size:12.5px">${(r.services||[]).slice(0,2).map(s=>esc(s)).join(', ')}${(r.services||[]).length>2?' +'+((r.services||[]).length-2):''}</td>
+        <td>${(r.photos||[]).length?`<span class="chip chip-gray">📷 ${(r.photos||[]).length}</span>`:'—'}</td>
+        <td>${reqChip(r.status)}</td>
+      </tr>`).join('')}</tbody>
+  </table>`:`<div class="empty"><div class="ei">📨</div><h4>No requests yet</h4><p>New quote requests from your website will show up here.</p></div>`}
+  </div></div>`;
+}
+function reqWhen(iso){ if(!iso) return '—'; const d=new Date(iso); const days=Math.round((Date.now()-d)/864e5); if(days===0)return 'Today'; if(days===1)return 'Yesterday'; if(days<7)return days+'d ago'; return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function reqChip(s){ const m={new:['chip-amber','New'],contacted:['chip-blue','Contacted'],quoted:['chip-purple','Quoted'],closed:['chip-green','Closed'],lost:['chip-gray','Lost']}; const [c,l]=m[s]||['chip-amber','New']; return `<span class="chip ${c}"><span class="d" style="background:currentColor"></span>${l}</span>`; }
+
+function openRequest(id){
+  const r=(DB.requests||[]).find(x=>x.id===id); if(!r) return;
+  const photos=(r.photos||[]);
+  const photoHtml = photos.length ? `<div class="field"><label>Photos (${photos.length})</label><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px">${photos.map(p=>{
+    const isUrl=/^https?:/.test(p);
+    return `<a href="${isUrl?p:'#'}" ${isUrl?'target="_blank"':''} style="aspect-ratio:1;border-radius:9px;overflow:hidden;border:1px solid var(--border);display:block"><img src="${p}" style="width:100%;height:100%;object-fit:cover"></a>`;
+  }).join('')}</div></div>` : '';
+  openModal(`
+    <div class="modal-head"><div style="flex:1"><h2>${esc(r.name||'Quote Request')}</h2><div class="sub">${reqWhen(r.date)} · ${esc(r.propertyType||'')}</div></div>${reqChip(r.status)}<button class="btn-icon" onclick="closeModal()" style="margin-left:10px;font-size:18px">✕</button></div>
+    <div class="modal-body">
+      <div class="field-row">
+        ${r.phone?`<div class="field"><label>Phone</label><div>📞 <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a></div></div>`:''}
+        ${r.email?`<div class="field"><label>Email</label><div>✉️ <a href="mailto:${esc(r.email)}">${esc(r.email)}</a></div></div>`:''}
+      </div>
+      ${r.address?`<div class="field"><label>Address</label><div>📍 ${esc(r.address)}</div></div>`:''}
+      <div class="field"><label>Services requested</label><div>${(r.services||[]).map(s=>`<span class="chip chip-blue" style="margin:2px">${esc(s)}</span>`).join(' ')||'—'}</div></div>
+      ${r.message?`<div class="field"><label>Their message</label><div style="background:var(--surface-2);padding:12px;border-radius:9px;white-space:pre-wrap">${esc(r.message)}</div></div>`:''}
+      ${photoHtml}
+      <div class="field"><label>Status</label>
+        <select class="input" id="req_status" onchange="setReqStatus('${r.id}',this.value)">
+          ${['new','contacted','quoted','closed','lost'].map(s=>`<option value="${s}" ${r.status===s?'selected':''}>${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="requestToQuote('${r.id}')">📝 Create Quote</button>
+      <button class="btn btn-soft" onclick="requestToCustomer('${r.id}')">👤 Add as Customer</button>
+      ${r.phone?`<a class="btn btn-ghost btn-sm" href="tel:${esc(r.phone)}">📞 Call</a>`:''}
+      <div style="flex:1"></div>
+      <button class="btn btn-danger btn-sm" onclick="deleteRequest('${r.id}')">Delete</button>
+    </div>`, true);
+}
+function setReqStatus(id,s){ const r=DB.requests.find(x=>x.id===id); r.status=s; saveDB(); toast('Marked '+s,'ok'); buildNav(); }
+function reqFindOrCreateCustomer(r){
+  let c=DB.customers.find(x=>(r.email&&x.email===r.email)||(r.phone&&x.phone===r.phone)||(x.name===r.name&&r.name));
+  if(!c){ c={id:uid('cus'),name:r.name||'Website Lead',email:r.email||'',phone:r.phone||'',address:r.address||'',notes:'From website request',createdAt:todayISO()}; DB.customers.push(c); }
+  return c;
+}
+function requestToCustomer(id){
+  const r=DB.requests.find(x=>x.id===id); const c=reqFindOrCreateCustomer(r); r.status=r.status==='new'?'contacted':r.status; saveDB(); closeModal(); toast('Added to customers','ok'); openCustomer(c.id);
+}
+function requestToQuote(id){
+  const r=DB.requests.find(x=>x.id===id); const c=reqFindOrCreateCustomer(r);
+  const items=(r.services||[]).map(s=>({desc:s,qty:1,price:''}));
+  if(!items.length) items.push({desc:'Pressure washing',qty:1,price:''});
+  const q={id:uid('qte'),number:nextNumber('quote'),customerId:c.id,date:todayISO(),validUntil:addDays(todayISO(),30),status:'draft',items,notes:r.message||'',taxRate:CFG.taxRate||0,token:uid('tok')};
+  DB.quotes.push(q); r.status='quoted'; saveDB(); closeModal(); ROUTE='quotes'; render(); openQuote(q.id); toast('Quote drafted from request','ok');
+}
+function deleteRequest(id){ confirmDialog('Delete this request?','This removes the lead permanently.',()=>{ DB.requests=DB.requests.filter(x=>x.id!==id); saveDB(); closeModal(); render(); toast('Request deleted','ok'); }); }
 
 /* ---------------------------------------------------------------------
    8. VIEW: SCHEDULE (calendar + list)
