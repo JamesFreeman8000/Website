@@ -97,15 +97,7 @@
 
           <div class="fld">
             <label>What services are you interested in? <span class="req">*</span></label>
-            <div class="svc-checks" id="svcChecks">
-              <label class="svc-check"><input type="checkbox" value="House Soft Washing"> House Washing</label>
-              <label class="svc-check"><input type="checkbox" value="Roof Cleaning"> Roof Cleaning</label>
-              <label class="svc-check"><input type="checkbox" value="Driveway / Concrete"> Driveway / Concrete</label>
-              <label class="svc-check"><input type="checkbox" value="Gutter Cleaning"> Gutter Cleaning</label>
-              <label class="svc-check"><input type="checkbox" value="Deck / Fence"> Deck / Fence</label>
-              <label class="svc-check"><input type="checkbox" value="Commercial"> Commercial</label>
-              <label class="svc-check"><input type="checkbox" value="Not sure / Other"> Not Sure / Other</label>
-            </div>
+            <div class="svc-checks" id="svcChecks"><!-- filled by JS based on Residential/Commercial --></div>
           </div>
 
           <div class="frow">
@@ -164,14 +156,34 @@ HydroSite.render({base:'../', active:'contact'});
 let selectedType='Residential';
 let photos=[];  // array of data URLs
 
+// Service options shown per property type
+const SERVICES={
+  Residential:[
+    'House Washing','Roof Cleaning','Driveway / Concrete',
+    'Gutter Cleaning','Deck / Fence','Not Sure / Other'
+  ],
+  Commercial:[
+    'Building / Storefront Washing','Concrete / Sidewalks','Dumpster Pad Cleaning',
+    'Awning / Canopy','Fleet / Equipment','Not Sure / Other'
+  ]
+};
+
+function renderServices(){
+  const wrap=document.getElementById('svcChecks');
+  wrap.innerHTML=SERVICES[selectedType].map(s=>
+    `<label class="svc-check"><input type="checkbox" value="${s}"> ${s}</label>`).join('');
+  // wire up highlight-on-check for the fresh checkboxes
+  wrap.querySelectorAll('.svc-check input').forEach(cb=>{
+    cb.addEventListener('change',()=>cb.closest('.svc-check').classList.toggle('sel',cb.checked));
+  });
+}
+
 function pickType(el){
   document.querySelectorAll('.toggle').forEach(t=>t.classList.remove('sel'));
   el.classList.add('sel'); selectedType=el.dataset.type;
+  renderServices();   // swap the service list to match Residential/Commercial
 }
-// service check highlight
-document.querySelectorAll('.svc-check input').forEach(cb=>{
-  cb.addEventListener('change',()=>cb.closest('.svc-check').classList.toggle('sel',cb.checked));
-});
+renderServices();     // initial render (Residential by default)
 
 // drag & drop
 const dz=document.getElementById('dropZone');
