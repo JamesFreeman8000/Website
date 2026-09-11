@@ -390,19 +390,31 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;'
 /* ---------------------------------------------------------------------
    2. SEED DATA (demo, so the dashboard looks alive on first open)
    ------------------------------------------------------------------- */
+/* The standard Hydro service list — matches the website quote form.
+   Rates are editable placeholders; tap any card to adjust. */
+function HYDRO_SERVICES(){
+  return [
+    // --- Residential ---
+    {id:uid('svc'), name:'House Washing',              emoji:'🏠', color:'blue',   type:'sqft',   rate:0.18, min:250, unit:'sq ft',     notes:'Residential. Low-pressure soft wash for siding, vinyl, stucco.'},
+    {id:uid('svc'), name:'Roof Cleaning',              emoji:'🧼', color:'purple', type:'sqft',   rate:0.35, min:400, unit:'sq ft',     notes:'Residential. Soft wash — kills algae/moss. Extra care on landscaping.'},
+    {id:uid('svc'), name:'Driveway / Concrete',        emoji:'🛣️', color:'gray',   type:'sqft',   rate:0.22, min:120, unit:'sq ft',     notes:'Residential. Surface cleaner + post-treatment. Price up for oil stains.'},
+    {id:uid('svc'), name:'Gutter Cleaning',            emoji:'🪣', color:'green',  type:'linear', rate:1.25, min:100, unit:'linear ft', notes:'Residential. Interior debris removal. 2-story +25%.'},
+    {id:uid('svc'), name:'Deck / Fence',               emoji:'🪵', color:'amber',  type:'sqft',   rate:0.30, min:150, unit:'sq ft',     notes:'Residential. Wood-safe pressure. Optional brightener add-on.'},
+    {id:uid('svc'), name:'Trash / Recycle Bin Cleaning', emoji:'🗑️', color:'green', type:'flat',  rate:15,   min:30,  unit:'per bin',   notes:'Residential. Wash & sanitize curbside bins. $15/bin, $30 min.'},
+    // --- Commercial (placeholder rates — edit to your market) ---
+    {id:uid('svc'), name:'Building / Storefront Washing', emoji:'🏢', color:'blue',   type:'sqft',   rate:0.15, min:300, unit:'sq ft',  notes:'Commercial. Storefront & building exterior soft wash.'},
+    {id:uid('svc'), name:'Concrete / Sidewalks',          emoji:'🚶', color:'gray',   type:'sqft',   rate:0.18, min:250, unit:'sq ft',  notes:'Commercial. Sidewalks, entryways, walkways.'},
+    {id:uid('svc'), name:'Dumpster Pad Cleaning',         emoji:'🗑️', color:'green',  type:'flat',   rate:125,  min:0,   unit:'job',    notes:'Commercial. Degrease + sanitize. Recurring available.'},
+    {id:uid('svc'), name:'Awning / Canopy',               emoji:'⛱️', color:'amber',  type:'flat',   rate:150,  min:0,   unit:'job',    notes:'Commercial. Soft wash fabric/metal awnings. Price by size.'},
+    {id:uid('svc'), name:'Fleet / Equipment',             emoji:'🚚', color:'purple', type:'flat',   rate:35,   min:100, unit:'per unit', notes:'Commercial. Trucks/trailers/equipment. $35/unit, $100 min.'}
+  ];
+}
 function seedDB(){
   const db = blankDB();
   db.services = [
-    {id:uid('svc'), name:'House Soft Wash', emoji:'🏠', color:'blue', type:'sqft', rate:0.18, min:250, unit:'sq ft', notes:'Low-pressure soft wash for siding, vinyl, stucco. Uses SH mix.'},
-    {id:uid('svc'), name:'Roof Soft Wash', emoji:'🧼', color:'purple', type:'sqft', rate:0.35, min:400, unit:'sq ft', notes:'Kills algae/moss. Heavier SH ratio. Extra care on landscaping.'},
-    {id:uid('svc'), name:'Driveway / Concrete', emoji:'🛣️', color:'gray', type:'sqft', rate:0.22, min:120, unit:'sq ft', notes:'Surface cleaner + post-treatment. Price up for oil stains.'},
-    {id:uid('svc'), name:'Gutter Cleaning', emoji:'🪣', color:'green', type:'linear', rate:1.25, min:100, unit:'linear ft', notes:'Interior debris removal. 2-story +25%.'},
-    {id:uid('svc'), name:'Gutter Brightening', emoji:'✨', color:'amber', type:'linear', rate:1.75, min:125, unit:'linear ft', notes:'Removes tiger stripes / oxidation on gutter face.'},
-    {id:uid('svc'), name:'Deck / Fence Wash', emoji:'🪵', color:'amber', type:'sqft', rate:0.30, min:150, unit:'sq ft', notes:'Wood-safe pressure. Optional brightener add-on.'},
-    {id:uid('svc'), name:'Pressure Wash (Flat)', emoji:'💦', color:'blue', type:'flat', rate:175, min:0, unit:'job', notes:'General pressure washing — patios, walkways, small areas.'},
-    {id:uid('svc'), name:'Window Cleaning', emoji:'🪟', color:'blue', type:'flat', rate:8, min:80, unit:'per pane', notes:'Exterior only unless requested. $8/pane, $80 min.'}
+    ...HYDRO_SERVICES()
   ];
-  const svc = n => db.services.find(s=>s.name.includes(n)).name;
+  const svc = n => { const m=db.services.find(s=>s.name.includes(n)); return m?m.name:(db.services[0]&&db.services[0].name)||''; };
 
   db.customers = [
     {id:uid('cus'), name:'Robert Hayes', email:'rhayes@example.com', phone:'(704) 555-0142', address:'1420 Oakmont Dr, Charlotte, NC', notes:'Repeat customer — annual house wash', createdAt:'2025-03-11'},
@@ -414,11 +426,11 @@ function seedDB(){
   const d = (off)=>{ const x=new Date(); x.setDate(x.getDate()+off); return x.toISOString().slice(0,10); };
 
   db.jobs = [
-    {id:uid('job'), customerId:C[0].id, title:'Full House Soft Wash', services:[svc('House Soft')], date:d(-12), time:'09:00', status:'completed', address:C[0].address, price:520, cost:85, notes:'North + east siding heavy algae', beforePhotos:[], afterPhotos:[], createdAt:d(-20)},
-    {id:uid('job'), customerId:C[2].id, title:'Storefront Concrete + Windows', services:[svc('Driveway'),svc('Window')], date:d(-5), time:'07:00', status:'completed', address:C[2].address, price:340, cost:40, notes:'Early AM before open', beforePhotos:[], afterPhotos:[], createdAt:d(-14)},
-    {id:uid('job'), customerId:C[1].id, title:'Roof Wash + Gutters', services:[svc('Roof Soft'),svc('Gutter Cleaning')], date:d(1), time:'10:00', status:'scheduled', address:C[1].address, price:780, cost:120, notes:'2-story, watch the flower beds', beforePhotos:[], afterPhotos:[], createdAt:d(-3)},
-    {id:uid('job'), customerId:C[3].id, title:'Driveway + Deck', services:[svc('Driveway'),svc('Deck')], date:d(3), time:'13:00', status:'scheduled', address:C[3].address, price:450, cost:60, notes:'', beforePhotos:[], afterPhotos:[], createdAt:d(-2)},
-    {id:uid('job'), customerId:C[0].id, title:'Gutter Brightening', services:[svc('Gutter Bright')], date:d(6), time:'11:00', status:'scheduled', address:C[0].address, price:210, cost:20, notes:'Front elevation only', beforePhotos:[], afterPhotos:[], createdAt:d(-1)}
+    {id:uid('job'), customerId:C[0].id, title:'Full House Soft Wash', services:[svc('House Washing')], date:d(-12), time:'09:00', status:'completed', address:C[0].address, price:520, cost:85, notes:'North + east siding heavy algae', beforePhotos:[], afterPhotos:[], createdAt:d(-20)},
+    {id:uid('job'), customerId:C[2].id, title:'Storefront Concrete + Windows', services:[svc('Driveway'),svc('Concrete / Sidewalks')], date:d(-5), time:'07:00', status:'completed', address:C[2].address, price:340, cost:40, notes:'Early AM before open', beforePhotos:[], afterPhotos:[], createdAt:d(-14)},
+    {id:uid('job'), customerId:C[1].id, title:'Roof Wash + Gutters', services:[svc('Roof Cleaning'),svc('Gutter Cleaning')], date:d(1), time:'10:00', status:'scheduled', address:C[1].address, price:780, cost:120, notes:'2-story, watch the flower beds', beforePhotos:[], afterPhotos:[], createdAt:d(-3)},
+    {id:uid('job'), customerId:C[3].id, title:'Driveway + Deck', services:[svc('Driveway'),svc('Deck / Fence')], date:d(3), time:'13:00', status:'scheduled', address:C[3].address, price:450, cost:60, notes:'', beforePhotos:[], afterPhotos:[], createdAt:d(-2)},
+    {id:uid('job'), customerId:C[0].id, title:'Gutter Brightening', services:[svc('Gutter Cleaning')], date:d(6), time:'11:00', status:'scheduled', address:C[0].address, price:210, cost:20, notes:'Front elevation only', beforePhotos:[], afterPhotos:[], createdAt:d(-1)}
   ];
 
   db.quotes = [
@@ -1829,6 +1841,17 @@ function viewSettings(){
         </div>
       </div>
       <div class="card" style="margin-top:16px">
+        <div class="card-head"><h3>🏷️ Services / Pricing List</h3></div>
+        <div class="card-pad">
+          <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;line-height:1.5">Load the standard Hydro service list (residential + commercial) into your Pricing Cheat Sheet and quote builder. Use this if your list is missing services. Rates are placeholders you can edit after.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="addMissingServices()">＋ Add missing Hydro services</button>
+            <button class="btn btn-ghost btn-sm" onclick="replaceServices()">↻ Reset to standard list</button>
+          </div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:10px">You currently have ${DB.services.length} services.</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
         <div class="card-head"><h3>Data & Backup</h3></div>
         <div class="card-pad">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1894,6 +1917,18 @@ function resetData(){ confirmDialog('Start fresh (clear everything)?','This perm
   saveDB(); render(); toast('All data cleared','ok');
 },'Clear everything'); }
 function loadDemoData(){ confirmDialog('Load demo data?','This replaces current data with the sample demo records (here and in your Sheet).',()=>{ DB=seedDB(); saveDB(); render(); toast('Demo data loaded','ok'); },'Load demo'); }
+function addMissingServices(){
+  const have=new Set(DB.services.map(s=>s.name.toLowerCase()));
+  const add=HYDRO_SERVICES().filter(s=>!have.has(s.name.toLowerCase()));
+  if(!add.length){ toast('You already have all standard services','info'); return; }
+  DB.services=DB.services.concat(add); saveDB(); render();
+  toast('Added '+add.length+' service'+(add.length>1?'s':''),'ok');
+}
+function replaceServices(){
+  confirmDialog('Reset to standard service list?','This replaces your current services with the standard Hydro list (residential + commercial). Any custom rates or services you added will be lost. Past jobs/quotes keep their service names.',()=>{
+    DB.services=HYDRO_SERVICES(); saveDB(); render(); toast('Services reset to standard list','ok');
+  },'Reset services');
+}
 
 /* ---------------------------------------------------------------------
    17. GLOBAL HELPERS + INIT
