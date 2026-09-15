@@ -126,11 +126,27 @@ function render(q){
   }else if(q.status==='declined'){
     actions=`<div class="q-actions"><div class="ttl">This quote was declined</div><div class="sub">Changed your mind? Call or text us at (609) 545-1018.</div></div>`;
   }else{
+    const w=q.waiver;
+    const waiverBlock = w ? `
+      <div style="text-align:left;background:#fff;border:1px solid var(--border);border-radius:12px;margin:0 0 16px;overflow:hidden">
+        <button type="button" onclick="toggleWaiver()" style="width:100%;text-align:left;background:none;border:none;padding:14px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px">
+          <span id="wchev">▸</span> ${esc(w.title||'Liability Waiver & Service Agreement')}
+        </button>
+        <div id="wbody" style="display:none;padding:0 16px 16px;max-height:280px;overflow-y:auto;font-size:12.5px;color:var(--text-2);line-height:1.5">
+          ${w.intro?`<p style="margin-bottom:10px">${esc(w.intro)}</p>`:''}
+          ${(w.clauses||[]).map((c,i)=>`<div style="margin-bottom:10px"><b>${i+1}. ${esc(c.heading)}</b><br>${esc(c.body)}</div>`).join('')}
+        </div>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:10px;text-align:left;font-size:13.5px;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="waiverCheck" onchange="document.getElementById('acceptBtn').disabled=!this.checked" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--blue)">
+        <span>I have read and agree to the <a href="#" onclick="toggleWaiver();return false" style="color:var(--blue);font-weight:600">${esc(w.title||'liability waiver')}</a> and authorize the service described above.</span>
+      </label>` : '';
     actions=`<div class="q-actions">
       <div class="ttl">Ready to get started?</div>
-      <div class="sub">Accept below and we'll be in touch to schedule. No obligation.</div>
+      <div class="sub">Review the terms, then accept below. We'll be in touch to schedule.</div>
+      ${waiverBlock}
       <div class="q-btns">
-        <button class="btn-accept" onclick="respond('accepted')">✓ Accept Quote</button>
+        <button class="btn-accept" id="acceptBtn" ${w?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="respond('accepted')">✓ Accept Quote</button>
         <button class="btn-decline" onclick="respond('declined')">Decline</button>
       </div>
     </div>`;
@@ -161,16 +177,29 @@ function render(q){
     ${actions}`;
 }
 
+function toggleWaiver(){
+  const b=document.getElementById('wbody'), c=document.getElementById('wchev');
+  if(!b) return;
+  const open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  if(c) c.textContent=open?'▸':'▾';
+}
 let busy=false;
 let currentQuote=null;
 function respond(choice){
-  if(busy) return; busy=true;
+  if(busy) return;
+  // If a waiver is shown, require the checkbox before accepting
+  if(choice==='accepted' && document.getElementById('waiverCheck') && !document.getElementById('waiverCheck').checked){
+    toggleWaiver();
+    return;
+  }
+  busy=true;
+  const waiverAgreed = choice==='accepted' && !!(document.getElementById('waiverCheck') && document.getElementById('waiverCheck').checked);
   // Show the confirmation IMMEDIATELY — never leave the customer staring at a spinner.
   if(window.gtag) gtag('event', choice==='accepted'?'quote_accepted':'quote_declined');
   if(currentQuote){ currentQuote.status=choice; render(currentQuote); }
-  // Fire the request to the backend in the background (it records the answer +
-  // emails the owner). We don't block the UI on it.
-  apiSend('respondQuote',{response:choice}).catch(function(){});
+  // Fire the request to the backend in the background (records answer + waiver + emails owner).
+  apiSend('respondQuote',{response:choice, waiverAgreed:waiverAgreed}).catch(function(){});
 }
 load();
 </script>
