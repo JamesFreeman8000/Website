@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZFVGB2BL7"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JZFVGB2BL7');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Waiver | Hydro Pressure Washing</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.q-hero{background:linear-gradient(135deg,#0e1116,#16233b);color:#fff;padding:40px 0 34px;text-align:center}
+.q-hero img{height:52px;margin:0 auto 6px}
+.w-wrap{max-width:720px;margin:-24px auto 60px;padding:0 20px}
+.w-card{background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
+.w-head{padding:24px 30px;border-bottom:1px solid var(--border)}
+.w-head h2{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.w-head p{color:var(--text-2);font-size:14px;margin-top:5px}
+.w-body{padding:24px 30px}
+.w-terms{max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:18px;background:var(--bg-2);font-size:13.5px;color:var(--text-2);line-height:1.6}
+.w-terms .clause{margin-bottom:14px}
+.w-terms .clause b{color:var(--text)}
+.fld{margin:16px 0}
+.fld label{display:block;font-weight:700;font-size:13.5px;margin-bottom:6px}
+.fld input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:11px;font-size:15px;outline:none}
+.fld input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.frow{grid-template-columns:1fr}}
+.sigwrap{border:2px dashed var(--border-strong,#d4dae4);border-radius:12px;background:#fff;position:relative}
+.sigwrap canvas{width:100%;height:170px;display:block;touch-action:none;border-radius:12px}
+.sig-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-3);font-size:13px;pointer-events:none}
+.sig-clear{position:absolute;top:8px;right:10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-2)}
+.agree{display:flex;align-items:flex-start;gap:10px;font-size:14px;margin:18px 0;cursor:pointer}
+.agree input{width:19px;height:19px;margin-top:1px;flex-shrink:0;accent-color:var(--blue)}
+.submit{width:100%;justify-content:center;font-size:16px;padding:16px}
+.state{text-align:center;padding:48px 24px}
+.state .ic{font-size:56px;margin-bottom:10px}
+.state h2{font-size:24px;font-weight:900;color:var(--text)}
+.state p{color:var(--text-2);font-size:15.5px;margin-top:6px}
+.spinner{width:17px;height:17px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{background:var(--blue-l);color:var(--blue-d);padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:600;margin-bottom:14px}
+.w-foot{text-align:center;color:var(--text-3);font-size:13px;margin-top:20px}
+</style>
+</head>
+<body style="background:var(--bg-2)">
+
+<header class="q-hero">
+  <img src="../assets/logo.png" alt="Hydro Pressure Washing">
+  <div style="color:#c3ccda;font-size:14px">Service Waiver &amp; Agreement</div>
+</header>
+
+<div class="w-wrap">
+  <div class="w-card" id="card">
+    <div class="state"><div class="spinner" style="border-color:#ccc;border-top-color:#1f6fef;width:28px;height:28px"></div><p style="margin-top:14px">Loading…</p></div>
+  </div>
+  <div class="w-foot">Questions? Call or text <a href="tel:+16095451018" style="color:var(--blue);font-weight:600">(609) 545-1018</a></div>
+</div>
+
+<script src="../assets/config.js"></script>
+<script>
+const card=document.getElementById('card');
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function api(action,extra,timeoutMs){
+  const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(),timeoutMs||18000);
+  try{ const res=await fetch(window.HYDRO_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action},extra||{})),signal:ctrl.signal}); return await res.json(); }
+  finally{ clearTimeout(timer); }
+}
+async function apiSend(action,extra){
+  const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(),12000);
+  try{ await fetch(window.HYDRO_API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action},extra||{})),signal:ctrl.signal}); }
+  finally{ clearTimeout(timer); }
+}
+function stateHtml(ic,title,msg){return `<div class="state"><div class="ic">${ic}</div><h2>${title}</h2><p>${msg}</p><a href="../index.html" class="btn btn-primary btn-lg" style="margin-top:22px">Visit Our Website</a></div>`;}
+
+let waiver=null;
+async function load(){
+  let data=null;
+  for(let i=0;i<2;i++){ try{ data=await api('getWaiver'); if(data&&data.waiver)break; }catch(e){} if(i===0)await new Promise(r=>setTimeout(r,1000)); }
+  waiver=(data&&data.waiver)?data.waiver:{title:'Liability Waiver & Service Agreement',intro:'',clauses:[]};
+  render();
+}
+
+function render(){
+  const w=waiver;
+  card.innerHTML=`
+    <div class="w-head"><h2>${esc(w.title)}</h2><p>Please read, fill in your details, sign, and submit.</p></div>
+    <div class="w-body">
+      <div id="errBox"></div>
+      <div class="w-terms">
+        ${w.intro?`<p style="margin-bottom:12px">${esc(w.intro)}</p>`:''}
+        ${(w.clauses||[]).map((c,i)=>`<div class="clause"><b>${i+1}. ${esc(c.heading)}</b><br>${esc(c.body)}</div>`).join('')}
+      </div>
+      <div class="frow">
+        <div class="fld"><label>Full name *</label><input id="s_name" placeholder="John Smith"></div>
+        <div class="fld"><label>Phone</label><input id="s_phone" placeholder="(609) 555-0123"></div>
+      </div>
+      <div class="frow">
+        <div class="fld"><label>Email</label><input id="s_email" placeholder="you@email.com"></div>
+        <div class="fld"><label>Property address *</label><input id="s_address" placeholder="123 Main St, Vineland NJ"></div>
+      </div>
+      <div class="fld">
+        <label>Signature *</label>
+        <div class="sigwrap">
+          <canvas id="sig"></canvas>
+          <div class="sig-hint" id="sigHint">✍️ Sign here with your mouse or finger</div>
+          <button type="button" class="sig-clear" onclick="clearSig()">Clear</button>
+        </div>
+      </div>
+      <label class="agree"><input type="checkbox" id="agree"><span>I have read and agree to the terms above, and I am the property owner or authorized to approve this service.</span></label>
+      <button class="btn btn-primary submit" id="submitBtn" onclick="submitWaiver()">Sign &amp; Submit</button>
+    </div>`;
+  setupSig();
+}
+
+/* signature pad */
+let sigCanvas,sigCtx,drawing=false,hasInk=false;
+function setupSig(){
+  sigCanvas=document.getElementById('sig');
+  const rect=sigCanvas.getBoundingClientRect();
+  sigCanvas.width=rect.width*2; sigCanvas.height=170*2;   // retina
+  sigCtx=sigCanvas.getContext('2d'); sigCtx.scale(2,2);
+  sigCtx.lineWidth=2.2; sigCtx.lineCap='round'; sigCtx.strokeStyle='#12203a';
+  const pos=e=>{const r=sigCanvas.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top};};
+  const start=e=>{drawing=true;hasInk=true;document.getElementById('sigHint').style.display='none';const{x,y}=pos(e);sigCtx.beginPath();sigCtx.moveTo(x,y);e.preventDefault();};
+  const move=e=>{if(!drawing)return;const{x,y}=pos(e);sigCtx.lineTo(x,y);sigCtx.stroke();e.preventDefault();};
+  const end=()=>{drawing=false;};
+  sigCanvas.addEventListener('mousedown',start);sigCanvas.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',end);
+  sigCanvas.addEventListener('touchstart',start,{passive:false});sigCanvas.addEventListener('touchmove',move,{passive:false});sigCanvas.addEventListener('touchend',end);
+}
+function clearSig(){ if(sigCtx){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);hasInk=false;document.getElementById('sigHint').style.display='';} }
+function showErr(m){document.getElementById('errBox').innerHTML=`<div class="err">⚠ ${m}</div>`;}
+
+async function submitWaiver(){
+  document.getElementById('errBox').innerHTML='';
+  const name=document.getElementById('s_name').value.trim();
+  const address=document.getElementById('s_address').value.trim();
+  if(!name||!address){ showErr('Please enter your name and property address.'); return; }
+  if(!hasInk){ showErr('Please sign in the box above.'); return; }
+  if(!document.getElementById('agree').checked){ showErr('Please check the box to agree to the terms.'); return; }
+  const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Submitting…';
+  const record={
+    name, address,
+    email:document.getElementById('s_email').value.trim(),
+    phone:document.getElementById('s_phone').value.trim(),
+    signature:sigCanvas.toDataURL('image/png'),
+    source:'waiver-page'
+  };
+  try{
+    await apiSend('signWaiver',{record});
+    if(window.gtag) gtag('event','waiver_signed');
+    card.innerHTML=`<div class="state"><div class="ic">✅</div><h2>Thank you, ${esc(name.split(' ')[0])}!</h2><p>Your waiver has been submitted. We'll be in touch about your service.</p><a href="../index.html" class="btn btn-primary btn-lg" style="margin-top:22px">Back to Home</a></div>`;
+  }catch(e){
+    card.innerHTML=`<div class="state"><div class="ic">✅</div><h2>Thank you, ${esc(name.split(' ')[0])}!</h2><p>Your waiver has been submitted.</p><a href="../index.html" class="btn btn-primary btn-lg" style="margin-top:22px">Back to Home</a></div>`;
+  }
+}
+load();
+</script>
+</body>
+</html>
