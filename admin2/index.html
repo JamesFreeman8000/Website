@@ -357,9 +357,26 @@ function saveCfg(){ try{ localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); }ca
 function blankDB(){
   return {
     jobs:[], customers:[], quotes:[], invoices:[], services:[], expenses:[], requests:[],
+    waiver:null, signedWaivers:[],
     meta:{ createdAt:new Date().toISOString(), lastSync:null }
   };
 }
+/* Default waiver — matches the backend's DEFAULT_WAIVER. Editable in the dashboard. */
+function DEFAULT_WAIVER(){
+  return {
+    title:'Liability Waiver & Service Agreement',
+    intro:'Please read carefully. By signing below (or accepting your quote online), you agree to the following terms for services performed by Hydro Pressure Washing.',
+    clauses:[
+      {heading:'Property Condition & Pre-Existing Damage', body:'Exterior surfaces, siding, paint, wood, window seals, screens, and trim can be aged, loose, or already damaged. While we use proper techniques and appropriate pressure for each surface, the Customer understands that cleaning may reveal or, in rare cases, worsen pre-existing conditions. Hydro Pressure Washing is not liable for damage to surfaces that were already failing, improperly installed, rotted, oxidized, or in poor repair prior to service.'},
+      {heading:'Customer Preparation Responsibilities', body:'Before service, the Customer agrees to: close and secure all windows and doors; remove or secure vehicles, furniture, plants, décor, and valuables from work areas; disclose any known issues (leaks, loose fixtures, faulty seals, prior damage, electrical concerns); and provide safe access to the property and a working water source unless otherwise arranged.'},
+      {heading:'Results Not Guaranteed on Certain Conditions', body:'Some stains and conditions cannot be fully removed and are not guaranteed, including but not limited to: oxidation, rust, artillery fungus, deep-set organic staining, paint failure, mineral deposits, and permanent discoloration. We will always do our best, but the Customer accepts that certain results depend on the age and condition of the surface.'},
+      {heading:'Assumption of Risk & Hold Harmless', body:'The Customer assumes the risks inherent in exterior cleaning and agrees to hold harmless and release Hydro Pressure Washing, its owners and workers, from any claims, damages, or liabilities arising from the service, except those caused by our proven gross negligence. Our total liability for any claim shall not exceed the amount paid for the specific service in question.'},
+      {heading:'Photo & Marketing Consent', body:'The Customer grants permission for before/after photos of the work (excluding people and identifying details) to be used for marketing, website, and social media, unless the Customer notifies us in writing to opt out.'},
+      {heading:'Payment Terms', body:'Payment is due upon completion of the service unless other terms are agreed in writing. Returned payments or late balances may incur reasonable fees.'}
+    ]
+  };
+}
+function currentWaiver(){ return (DB.waiver && DB.waiver.clauses) ? DB.waiver : DEFAULT_WAIVER(); }
 function loadDB(){
   try{
     const d = JSON.parse(localStorage.getItem(LS_KEY));
@@ -589,6 +606,7 @@ const NAV = [
   {section:'Reference'},
   {id:'customers', label:'Customers', icon:'👥'},
   {id:'pricing',   label:'Pricing Cheat Sheet', icon:'🏷️'},
+  {id:'waiver',    label:'Liability Waiver', icon:'📋'},
   {id:'gallery',   label:'Before / After', icon:'🖼️'},
   {section:'System'},
   {id:'settings',  label:'Settings',  icon:'⚙️'}
@@ -618,6 +636,7 @@ const TITLES={
   revenue:['Revenue','Money in, money out, profit'],
   customers:['Customers','Your client book'],
   pricing:['Pricing Cheat Sheet','What you charge, at a glance'],
+  waiver:['Liability Waiver','Edit your waiver & view who signed'],
   gallery:['Before / After','Your photo showcase'],
   settings:['Settings','Business info & Google Sheets sync']
 };
@@ -629,7 +648,7 @@ function render(){
   document.getElementById('bizName').textContent=(CFG.bizName||'Exterior Wash').replace(/ LLC$/,'');
   buildNav();
   const v=document.getElementById('view');
-  const fn=({dashboard:viewDashboard,requests:viewRequests,schedule:viewSchedule,jobs:viewJobs,quotes:viewQuotes,invoices:viewInvoices,revenue:viewRevenue,customers:viewCustomers,pricing:viewPricing,gallery:viewGallery,settings:viewSettings})[ROUTE];
+  const fn=({dashboard:viewDashboard,requests:viewRequests,schedule:viewSchedule,jobs:viewJobs,quotes:viewQuotes,invoices:viewInvoices,revenue:viewRevenue,customers:viewCustomers,pricing:viewPricing,waiver:viewWaiver,gallery:viewGallery,settings:viewSettings})[ROUTE];
   v.innerHTML = fn ? fn() : '<div class="empty">Not found</div>';
   if(afterRender) { const f=afterRender; afterRender=null; f(); }
 }
@@ -1747,6 +1766,125 @@ function saveCustomer(id){
   saveDB(); closeModal(); render(); toast('Customer saved','ok');
 }
 function deleteCustomer(id){ confirmDialog('Delete this customer?','Their jobs and invoices are kept but will show as unassigned.',()=>{ DB.customers=DB.customers.filter(c=>c.id!==id); saveDB(); closeModal(); render(); toast('Customer deleted','ok'); }); }
+
+/* ---------------------------------------------------------------------
+   14b. VIEW: LIABILITY WAIVER (editable + signed list)
+   ------------------------------------------------------------------- */
+let waiverTab='edit';
+function viewWaiver(){
+  const w=currentWaiver();
+  const signed=(DB.signedWaivers||[]);
+  const siteUrl=(typeof SITE_URL!=='undefined'?SITE_URL:'').replace(/\/$/,'');
+  const waiverPageUrl = siteUrl ? siteUrl+'/waiver/' : '';
+  return `
+  <div class="toolbar">
+    <div class="pill-tabs">
+      <button class="${waiverTab==='edit'?'active':''}" onclick="waiverTab='edit';render()">✏️ Edit Waiver</button>
+      <button class="${waiverTab==='signed'?'active':''}" onclick="waiverTab='signed';render()">✍️ Signed (${signed.length})</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" onclick="printWaiver()">🖨️ Print / PDF</button>
+    ${waiverPageUrl?`<button class="btn btn-soft" onclick="copyText('${waiverPageUrl}')">🔗 Copy signing link</button>`:''}
+  </div>
+  ${waiverTab==='edit'?waiverEditHTML(w):waiverSignedHTML(signed)}`;
+}
+function waiverEditHTML(w){
+  return `
+  <div class="setup-banner" style="background:var(--brand-soft);border-color:#cfe0fa">
+    <span class="sb-ico">📋</span>
+    <div style="flex:1;font-size:12.5px;color:var(--text-2)"><b>This is your liability waiver.</b> Edit the title, intro, and any clause below. It appears on the quote-acceptance page, the public signing page, and the printable PDF. Not legal advice — have an attorney or your insurer review it.</div>
+    <button class="btn btn-primary btn-sm" onclick="saveWaiver()">Save Waiver</button>
+  </div>
+  <div class="card"><div class="card-pad">
+    <div class="field"><label>Waiver title</label><input class="input" id="w_title" value="${esc(w.title)}"></div>
+    <div class="field"><label>Intro paragraph</label><textarea class="input" id="w_intro" style="min-height:70px">${esc(w.intro)}</textarea></div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;margin-bottom:12px"><div class="section-title" style="margin:0">Clauses</div><button class="btn btn-soft btn-sm" style="margin-left:auto" onclick="addWaiverClause()">+ Add clause</button></div>
+    <div id="w_clauses">${(w.clauses||[]).map((c,i)=>waiverClauseRow(c,i)).join('')}</div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="saveWaiver()">Save Waiver</button>
+    <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="resetWaiver()">Reset to default</button>
+  </div></div>`;
+}
+function waiverClauseRow(c,i){
+  return `<div class="card" style="margin-bottom:12px;border-color:var(--border)" data-ci="${i}">
+    <div class="card-pad" style="padding:14px 16px">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+        <input class="input wc-head" style="font-weight:700" value="${esc(c.heading||'')}" placeholder="Clause heading">
+        <button class="btn-icon" onclick="moveClause(${i},-1)" title="Move up">↑</button>
+        <button class="btn-icon" onclick="moveClause(${i},1)" title="Move down">↓</button>
+        <button class="btn-icon" onclick="this.closest('[data-ci]').remove()" title="Remove" style="color:var(--red)">✕</button>
+      </div>
+      <textarea class="input wc-body" style="min-height:70px" placeholder="Clause text">${esc(c.body||'')}</textarea>
+    </div>
+  </div>`;
+}
+function readWaiverForm(){
+  const clauses=[...document.querySelectorAll('#w_clauses [data-ci]')].map(el=>({
+    heading:el.querySelector('.wc-head').value.trim(),
+    body:el.querySelector('.wc-body').value.trim()
+  })).filter(c=>c.heading||c.body);
+  return { title:document.getElementById('w_title').value.trim()||'Liability Waiver', intro:document.getElementById('w_intro').value.trim(), clauses };
+}
+function addWaiverClause(){
+  // save current edits into DB.waiver first so we don't lose them on re-render
+  DB.waiver=readWaiverForm(); DB.waiver.clauses.push({heading:'',body:''}); render();
+}
+function moveClause(i,dir){
+  const w=readWaiverForm(); const j=i+dir; if(j<0||j>=w.clauses.length) return;
+  const t=w.clauses[i]; w.clauses[i]=w.clauses[j]; w.clauses[j]=t; DB.waiver=w; render();
+}
+function saveWaiver(){ DB.waiver=readWaiverForm(); saveDB(); toast('Waiver saved','ok'); render(); }
+function resetWaiver(){ confirmDialog('Reset waiver to default?','This replaces your edits with the standard waiver text.',()=>{ DB.waiver=DEFAULT_WAIVER(); saveDB(); render(); toast('Waiver reset','ok'); },'Reset'); }
+
+function waiverSignedHTML(signed){
+  if(!signed.length) return `<div class="card"><div class="empty"><div class="ei">✍️</div><h4>No signed waivers yet</h4><p>Customers who sign on your website or accept a quote with the waiver will appear here.</p></div></div>`;
+  return `<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Date</th><th>Name</th><th>Address</th><th>Contact</th><th>Source</th><th>Signature</th></tr></thead>
+    <tbody>${signed.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(s=>`
+      <tr class="row-click" onclick="viewSignedWaiver('${s.id}')">
+        <td class="mono">${s.date?new Date(s.date).toLocaleDateString():'—'}</td>
+        <td><b>${esc(s.name)}</b></td>
+        <td style="font-size:12.5px">${esc((s.address||'').slice(0,34))}</td>
+        <td style="font-size:12.5px">${esc(s.phone||s.email||'')}</td>
+        <td><span class="chip chip-gray">${esc(s.source||'')}</span></td>
+        <td>${s.signature?`<img src="${s.signature}" style="height:30px">`:'—'}</td>
+      </tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+function viewSignedWaiver(id){
+  const s=(DB.signedWaivers||[]).find(x=>x.id===id); if(!s) return;
+  openModal(`<div class="modal-head"><div style="flex:1"><h2>${esc(s.name)}</h2><div class="sub">Signed ${s.date?new Date(s.date).toLocaleString():''}</div></div><button class="btn-icon" onclick="closeModal()" style="font-size:18px">✕</button></div>
+  <div class="modal-body">
+    <div class="field-row"><div class="field"><label>Address</label><div>${esc(s.address||'—')}</div></div><div class="field"><label>Contact</label><div>${esc(s.phone||'')} ${esc(s.email||'')}</div></div></div>
+    <div class="field"><label>Waiver</label><div>${esc(s.waiverTitle||'Liability Waiver')}</div></div>
+    ${s.signature?`<div class="field"><label>Signature</label><div style="border:1px solid var(--border);border-radius:9px;padding:10px;background:#fff"><img src="${s.signature}" style="max-height:100px"></div></div>`:''}
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Close</button><div style="flex:1"></div><button class="btn btn-danger btn-sm" onclick="deleteSignedWaiver('${s.id}')">Delete</button></div>`);
+}
+function deleteSignedWaiver(id){ confirmDialog('Delete this signed waiver?','This removes the record permanently.',()=>{ DB.signedWaivers=DB.signedWaivers.filter(x=>x.id!==id); saveDB(); closeModal(); render(); toast('Deleted','ok'); }); }
+
+function printWaiver(){
+  const w=currentWaiver();
+  const clauses=(w.clauses||[]).map((c,i)=>`<div style="margin:14px 0"><div style="font-weight:700;font-size:14px">${i+1}. ${esc(c.heading)}</div><div style="font-size:12.5px;color:#333;margin-top:3px">${esc(c.body)}</div></div>`).join('');
+  const win=window.open('','_blank');
+  win.document.write(`<html><head><title>${esc(w.title)}</title><style>body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:720px;margin:30px auto;padding:0 24px;color:#1a2233}h1{font-size:22px}.intro{color:#444;font-size:13.5px;margin:10px 0 6px}.sig{margin-top:40px;display:flex;gap:40px}.sig .line{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px;color:#666}</style></head><body>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1f6fef;padding-bottom:12px">
+      <h1 style="margin:0">${esc(CFG.bizName||'Hydro Pressure Washing')}</h1>
+      <div style="text-align:right;font-size:12px;color:#666">${esc(CFG.phone||'')}<br>${esc(CFG.email||'')}</div>
+    </div>
+    <h2 style="font-size:18px;margin-top:18px">${esc(w.title)}</h2>
+    <div class="intro">${esc(w.intro)}</div>
+    ${clauses}
+    <div class="sig">
+      <div class="line">Customer Signature</div>
+      <div class="line">Printed Name</div>
+      <div class="line" style="max-width:120px">Date</div>
+    </div>
+    <div style="margin-top:20px;font-size:11px;color:#999">Property Address: _______________________________________________</div>
+  </body></html>`);
+  win.document.close(); setTimeout(()=>win.print(),300);
+}
+function copyText(t){ navigator.clipboard&&navigator.clipboard.writeText(t); toast('Copied: '+t,'ok'); }
 
 /* ---------------------------------------------------------------------
    15. VIEW: GALLERY (before/after showcase)
