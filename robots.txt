@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Keep private/utility pages out of search results
+Disallow: /admin/
+Disallow: /quote/
+Disallow: /waiver/
+
+Sitemap: https://hydropressurewashing.co/sitemap.xml
