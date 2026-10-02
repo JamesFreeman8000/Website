@@ -357,7 +357,7 @@ function saveCfg(){ try{ localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); }ca
 function blankDB(){
   return {
     jobs:[], customers:[], quotes:[], invoices:[], services:[], expenses:[], requests:[],
-    waiver:null, signedWaivers:[],
+    waiver:null, signedWaivers:[], mileage:[],
     meta:{ createdAt:new Date().toISOString(), lastSync:null }
   };
 }
@@ -603,6 +603,7 @@ const NAV = [
   {id:'quotes',    label:'Quotes',    icon:'📝'},
   {id:'invoices',  label:'Invoices',  icon:'🧾'},
   {id:'revenue',   label:'Revenue',   icon:'💰'},
+  {id:'mileage',   label:'Mileage',   icon:'🚚'},
   {section:'Reference'},
   {id:'customers', label:'Customers', icon:'👥'},
   {id:'pricing',   label:'Pricing Cheat Sheet', icon:'🏷️'},
@@ -636,6 +637,7 @@ const TITLES={
   revenue:['Revenue','Money in, money out, profit'],
   customers:['Customers','Your client book'],
   pricing:['Pricing Cheat Sheet','What you charge, at a glance'],
+  mileage:['Mileage Log','Track business miles for your taxes'],
   waiver:['Liability Waiver','Edit your waiver & view who signed'],
   gallery:['Before / After','Your photo showcase'],
   settings:['Settings','Business info & Google Sheets sync']
@@ -648,7 +650,7 @@ function render(){
   document.getElementById('bizName').textContent=(CFG.bizName||'Exterior Wash').replace(/ LLC$/,'');
   buildNav();
   const v=document.getElementById('view');
-  const fn=({dashboard:viewDashboard,requests:viewRequests,schedule:viewSchedule,jobs:viewJobs,quotes:viewQuotes,invoices:viewInvoices,revenue:viewRevenue,customers:viewCustomers,pricing:viewPricing,waiver:viewWaiver,gallery:viewGallery,settings:viewSettings})[ROUTE];
+  const fn=({dashboard:viewDashboard,requests:viewRequests,schedule:viewSchedule,jobs:viewJobs,quotes:viewQuotes,invoices:viewInvoices,revenue:viewRevenue,mileage:viewMileage,customers:viewCustomers,pricing:viewPricing,waiver:viewWaiver,gallery:viewGallery,settings:viewSettings})[ROUTE];
   v.innerHTML = fn ? fn() : '<div class="empty">Not found</div>';
   if(afterRender) { const f=afterRender; afterRender=null; f(); }
 }
@@ -1175,9 +1177,10 @@ function jobForm(id, presetDate){
       <div class="field"><label>Services <span class="hint">— pick all that apply</span></label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">${svcChecks}</div>
       </div>
-      <div class="field-row">
-        <div class="field"><label>Price charged <span class="hint">(what customer pays)</span></label><input class="input" type="number" step="0.01" id="jf_price" value="${j.price}" placeholder="0.00"></div>
-        <div class="field"><label>Your cost <span class="hint">(chemicals, etc.)</span></label><input class="input" type="number" step="0.01" id="jf_cost" value="${j.cost}" placeholder="0.00"></div>
+      <div class="field-row-3">
+        <div class="field"><label>Price charged <span class="hint">(customer pays)</span></label><input class="input" type="number" step="0.01" id="jf_price" value="${j.price}" placeholder="0.00"></div>
+        <div class="field"><label>Your cost <span class="hint">(chemicals)</span></label><input class="input" type="number" step="0.01" id="jf_cost" value="${j.cost}" placeholder="0.00"></div>
+        <div class="field"><label>Miles <span class="hint">(round trip)</span></label><input class="input" type="number" step="0.1" id="jf_miles" value="${j.miles!=null?j.miles:''}" placeholder="0"></div>
       </div>
       <div class="field"><label>Notes</label><textarea class="input" id="jf_notes" placeholder="Access notes, gate code, special care…">${esc(j.notes)}</textarea></div>
     </div>
@@ -1195,7 +1198,7 @@ function saveJob(id){
   const services=[...document.querySelectorAll('input[name=jsvc]:checked')].map(c=>c.value);
   const rec={
     customerId:g('customer'), title, status:g('status'), date:g('date'), time:g('time'),
-    address:g('address'), price:parseFloat(g('price'))||0, cost:parseFloat(g('cost'))||0, notes:g('notes'), services
+    address:g('address'), price:parseFloat(g('price'))||0, cost:parseFloat(g('cost'))||0, miles:parseFloat(g('miles'))||0, notes:g('notes'), services
   };
   if(id){ const j=DB.jobs.find(x=>x.id===id); Object.assign(j, rec); }
   else { DB.jobs.push({id:uid('job'), ...rec, beforePhotos:[], afterPhotos:[], createdAt:new Date().toISOString()}); }
@@ -1766,6 +1769,91 @@ function saveCustomer(id){
   saveDB(); closeModal(); render(); toast('Customer saved','ok');
 }
 function deleteCustomer(id){ confirmDialog('Delete this customer?','Their jobs and invoices are kept but will show as unassigned.',()=>{ DB.customers=DB.customers.filter(c=>c.id!==id); saveDB(); closeModal(); render(); toast('Customer deleted','ok'); }); }
+
+/* ---------------------------------------------------------------------
+   14a. VIEW: MILEAGE LOG (job miles + standalone trips, for taxes)
+   ------------------------------------------------------------------- */
+let mileageYear = new Date().getFullYear();
+function allMileageEntries(){
+  // Combine per-job miles + standalone log into one list
+  const out=[];
+  (DB.jobs||[]).forEach(j=>{ if(Number(j.miles)>0) out.push({date:j.date||'', miles:Number(j.miles), purpose:(j.title||'Job'), type:'Job', from:'', to:(j.address||''), id:'job:'+j.id, jobId:j.id}); });
+  (DB.mileage||[]).forEach(m=>{ out.push({date:m.date||'', miles:Number(m.miles)||0, purpose:m.purpose||'', type:'Trip', from:m.from||'', to:m.to||'', id:'trip:'+m.id, tripId:m.id}); });
+  return out.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+}
+function viewMileage(){
+  const all=allMileageEntries();
+  const years=[...new Set(all.map(e=>(e.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  if(!years.includes(String(mileageYear))&&years.length) mileageYear=parseInt(years[0]);
+  const inYear=all.filter(e=>(e.date||'').slice(0,4)===String(mileageYear));
+  const yearMiles=inYear.reduce((s,e)=>s+e.miles,0);
+  const totalMiles=all.reduce((s,e)=>s+e.miles,0);
+  const jobMiles=inYear.filter(e=>e.type==='Job').reduce((s,e)=>s+e.miles,0);
+  const tripMiles=inYear.filter(e=>e.type==='Trip').reduce((s,e)=>s+e.miles,0);
+  return `
+  <div class="setup-banner" style="background:var(--brand-soft);border-color:#cfe0fa">
+    <span class="sb-ico">🚚</span>
+    <div style="flex:1;font-size:12.5px;color:var(--text-2)"><b>Your business mileage log.</b> Job miles come from the "Miles" field on each job; add other trips (supply runs, bank, etc.) below. Export a CSV for your accountant at tax time. <i>Miles only — your CPA applies the IRS rate. Not tax advice.</i></div>
+    <button class="btn btn-primary btn-sm" onclick="mileageForm()">＋ Add Trip</button>
+  </div>
+  <div class="grid kpi-grid" style="margin-bottom:18px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    ${kpi('🚚','var(--brand)','var(--brand-soft)',mileageYear+' total miles',yearMiles.toLocaleString(undefined,{maximumFractionDigits:1}),'')}
+    ${kpi('🧽','var(--green)','var(--green-soft)','From jobs',jobMiles.toLocaleString(undefined,{maximumFractionDigits:1}),'')}
+    ${kpi('🛣️','var(--amber)','var(--amber-soft)','Other trips',tripMiles.toLocaleString(undefined,{maximumFractionDigits:1}),'')}
+    ${kpi('📅','var(--purple)','var(--purple-soft)','All-time miles',totalMiles.toLocaleString(undefined,{maximumFractionDigits:1}),'')}
+  </div>
+  <div class="toolbar">
+    ${years.length?`<select class="select-mini" onchange="mileageYear=parseInt(this.value);render()">${years.map(y=>`<option value="${y}" ${y==mileageYear?'selected':''}>${y}</option>`).join('')}</select>`:''}
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm" onclick="exportMileage()">⬇️ Export CSV (${mileageYear})</button>
+  </div>
+  <div class="card"><div class="table-wrap">
+  ${inYear.length?`<table>
+    <thead><tr><th>Date</th><th>Type</th><th>Purpose</th><th>To / Location</th><th style="text-align:right">Miles</th><th></th></tr></thead>
+    <tbody>${inYear.map(e=>`<tr>
+      <td class="mono">${e.date?fmtDateShort(e.date):'—'}</td>
+      <td><span class="chip ${e.type==='Job'?'chip-green':'chip-amber'}">${e.type}</span></td>
+      <td>${esc(e.purpose)}</td>
+      <td style="font-size:12.5px;color:var(--text-2)">${esc((e.to||e.from||'').slice(0,40))}</td>
+      <td class="mono" style="text-align:right"><b>${e.miles.toLocaleString(undefined,{maximumFractionDigits:1})}</b></td>
+      <td style="text-align:right">${e.type==='Job'?`<button class="btn-icon" onclick="openJob('${e.jobId}')" title="Open job">✏️</button>`:`<button class="btn-icon" onclick="deleteTrip('${e.tripId}')">✕</button>`}</td>
+    </tr>`).join('')}
+    <tr style="background:var(--surface-2)"><td colspan="4" style="text-align:right;font-weight:800">${mileageYear} Total</td><td class="mono" style="text-align:right;font-weight:800">${yearMiles.toLocaleString(undefined,{maximumFractionDigits:1})} mi</td><td></td></tr>
+    </tbody>
+  </table>`:`<div class="empty"><div class="ei">🚚</div><h4>No miles logged for ${mileageYear}</h4><p>Add "Miles" to a job, or click "Add Trip" for supply runs and other business driving.</p></div>`}
+  </div></div>`;
+}
+function mileageForm(id){
+  const m=id?(DB.mileage||[]).find(x=>x.id===id):{id:null,date:todayISO(),miles:'',purpose:'',from:'',to:''};
+  openModal(`<div class="modal-head"><h2>${id?'Edit':'Add'} Trip</h2><button class="btn-icon" onclick="closeModal()" style="margin-left:auto;font-size:18px">✕</button></div>
+  <div class="modal-body">
+    <div class="field-row"><div class="field"><label>Date</label><input class="input" type="date" id="mi_date" value="${m.date}"></div>
+    <div class="field"><label>Miles (round trip)</label><input class="input" type="number" step="0.1" id="mi_miles" value="${m.miles}" placeholder="0"></div></div>
+    <div class="field"><label>Purpose</label><input class="input" id="mi_purpose" value="${esc(m.purpose||'')}" placeholder="e.g. Supply run, bank deposit"></div>
+    <div class="field-row"><div class="field"><label>From <span class="hint">(optional)</span></label><input class="input" id="mi_from" value="${esc(m.from||'')}" placeholder="Home"></div>
+    <div class="field"><label>To <span class="hint">(optional)</span></label><input class="input" id="mi_to" value="${esc(m.to||'')}" placeholder="Supply store"></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-primary" onclick="saveTrip('${id||''}')">${id?'Save':'Add Trip'}</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`);
+}
+function saveTrip(id){
+  const g=x=>document.getElementById('mi_'+x).value;
+  const miles=parseFloat(g('miles'))||0;
+  if(!miles) return toast('Enter the miles','err');
+  const rec={date:g('date'),miles,purpose:g('purpose'),from:g('from'),to:g('to')};
+  DB.mileage=DB.mileage||[];
+  if(id){ Object.assign(DB.mileage.find(x=>x.id===id),rec); } else DB.mileage.push({id:uid('mi'),...rec});
+  saveDB(); closeModal(); render(); toast('Trip logged','ok');
+}
+function deleteTrip(id){ DB.mileage=(DB.mileage||[]).filter(x=>x.id!==id); saveDB(); render(); toast('Trip removed','ok'); }
+function exportMileage(){
+  const rows=allMileageEntries().filter(e=>(e.date||'').slice(0,4)===String(mileageYear));
+  const csv=[['Date','Type','Purpose','From','To','Miles'].join(',')]
+    .concat(rows.map(e=>[e.date,e.type,'"'+(e.purpose||'').replace(/"/g,'""')+'"','"'+(e.from||'')+'"','"'+(e.to||'').replace(/"/g,'""')+'"',e.miles].join(',')))
+    .concat([['','','','','TOTAL',rows.reduce((s,e)=>s+e.miles,0)].join(',')]).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='hydro-mileage-'+mileageYear+'.csv'; a.click();
+  toast('Mileage CSV downloaded','ok');
+}
 
 /* ---------------------------------------------------------------------
    14b. VIEW: LIABILITY WAIVER (editable + signed list)
