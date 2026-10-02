@@ -241,6 +241,7 @@ textarea.input{resize:vertical;min-height:80px}
 .spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 </style>
 </head>
 <body>
@@ -492,6 +493,18 @@ function docTotal(doc){
   const tax = sub*((Number(doc.taxRate)||0)/100);
   return {sub, tax, total:sub+tax};
 }
+// Total tracked seconds for a job (accumulated + currently-running segment)
+function jobSeconds(j){
+  let s = Number(j.timerAccum)||0;
+  if(j.timerStart){ s += Math.max(0,(Date.now()-j.timerStart)/1000); }
+  return s;
+}
+function fmtDuration(sec){
+  sec=Math.floor(sec); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  return (h?h+'h ':'')+(m||h?m+'m ':'')+ (h?'':s+'s');
+}
+function fmtHM(sec){ sec=Math.floor(sec); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+
 function revenueStats(){
   const paid = DB.invoices.filter(i=>i.status==='paid');
   const outstanding = DB.invoices.filter(i=>i.status==='sent'||i.status==='overdue');
@@ -499,8 +512,10 @@ function revenueStats(){
   const totalOut = outstanding.reduce((s,i)=>s+docTotal(i).total,0);
   const jobsRev = DB.jobs.filter(j=>j.status==='completed').reduce((s,j)=>s+(Number(j.price)||0),0);
   const expenses = DB.expenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const jobCosts = DB.jobs.filter(j=>j.status==='completed').reduce((s,j)=>s+(Number(j.cost)||0),0);
-  return {totalPaid, totalOut, jobsRev, expenses, jobCosts, profit: jobsRev-expenses-jobCosts};
+  const profit = jobsRev - expenses;                       // overall profit (no per-job cost guessing)
+  const hours = DB.jobs.reduce((s,j)=>s+jobSeconds(j),0)/3600;   // all tracked work hours
+  const effectiveHourly = hours>0 ? profit/hours : 0;
+  return {totalPaid, totalOut, jobsRev, expenses, profit, hours, effectiveHourly};
 }
 function monthlyRevenue(){
   // last 6 months of completed job revenue
@@ -619,9 +634,10 @@ function buildNav(){
     if(n.section) return `<div class="nav-section">${n.section}</div>`;
     let badge='';
     if(n.id==='requests'){ const r=(DB.requests||[]).filter(x=>x.status==='new').length; if(r)badge=`<span class="badge">${r}</span>`; }
+    if(n.id==='jobs'){ if(DB.jobs.some(j=>j.timerStart)) badge=`<span class="badge" style="background:var(--green);animation:pulse 1.5s infinite">⏱</span>`; }
     if(n.id==='schedule'){ const t=DB.jobs.filter(j=>j.status==='scheduled'&&daysUntil(j.date)!=null&&daysUntil(j.date)>=0&&daysUntil(j.date)<=2).length; if(t)badge=`<span class="badge">${t}</span>`; }
     if(n.id==='invoices'){ const o=DB.invoices.filter(i=>i.status==='sent'||i.status==='overdue').length; if(o)badge=`<span class="badge">${o}</span>`; }
-    if(n.id==='quotes'){ const q=DB.quotes.filter(x=>x.status==='sent').length; if(q)badge=`<span class="badge">${q}</span>`; }
+    if(n.id==='quotes'){ const q=DB.quotes.filter(x=>x.status==='accepted').length; if(q)badge=`<span class="badge" style="background:var(--green)">${q}</span>`; }
     return `<button class="nav-item ${ROUTE===n.id?'active':''}" onclick="go('${n.id}')"><span class="ico">${n.icon}</span>${n.label}${badge}</button>`;
   }).join('');
 }
@@ -725,7 +741,7 @@ function viewDashboard(){
     ${kpi('💰','var(--green)','var(--green-soft)','Revenue this month',fmtMoney0(thisMonth.rev), momPct>=0?`<span class="kd up">▲ ${momPct}% vs last mo</span>`:`<span class="kd down">▼ ${Math.abs(momPct)}% vs last mo</span>`)}
     ${kpi('🧾','var(--amber)','var(--amber-soft)','Outstanding',fmtMoney0(st.totalOut),`<span class="kd flat">${DB.invoices.filter(i=>i.status==='sent'||i.status==='overdue').length} unpaid invoices</span>`)}
     ${kpi('📅','var(--brand)','var(--brand-soft)','Jobs scheduled',DB.jobs.filter(j=>j.status==='scheduled').length,`<span class="kd flat">Next: ${upcoming[0]?fmtDateShort(upcoming[0].date):'none'}</span>`)}
-    ${kpi('📈','var(--purple)','var(--purple-soft)','Est. profit (all-time)',fmtMoney0(st.profit),`<span class="kd flat">Rev ${fmtMoney0(st.jobsRev)} − costs</span>`)}
+    ${kpi('📈','var(--purple)','var(--purple-soft)','Net profit (all-time)',fmtMoney0(st.profit),`<span class="kd flat">revenue − expenses</span>`)}
   </div>
 
   <div class="grid" style="grid-template-columns:1.6fr 1fr;align-items:start">
@@ -1017,7 +1033,7 @@ function openJob(id){
   const c=customer(j.customerId);
   const before=j.beforePhotos||[], after=j.afterPhotos||[];
   const svcHTML=(j.services||[]).map(s=>{const sv=service(s);return `<span class="chip chip-${sv?sv.color:'gray'}">${sv?sv.emoji:''} ${esc(s)}</span>`;}).join(' ')||'—';
-  const profit=(Number(j.price)||0)-(Number(j.cost)||0);
+  const secs=jobSeconds(j);
   openModal(`
     <div class="modal-head">
       <div style="flex:1">
@@ -1030,10 +1046,26 @@ function openJob(id){
     <div class="modal-body">
       <div class="stat-inline" style="margin-bottom:18px">
         <div><div class="si-l">Price</div><div class="si-v">${fmtMoney0(j.price)}</div></div>
-        <div><div class="si-l">Cost</div><div class="si-v" style="color:var(--text-2)">${fmtMoney0(j.cost)}</div></div>
-        <div><div class="si-l">Profit</div><div class="si-v" style="color:var(--green)">${fmtMoney0(profit)}</div></div>
-        <div><div class="si-l">Margin</div><div class="si-v">${j.price?Math.round(profit/j.price*100):0}%</div></div>
+        <div><div class="si-l">Time worked</div><div class="si-v" id="jobTimeStat">${secs>0?fmtDuration(secs):'—'}</div></div>
+        ${secs>0&&j.price?`<div><div class="si-l">$ / hour</div><div class="si-v" style="color:var(--green)">${fmtMoney0((Number(j.price)||0)/(secs/3600))}</div></div>`:''}
+        ${Number(j.miles)>0?`<div><div class="si-l">Miles</div><div class="si-v" style="color:var(--text-2)">${j.miles}</div></div>`:''}
       </div>
+
+      <!-- Work timer -->
+      <div class="card" style="margin-bottom:18px;border-color:${j.timerStart?'#a7dcbb':'var(--border)'}">
+        <div class="card-pad" style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+          <div style="flex:1">
+            <div class="si-l">⏱️ Work Timer</div>
+            <div id="timerDisplay" style="font-size:26px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;color:${j.timerStart?'var(--green)':'var(--text)'}">${fmtHM(secs)}</div>
+          </div>
+          ${j.timerStart
+            ? `<button class="btn btn-soft" onclick="pauseTimer('${j.id}')">⏸ Pause</button>
+               <button class="btn btn-primary" onclick="stopTimer('${j.id}')">⏹ Stop &amp; Save</button>`
+            : `<button class="btn btn-primary" onclick="startTimer('${j.id}')">▶ ${secs>0?'Resume':'Start Job'}</button>
+               ${secs>0?`<button class="btn btn-ghost btn-sm" onclick="resetTimer('${j.id}')">Reset</button>`:''}`}
+        </div>
+      </div>
+
       <div class="field"><label>Services</label><div>${svcHTML}</div></div>
       ${j.address?`<div class="field"><label>Address</label><div>📍 ${esc(j.address)}</div></div>`:''}
       ${c?`<div class="field"><label>Contact</label><div>${c.phone?'📞 '+esc(c.phone)+'  ':''}${c.email?'✉️ '+esc(c.email):''}</div></div>`:''}
@@ -1063,6 +1095,43 @@ function openJob(id){
     </div>
   `, true);
 }
+/* ---- Work timer (persists across tab close via absolute start timestamp) ---- */
+let _timerInterval=null;
+function tickTimer(){
+  // find a running job and update the live display if the job modal is open
+  const disp=document.getElementById('timerDisplay'); if(!disp) return;
+  const running=DB.jobs.find(j=>j.timerStart);
+  if(!running){ return; }
+  disp.textContent=fmtHM(jobSeconds(running));
+}
+function ensureTimerLoop(){
+  if(_timerInterval) return;
+  _timerInterval=setInterval(()=>{ tickTimer(); buildNav(); }, 1000);
+}
+function startTimer(id){
+  const j=DB.jobs.find(x=>x.id===id); if(!j) return;
+  // Only one job can run at a time — pause any other running job
+  DB.jobs.forEach(o=>{ if(o.timerStart && o.id!==id){ o.timerAccum=(Number(o.timerAccum)||0)+(Date.now()-o.timerStart)/1000; o.timerStart=null; } });
+  j.timerStart=Date.now(); j.timerAccum=Number(j.timerAccum)||0;
+  if(j.status==='scheduled') j.status='in-progress';
+  saveDB(); ensureTimerLoop(); openJob(id); toast('Timer started','ok');
+}
+function pauseTimer(id){
+  const j=DB.jobs.find(x=>x.id===id); if(!j||!j.timerStart) return;
+  j.timerAccum=(Number(j.timerAccum)||0)+(Date.now()-j.timerStart)/1000; j.timerStart=null;
+  saveDB(); openJob(id); toast('Timer paused','info');
+}
+function stopTimer(id){
+  const j=DB.jobs.find(x=>x.id===id); if(!j) return;
+  if(j.timerStart){ j.timerAccum=(Number(j.timerAccum)||0)+(Date.now()-j.timerStart)/1000; j.timerStart=null; }
+  saveDB(); openJob(id); toast('Time saved: '+fmtDuration(jobSeconds(j)),'ok');
+}
+function resetTimer(id){
+  confirmDialog('Reset the timer?','This clears the recorded work time for this job.',()=>{
+    const j=DB.jobs.find(x=>x.id===id); j.timerStart=null; j.timerAccum=0; saveDB(); openJob(id); toast('Timer reset','ok');
+  },'Reset');
+}
+
 function photoStrip(arr, jobId, kind){
   if(!arr.length) return `<div style="border:2px dashed var(--border-strong);border-radius:10px;padding:22px;text-align:center;color:var(--text-3);font-size:12px;cursor:pointer" onclick="addPhoto('${jobId}','${kind}')">+ Add ${kind} photo</div>`;
   return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px">${arr.map((p,i)=>`
@@ -1177,10 +1246,9 @@ function jobForm(id, presetDate){
       <div class="field"><label>Services <span class="hint">— pick all that apply</span></label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">${svcChecks}</div>
       </div>
-      <div class="field-row-3">
-        <div class="field"><label>Price charged <span class="hint">(customer pays)</span></label><input class="input" type="number" step="0.01" id="jf_price" value="${j.price}" placeholder="0.00"></div>
-        <div class="field"><label>Your cost <span class="hint">(chemicals)</span></label><input class="input" type="number" step="0.01" id="jf_cost" value="${j.cost}" placeholder="0.00"></div>
-        <div class="field"><label>Miles <span class="hint">(round trip)</span></label><input class="input" type="number" step="0.1" id="jf_miles" value="${j.miles!=null?j.miles:''}" placeholder="0"></div>
+      <div class="field-row">
+        <div class="field"><label>Price charged <span class="hint">(what customer pays)</span></label><input class="input" type="number" step="0.01" id="jf_price" value="${j.price}" placeholder="0.00"></div>
+        <div class="field"><label>Miles <span class="hint">(round trip, for taxes)</span></label><input class="input" type="number" step="0.1" id="jf_miles" value="${j.miles!=null?j.miles:''}" placeholder="0"></div>
       </div>
       <div class="field"><label>Notes</label><textarea class="input" id="jf_notes" placeholder="Access notes, gate code, special care…">${esc(j.notes)}</textarea></div>
     </div>
@@ -1198,7 +1266,7 @@ function saveJob(id){
   const services=[...document.querySelectorAll('input[name=jsvc]:checked')].map(c=>c.value);
   const rec={
     customerId:g('customer'), title, status:g('status'), date:g('date'), time:g('time'),
-    address:g('address'), price:parseFloat(g('price'))||0, cost:parseFloat(g('cost'))||0, miles:parseFloat(g('miles'))||0, notes:g('notes'), services
+    address:g('address'), price:parseFloat(g('price'))||0, miles:parseFloat(g('miles'))||0, notes:g('notes'), services
   };
   if(id){ const j=DB.jobs.find(x=>x.id===id); Object.assign(j, rec); }
   else { DB.jobs.push({id:uid('job'), ...rec, beforePhotos:[], afterPhotos:[], createdAt:new Date().toISOString()}); }
@@ -1221,17 +1289,20 @@ let quoteFilter='all';
 function viewQuotes(){
   let list=DB.quotes.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if(quoteFilter!=='all') list=list.filter(q=>q.status===quoteFilter);
-  const won=DB.quotes.filter(q=>q.status==='accepted').length;
+  const accepted=DB.quotes.filter(q=>q.status==='accepted');   // accepted but NOT yet scheduled
+  const won=DB.quotes.filter(q=>q.status==='accepted'||q.status==='scheduled').length;
   const total=DB.quotes.length;
+  const needBanner = accepted.length ? `<div class="setup-banner" style="background:var(--green-soft);border-color:#a7dcbb;cursor:pointer" onclick="quoteFilter='accepted';render()"><span class="sb-ico">⚡</span><div style="flex:1"><b>${accepted.length} accepted quote${accepted.length>1?'s':''} need scheduling</b><div style="font-size:12.5px;color:var(--text-2)">Click to see them, then "Schedule Job" to add to your calendar.</div></div><button class="btn btn-primary btn-sm">Review →</button></div>` : '';
   return `
-  <div class="grid kpi-grid" style="margin-bottom:18px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+  ${needBanner}
+  <div class="grid kpi-grid" style="margin-bottom:18px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
     ${kpi('📝','var(--brand)','var(--brand-soft)','Total quotes',total,'')}
     ${kpi('📤','var(--amber)','var(--amber-soft)','Awaiting reply',DB.quotes.filter(q=>q.status==='sent').length,'')}
-    ${kpi('✅','var(--green)','var(--green-soft)','Accepted',won,'')}
+    ${kpi('⚡','var(--green)','var(--green-soft)','Needs scheduling',accepted.length,'')}
     ${kpi('🎯','var(--purple)','var(--purple-soft)','Win rate',total?Math.round(won/total*100)+'%':'—','')}
   </div>
   <div class="toolbar">
-    <div class="pill-tabs">${['all','draft','sent','accepted','declined'].map(k=>`<button class="${quoteFilter===k?'active':''}" onclick="quoteFilter='${k}';render()">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}</div>
+    <div class="pill-tabs">${['all','sent','accepted','scheduled','declined'].map(k=>`<button class="${quoteFilter===k?'active':''}" onclick="quoteFilter='${k}';render()">${k==='accepted'?'Needs Scheduling':k[0].toUpperCase()+k.slice(1)}${k==='accepted'&&accepted.length?' <span style="opacity:.6">'+accepted.length+'</span>':''}</button>`).join('')}</div>
     <div class="spacer"></div>
     <button class="btn btn-primary" onclick="quoteForm()"><span style="font-size:16px">＋</span> New Quote</button>
   </div>
@@ -1424,7 +1495,8 @@ function openQuote(id){
     <div class="modal-head"><div style="flex:1"><h2>Quote ${q.number}</h2><div class="sub">${esc(custName(q.customerId))}</div></div>${statusChip(q.status)}<button class="btn-icon" onclick="closeModal()" style="margin-left:10px;font-size:18px">✕</button></div>
     <div class="modal-body">
       ${docPreviewHTML(q,'quote')}
-      ${q.status==='accepted'?`<div class="setup-banner" style="background:var(--green-soft);border-color:#a7dcbb;margin-top:18px"><span class="sb-ico">✅</span><div><b>Accepted by customer</b><div style="font-size:12px;color:var(--text-2)">${q.respondedAt?'on '+fmtDate((q.respondedAt||'').slice(0,10)):''} — ready to convert to invoice or schedule.</div></div></div>`:''}
+      ${q.status==='accepted'?`<div class="setup-banner" style="background:var(--green-soft);border-color:#a7dcbb;margin-top:18px"><span class="sb-ico">✅</span><div style="flex:1"><b>Accepted — needs scheduling!</b><div style="font-size:12px;color:var(--text-2)">${q.respondedAt?'Accepted '+fmtDate((q.respondedAt||'').slice(0,10))+'. ':''}Schedule it to add it to your calendar and mark it done.</div></div><button class="btn btn-primary btn-sm" onclick="scheduleFromQuote('${q.id}')">📅 Schedule Job</button></div>`:''}
+      ${q.status==='scheduled'?`<div class="setup-banner" style="background:var(--brand-soft);border-color:#cfe0fa;margin-top:18px"><span class="sb-ico">📅</span><div style="flex:1"><b>Scheduled</b><div style="font-size:12px;color:var(--text-2)">This job is on your calendar.${q.jobId?'':''}</div></div>${q.jobId?`<button class="btn btn-soft btn-sm" onclick="closeModal();openJob('${q.jobId}')">Open Job →</button>`:''}</div>`:''}
       ${q.status==='declined'?`<div class="setup-banner" style="background:var(--red-soft);border-color:#f0b3ae;margin-top:18px"><span class="sb-ico">❌</span><div><b>Declined by customer</b></div></div>`:''}
       ${acceptUrl&&(q.status==='sent'||q.status==='draft')?`
         <div class="field" style="margin-top:18px"><label>Customer accept/decline link <span class="hint">— send this; their choice updates here automatically</span></label>
@@ -1435,7 +1507,9 @@ function openQuote(id){
     <div class="modal-foot">
       ${CFG.apiUrl?`<button class="btn btn-primary" onclick="sendDoc('quote','${q.id}')">✉️ Email Quote</button>`:''}
       <button class="btn btn-ghost" onclick="printDoc()">🖨️ Print / PDF</button>
-      ${q.status!=='accepted'?`<button class="btn btn-soft" onclick="setQuoteStatus('${q.id}','accepted')">Mark Accepted</button>`:`<button class="btn btn-soft" onclick="invoiceFromQuote('${q.id}')">🧾 Convert to Invoice</button>`}
+      ${q.status==='accepted'?`<button class="btn btn-primary" onclick="scheduleFromQuote('${q.id}')">📅 Schedule Job</button>`:''}
+      ${(q.status==='sent'||q.status==='draft')?`<button class="btn btn-soft" onclick="setQuoteStatus('${q.id}','accepted')">Mark Accepted</button>`:''}
+      <button class="btn btn-soft btn-sm" onclick="invoiceFromQuote('${q.id}')">🧾 Invoice</button>
       <button class="btn btn-ghost btn-sm" onclick="quoteForm('${q.id}')">✏️ Edit</button>
       <div style="flex:1"></div>
       <button class="btn btn-danger btn-sm" onclick="deleteDoc('quote','${q.id}')">Delete</button>
@@ -1472,6 +1546,23 @@ function invoiceFromQuote(id){
   const q=DB.quotes.find(x=>x.id===id);
   const inv={id:uid('inv'), number:nextNumber('invoice'), customerId:q.customerId, date:todayISO(), dueDate:addDays(todayISO(),15), status:'draft', items:JSON.parse(JSON.stringify(q.items)), notes:q.notes, taxRate:q.taxRate};
   DB.invoices.push(inv); saveDB(); closeModal(); ROUTE='invoices'; render(); openInvoice(inv.id); toast('Invoice created from quote','ok');
+}
+/* Accepted quote → scheduled job. Creates a job and flips the quote to "scheduled". */
+function scheduleFromQuote(id){
+  const q=DB.quotes.find(x=>x.id===id); if(!q) return;
+  if(q.jobId && DB.jobs.find(j=>j.id===q.jobId)){ closeModal(); openJob(q.jobId); return; }  // already scheduled
+  const c=customer(q.customerId);
+  const t=docTotal(q);
+  const title=(q.items&&q.items[0]?q.items[0].desc:'')||'Pressure Washing';
+  const job={id:uid('job'), customerId:q.customerId, title:title.length>40?title.slice(0,40):title,
+    services:[], date:addDays(todayISO(),2), time:'09:00', status:'scheduled',
+    address:(c&&c.address)||'', price:Math.round(t.total*100)/100, miles:'', notes:'From quote '+q.number+(q.notes?'\n'+q.notes:''),
+    beforePhotos:[], afterPhotos:[], quoteId:q.id, createdAt:new Date().toISOString()};
+  DB.jobs.push(job);
+  q.status='scheduled'; q.jobId=job.id;
+  saveDB(); closeModal();
+  jobForm(job.id);   // open the job form so they can set the real date/time
+  toast('Job created — set the date & time','ok');
 }
 function invoiceFromJob(id){
   const j=DB.jobs.find(x=>x.id===id);
@@ -1516,12 +1607,13 @@ function viewRevenue(){
   DB.jobs.filter(j=>j.status==='completed').forEach(j=>{ const n=(j.services||[]).length||1; (j.services||['Other']).forEach(s=>{ svcRev[s]=(svcRev[s]||0)+(Number(j.price)||0)/n; }); });
   const svcRevArr=Object.entries(svcRev).sort((a,b)=>b[1]-a[1]);
   return `
-  <div class="grid kpi-grid" style="margin-bottom:20px">
-    ${kpi('💵','var(--green)','var(--green-soft)','Collected (paid invoices)',fmtMoney0(st.totalPaid),'')}
-    ${kpi('📅','var(--brand)','var(--brand-soft)','Revenue YTD (jobs)',fmtMoney0(ytd),'')}
-    ${kpi('📉','var(--amber)','var(--amber-soft)','Expenses',fmtMoney0(st.expenses+st.jobCosts),'')}
-    ${kpi('📈','var(--purple)','var(--purple-soft)','Net profit',fmtMoney0(st.profit),'')}
+  <div class="grid kpi-grid" style="margin-bottom:12px">
+    ${kpi('💰','var(--brand)','var(--brand-soft)','Revenue (completed jobs)',fmtMoney0(st.jobsRev),'')}
+    ${kpi('📉','var(--amber)','var(--amber-soft)','Expenses (total)',fmtMoney0(st.expenses),`<span class="kd flat">from your expense log</span>`)}
+    ${kpi('📈','var(--green)','var(--green-soft)','Net profit',fmtMoney0(st.profit),`<span class="kd flat">${st.jobsRev?Math.round(st.profit/st.jobsRev*100):0}% margin</span>`)}
+    ${kpi('⏱️','var(--purple)','var(--purple-soft)','Effective $/hour',st.hours>0?fmtMoney0(st.effectiveHourly):'—',`<span class="kd flat">${st.hours>0?st.hours.toFixed(1)+' hrs tracked':'start a job timer'}</span>`)}
   </div>
+  <div style="font-size:11.5px;color:var(--text-3);margin-bottom:18px">💡 Profit = completed-job revenue − total expenses. Effective $/hour = net profit ÷ hours tracked with the job timer. Log bulk chemical/fuel buys under Expenses for accurate profit.</div>
   <div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
     <div class="card">
       <div class="card-head"><h3>Revenue vs Expenses</h3><span class="sub">Last 6 months</span></div>
@@ -2231,6 +2323,7 @@ function startApp(){
   setSync('off');
   if(CFG.apiUrl){ setSync('ok'); pullSync(true); }
   render();
+  if(DB.jobs && DB.jobs.some(j=>j.timerStart)) ensureTimerLoop();   // resume live timer if a job was running
 }
 function init(){
   CFG = loadCfg();
